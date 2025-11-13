@@ -398,26 +398,32 @@ const WorkingIndex = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           
           {/* Navigation des tabs */}
-          <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg sm:rounded-xl text-xs sm:text-sm">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1 sm:gap-2 rounded-md sm:rounded-lg data-[state=active]:bg-white py-2">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Tableau de Bord</span>
-              <span className="xs:hidden">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="members" 
-              className="flex items-center gap-1 sm:gap-2 rounded-md sm:rounded-lg data-[state=active]:bg-white py-2"
-              disabled={shareMode}
-            >
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              Membres
-              {shareMode && <ShieldOff className="h-3 w-3 ml-1 text-orange-500" />}
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center gap-1 sm:gap-2 rounded-md sm:rounded-lg data-[state=active]:bg-white py-2">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              Présences
-            </TabsTrigger>
-          </TabsList>
+          <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg sm:rounded-xl text-xs sm:text-sm border border-black border-[0.5px] shadow-md">
+  <TabsTrigger 
+    value="dashboard" 
+    className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground h-9 rounded-md px-3 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:text-white"
+  >
+    <BarChart3 className="h-4 w-4" />
+    <span className="hidden xs:inline">Tableau de Bord</span>
+    <span className="xs:hidden">Dashboard</span>
+  </TabsTrigger>
+  <TabsTrigger 
+    value="members" 
+    className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground h-9 rounded-md px-3 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:text-white"
+    disabled={shareMode}
+  >
+    <Users className="h-4 w-4" />
+    Membres
+    {shareMode && <ShieldOff className="h-4 w-4 ml-1 text-orange-500" />}
+  </TabsTrigger>
+  <TabsTrigger 
+    value="attendance" 
+    className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground h-9 rounded-md px-3 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 data-[state=active]:bg-blue-700 data-[state=active]:text-white"
+  >
+    <Calendar className="h-4 w-4" />
+    Présences
+  </TabsTrigger>
+</TabsList>
 
           {/* ================================================================ */}
           {/* TAB 1: TABLEAU DE BORD */}
