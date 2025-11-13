@@ -1,199 +1,117 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList } from "lucide-react";
-import { z } from "zod";
-
-const signUpSchema = z.object({
-  email: z.string().trim().email({ message: "Email invalide" }).max(255, { message: "Email trop long" }),
-  password: z.string().min(8, { message: "Minimum 8 caractères" }).max(100, { message: "Mot de passe trop long" }),
-  firstName: z.string().trim().min(1, { message: "Prénom requis" }).max(100, { message: "Prénom trop long" }),
-  lastName: z.string().trim().min(1, { message: "Nom requis" }).max(100, { message: "Nom trop long" })
-});
-
-const signInSchema = z.object({
-  email: z.string().trim().email({ message: "Email invalide" }).max(255, { message: "Email trop long" }),
-  password: z.string().min(1, { message: "Mot de passe requis" }).max(100, { message: "Mot de passe trop long" })
-});
+import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("admin@institut.com");
+  const [password, setPassword] = useState("admin123");
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("signup-email") as string;
-    const password = formData.get("signup-password") as string;
-    const firstName = formData.get("first-name") as string;
-    const lastName = formData.get("last-name") as string;
+    try {
+      console.log("🔐 Tentative de connexion...");
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const result = signUpSchema.safeParse({ email, password, firstName, lastName });
-    
-    if (!result.success) {
-      toast.error(result.error.errors[0].message);
-      setIsLoading(false);
-      return;
-    }
+      if (error) {
+        console.error("❌ Erreur:", error);
+        throw error;
+      }
 
-    const { error } = await supabase.auth.signUp({
-      email: result.data.email,
-      password: result.data.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          first_name: result.data.firstName,
-          last_name: result.data.lastName,
-        },
-      },
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Compte créé avec succès!");
-      navigate("/");
-    }
-  };
-
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("signin-email") as string;
-    const password = formData.get("signin-password") as string;
-
-    const result = signInSchema.safeParse({ email, password });
-    
-    if (!result.success) {
-      toast.error(result.error.errors[0].message);
-      setIsLoading(false);
-      return;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: result.data.email,
-      password: result.data.password,
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Connexion réussie!");
-      navigate("/");
+      console.log("✅ Connexion réussie:", data.user?.email);
+      toast.success("Connexion réussie !");
+      
+      // ⚠️ REDIRECTION MANUELLE EXPLICITE
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error("💥 Erreur complète:", error);
+      toast.error(error.message || "Erreur de connexion");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-elegant">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <ClipboardList className="h-10 w-10 text-primary" />
-            <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Gestion des Présences
-            </CardTitle>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg border-slate-200">
+        <CardHeader className="text-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center mx-auto">
+            <span className="text-white font-bold text-2xl">GM</span>
           </div>
-          <CardDescription>
-            Suivez les présences et cotisations de vos groupes
-          </CardDescription>
+          <div>
+            <CardTitle className="text-3xl text-slate-900">Connexion</CardTitle>
+            <CardDescription className="text-slate-600 text-lg mt-2">
+              Entrez vos identifiants
+            </CardDescription>
+          </div>
         </CardHeader>
+        
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Inscription</TabsTrigger>
-            </TabsList>
+          <form onSubmit={handleSignIn} className="space-y-5">
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-slate-700 text-base">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@institut.com"
+                required
+                className="h-12 text-base border-slate-300 focus:border-blue-500"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <Label htmlFor="password" className="text-slate-700 text-base">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Votre mot de passe"
+                required
+                className="h-12 text-base border-slate-300 focus:border-blue-500"
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Connexion...
+                </div>
+              ) : (
+                "Se connecter"
+              )}
+            </Button>
+          </form>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    name="signin-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Mot de passe</Label>
-                  <Input
-                    id="signin-password"
-                    name="signin-password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Connexion..." : "Se connecter"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name">Prénom</Label>
-                    <Input
-                      id="first-name"
-                      name="first-name"
-                      placeholder="Votre prénom"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last-name">Nom</Label>
-                    <Input
-                      id="last-name"
-                      name="last-name"
-                      placeholder="Votre nom"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    name="signup-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <Input
-                    id="signup-password"
-                    name="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Inscription..." : "S'inscrire"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <h4 className="font-semibold text-blue-900 mb-3 text-center">Compte de test</h4>
+            <div className="text-sm text-blue-700 space-y-1 text-center">
+              <p><strong>Email:</strong> admin@institut.com</p>
+              <p><strong>Mot de passe:</strong> admin123</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

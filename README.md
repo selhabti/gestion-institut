@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# 🎯 Gestion Institut - Application de Gestion des Membres
 
-## Project info
+Application moderne et intuitive pour la gestion des membres d'un institut avec suivi complet des présences et cotisations.
 
-**URL**: https://lovable.dev/projects/c8a04497-000e-41bc-938a-9ecbe211e08f
+## ✨ Fonctionnalités
 
-## How can I edit this code?
+### 👥 Gestion des Membres
 
-There are several ways of editing your application.
+- **Ajout simplifié** de nouveaux membres avec validation en temps réel
+- **Groupes multiples** : Lundi, Samedi, Dimanche
+- **Prévention des doublons** avec vérification automatique
+- **Interface tableau** pour une vue d'ensemble complète
 
-**Use Lovable**
+### 📅 Suivi des Présences
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c8a04497-000e-41bc-938a-9ecbe211e08f) and start prompting.
+- **Calendrier intelligent** affichant automatiquement la prochaine session
+- **Marquage rapide** des présences/absences
+- **Statuts détaillés** : Présent, Absence justifiée, Absence non justifiée
+- **Vue par groupe** avec filtrage automatique
 
-Changes made via Lovable will be committed automatically to this repo.
+### 💰 Gestion Financière
 
-**Use your preferred IDE**
+- **Suivi des cotisations** mensuelles
+- **Marquage des paiements** en un clic
+- **Statistiques de paiement** en temps réel
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📊 Tableau de Bord
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Statistiques complètes** par groupe et par mois
+- **Taux de présence** calculé automatiquement
+- **Indicateurs visuels** pour un suivi rapide
+- **Métriques financières** claires et précises
 
-Follow these steps:
+## 🛠️ Technologies Utilisées
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **Frontend** : React 18 + TypeScript + Vite
+- **Styling** : Tailwind CSS + shadcn/ui
+- **Base de données** : Supabase (PostgreSQL)
+- **Authentication** : Supabase Auth
+- **Icons** : Lucide React
+- **Validation** : Zod
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Installation et Démarrage
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prérequis
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+- Node.js 18+ et npm
+- Compte Supabase
+
+### Étapes d'installation
+
+```bash
+# 1. Cloner le repository
+git clone https://github.com/selhabti/gestion-institut.git
+cd gestion-institut
+
+# 2. Installer les dépendances
+npm install
+
+# 3. Configuration de l'environnement
+cp .env.example .env
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c8a04497-000e-41bc-938a-9ecbe211e08f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

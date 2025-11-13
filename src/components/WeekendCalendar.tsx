@@ -1,20 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Check, X, Trash2 } from "lucide-react";
-import type { Member } from "@/types/member";
-import { capitalize } from "@/lib/utils";
+import { Calendar, Users } from "lucide-react";
+import type { Member, AttendanceStatus } from "@/types/member";
 
 interface WeekendCalendarProps {
   members: Member[];
   selectedGroup: "Lundi" | "Samedi" | "Dimanche";
-  onMarkPresent: (memberId: string, date: string, present: boolean) => void;
+  onMarkPresent: (memberId: string, date: string, status: AttendanceStatus) => void;
   isAdmin?: boolean;
+  canMarkAttendance?: boolean; 
   onDeleteMember?: (memberId: string) => void;
+  showMembersList?: boolean;
 }
 
-export function WeekendCalendar({ members, selectedGroup, onMarkPresent, isAdmin, onDeleteMember }: WeekendCalendarProps) {
-  const getCurrentSession = () => {
+export function WeekendCalendar({ 
+  members, 
+  selectedGroup, 
+  onMarkPresent, 
+  isAdmin, 
+  onDeleteMember,
+  showMembersList = true
+}: WeekendCalendarProps) {
+  
+  // Calcul de la date de la prochaine session
+  const getNextSessionDate = () => {
     const now = new Date();
     const currentDay = now.getDay();
     const currentDate = now.getDate();
@@ -30,16 +39,14 @@ export function WeekendCalendar({ members, selectedGroup, onMarkPresent, isAdmin
         
       case "Samedi":
         if (currentDay === 6) return now;
-        if (currentDay === 0) {
-          targetDate.setDate(currentDate - 1);
-          return targetDate;
-        }
-        targetDate.setDate(currentDate + (6 - currentDay));
+        const daysUntilSaturday = currentDay <= 6 ? 6 - currentDay : 13 - currentDay;
+        targetDate.setDate(currentDate + daysUntilSaturday);
         return targetDate;
         
       case "Dimanche":
         if (currentDay === 0) return now;
-        targetDate.setDate(currentDate + (7 - currentDay));
+        const daysUntilSunday = currentDay === 6 ? 1 : 7 - currentDay;
+        targetDate.setDate(currentDate + daysUntilSunday);
         return targetDate;
         
       default:
@@ -52,104 +59,54 @@ export function WeekendCalendar({ members, selectedGroup, onMarkPresent, isAdmin
       weekday: 'long',
       day: "2-digit",
       month: "long",
+      year: "numeric"
     });
   };
 
-  const getDateString = (date: Date) => {
-    return date.toISOString().split("T")[0];
-  };
-
-  const getAttendanceForDate = (member: Member, dateString: string) => {
-    return member.attendances.find((a) => a.date === dateString);
-  };
-
-  const currentSession = getCurrentSession();
+  const nextSession = getNextSessionDate();
   const groupMembers = members.filter((m) => m.group === selectedGroup);
-  const dateString = getDateString(currentSession);
-  const isToday = dateString === new Date().toISOString().split("T")[0];
+  const isToday = nextSession.toISOString().split("T")[0] === new Date().toISOString().split("T")[0];
 
   return (
-    <Card className="shadow-medium">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="shadow-sm border-blue-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5" />
-          Session {selectedGroup}
+          Session à venir
         </CardTitle>
         <CardDescription>
-          {formatDate(currentSession)}
-          {isToday && " - Aujourd'hui"}
+          {formatDate(nextSession)}
+          {isToday && (
+            <Badge variant="default" className="ml-2 bg-green-500">
+              Aujourd'hui
+            </Badge>
+          )}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {groupMembers.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            Aucun membre dans le groupe {selectedGroup}
+      </CardHeader> {/* ← BALISE DE FERMETURE CORRECTE */}
+      <CardContent className="space-y-4">
+        {/* Statistiques rapides sans la liste des élèves */}
+        <div className="text-center py-4">
+          <Users className="h-12 w-12 mx-auto mb-3 text-blue-500" />
+          <h3 className="font-semibold text-slate-900">
+            {groupMembers.length} élève{groupMembers.length > 1 ? 's' : ''} inscrit{groupMembers.length > 1 ? 's' : ''}
+          </h3>
+          <p className="text-sm text-slate-600 mt-1">
+            Groupe {selectedGroup}
           </p>
-        ) : (
-          <div className="space-y-2">
-            {groupMembers.map((member) => {
-              const attendance = getAttendanceForDate(member, dateString);
-              const isPresent = attendance?.status === "present";
-              const isAbsent = attendance?.status === "absent_justified" || attendance?.status === "absent_unjustified";
-              
-              return (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between p-3 rounded-md bg-secondary/50 hover:bg-secondary transition-smooth"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
-                      {capitalize(member.firstName)} {capitalize(member.lastName)}
-                    </span>
-                    {isPresent && (
-                      <Badge variant="success" className="gap-1">
-                        <Check className="h-3 w-3" />
-                        Présent
-                      </Badge>
-                    )}
-                    {isAbsent && (
-                      <Badge variant="destructive" className="gap-1">
-                        <X className="h-3 w-3" />
-                        Absent
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={isPresent ? "default" : "outline"}
-                      onClick={() => onMarkPresent(member.id, dateString, true)}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={isAbsent ? "destructive" : "outline"}
-                      onClick={() => onMarkPresent(member.id, dateString, false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    {isAdmin && onDeleteMember && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          if (confirm(`Supprimer ${capitalize(member.firstName)} ${capitalize(member.lastName)} ?`)) {
-                            onDeleteMember(member.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          {isToday && (
+            <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
+              Session aujourd'hui
+            </Badge>
+          )}
+        </div>
+
+        {/* Note informative */}
+        <div className="text-xs text-slate-500 text-center pt-2 border-t border-slate-100">
+          Utilisez le tableau principal pour marquer les présences
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+export default WeekendCalendar;
