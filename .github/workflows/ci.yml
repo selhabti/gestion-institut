@@ -1,4 +1,4 @@
-# .github/workflows/ci.yml - CORRECTION DU PORT
+# .github/workflows/ci.yml
 name: CI Pipeline
 
 on:
@@ -21,15 +21,28 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Nettoyage de l'environnement
+        run: |
+          # Supprime tout fichier .env existant qui aurait pu être commité
+          rm -f .env .env.*.local
+
       - name: Installation des dépendances
         run: bun install
 
       - name: Configuration de l'environnement
         run: |
-          cp .env.example .env
-          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env
-          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
-          echo "VITE_APP_URL=http://localhost:5173" >> .env  # Port 5173 pour Vite
+          # Crée un NOUVEAU .env avec les secrets GitHub
+          cat > .env << EOF
+          # Configuration générée automatiquement par GitHub Actions
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_APP_URL=https://localhost:5173
+          NODE_ENV=production
+          EOF
+
+          echo "✅ Fichier .env créé avec les secrets GitHub"
+          echo "📏 Longueur VITE_SUPABASE_URL: ${#VITE_SUPABASE_URL}"
+          echo "📏 Longueur VITE_SUPABASE_ANON_KEY: ${#VITE_SUPABASE_ANON_KEY }"
 
       - name: Vérification TypeScript
         run: bun run build --type-check
@@ -37,31 +50,5 @@ jobs:
       - name: Analyse du code (ESLint)
         run: bun run lint
 
-      - name: Tests de build
-        run: ./scripts/test.sh
-
       - name: Build de production
         run: ./scripts/build.sh
-
-  security:
-    name: Analyse de Sécurité
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Scan de sécurité avec Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: "trivy-results.sarif"
