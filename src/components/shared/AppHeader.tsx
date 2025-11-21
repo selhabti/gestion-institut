@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ShieldOff, LogOut, Users } from "lucide-react";
+import { Shield, ShieldOff, LogOut, Users, School } from "lucide-react";
 
 interface AppHeaderProps {
   user: any;
@@ -18,14 +18,15 @@ export const AppHeader = ({ user, shareMode, onShareModeChange, onSignOut }: App
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              <School className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gestion Institut</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Institut Manager</h1>
               <p className="text-slate-600 text-xs sm:text-sm">{user.email}</p>
             </div>
           </div>
           
+          {/* Le reste du code reste identique */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
               {shareMode ? (

@@ -1,3 +1,6 @@
+// Path: src/types/member.ts
+import type { SessionType } from "./session";
+
 export type GroupType = "Samedi" | "Dimanche" | "Lundi";
 export type AttendanceStatus = "present" | "absent_justified" | "absent_unjustified";
 
@@ -19,18 +22,18 @@ export interface Attendance {
 
 export interface Payment {
   id: string;
-  date: string;  // ⚠️ C'est bien "date" et non "payment_date"
+  date: string;
   amount: number;
 }
 
-// Pour les props des composants
+// Pour les props des composants (CHANGER GroupType en SessionType)
 export interface MemberFormProps {
   onAddMember: (firstName: string, lastName: string, city: string, group: GroupType) => Promise<void>;
 }
 
 export interface MembersTableProps {
   members: Member[];
-  selectedGroup: GroupType;
+  selectedGroup: SessionType; // ← CHANGÉ : GroupType → SessionType
   currentDate: string;
   onMarkPresent: (memberId: string, date: string, status: AttendanceStatus) => void;
   onMarkPayment: (memberId: string) => void;
@@ -41,5 +44,24 @@ export interface MembersTableProps {
 
 export interface MonthlyStatsProps {
   members: Member[];
-  selectedGroup: GroupType;
+  selectedGroup: SessionType; // ← CHANGÉ : GroupType → SessionType
+}
+
+// AJOUTEZ ces interfaces si elles n'existent pas
+export interface WeekendCalendarProps {
+  members: Member[];
+  selectedGroup: SessionType; // ← SessionType
+  onMarkPresent: (memberId: string, date: string, status: AttendanceStatus) => void;
+  isAdmin: boolean;
+  onDeleteMember?: (memberId: string) => void;
+}
+
+export interface DashboardStatsProps {
+  members: Member[];
+  selectedGroup: SessionType; // ← SessionType
+}
+
+export interface AttendanceStatsProps {
+  members: Member[];
+  selectedGroup: SessionType; // ← SessionType
 }

@@ -1,66 +1,85 @@
+// Path: src/components/shared/DateGroupSelector.tsx
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import type { GroupType } from "@/types/member";
+import { Calendar, Combine } from "lucide-react";
+import type { SessionType } from "@/types/session";
 
 interface DateGroupSelectorProps {
   selectedDate: Date;
-  selectedGroup: GroupType;
+  selectedGroup: SessionType;
   onDateChange: (direction: 'prev' | 'next') => void;
-  onGroupChange: (group: GroupType) => void;
+  onGroupChange: (group: SessionType) => void;
 }
 
 export const DateGroupSelector = ({
   selectedDate,
   selectedGroup,
-  onGroupChange
+  onDateChange,
+  onGroupChange,
 }: DateGroupSelectorProps) => {
-  const formatDateDisplay = (date: Date) => ({
-    day: date.getDate().toString(),
-    month: date.toLocaleDateString('fr-FR', { month: 'long' }),
-    weekday: date.toLocaleDateString('fr-FR', { weekday: 'long' }),
-    full: date.toLocaleDateString('fr-FR', { 
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  });
-
-  const dateDisplay = formatDateDisplay(selectedDate);
-
   return (
-    <Card className="mb-6 sm:mb-8 border-slate-200 shadow-sm">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="text-center">
-              <div className="text-xs sm:text-sm font-medium text-slate-600 uppercase tracking-wide">{dateDisplay.weekday}</div>
-              <div className="text-3xl sm:text-4xl font-bold text-blue-600">{dateDisplay.day}</div>
-              <div className="text-xs sm:text-sm font-medium text-slate-600 uppercase tracking-wide">
-                {dateDisplay.month}
-              </div>
+    <div className="space-y-4 mb-6">
+      {/* Sélecteur de session */}
+      <div className="flex flex-wrap gap-2 items-center p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-2 mr-4">
+          <Calendar className="h-4 w-4 text-blue-600" />
+          <span className="font-medium text-sm">Session :</span>
+        </div>
+        
+        <Button
+          variant={selectedGroup === "Samedi" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onGroupChange("Samedi")}
+          className={selectedGroup === "Samedi" ? "bg-blue-600 hover:bg-blue-700" : ""}
+        >
+          Samedi
+        </Button>
+        
+        <Button
+          variant={selectedGroup === "Dimanche" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onGroupChange("Dimanche")}
+          className={selectedGroup === "Dimanche" ? "bg-green-600 hover:bg-green-700" : ""}
+        >
+          Dimanche
+        </Button>
+        
+        <Button
+          variant={selectedGroup === "Samedi+Dimanche" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onGroupChange("Samedi+Dimanche")}
+          className={`flex items-center gap-1 ${selectedGroup === "Samedi+Dimanche" ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+        >
+          <Combine className="h-3 w-3" />
+          Weekend
+        </Button>
+        
+        <Button
+          variant={selectedGroup === "Lundi" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onGroupChange("Lundi")}
+          className={selectedGroup === "Lundi" ? "bg-orange-600 hover:bg-orange-700" : ""}
+        >
+          Nouraniya
+        </Button>
+      </div>
+
+      {/* Sélecteur de date - VERSION SIMPLIFIÉE sans Précédent/Suivant */}
+      <div className="flex items-center justify-center p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            <div className="font-semibold text-lg">
+              {`${selectedDate.toLocaleDateString('fr-FR', { weekday: 'long' }).charAt(0).toUpperCase()}${selectedDate.toLocaleDateString('fr-FR', { weekday: 'long' }).slice(1)} ${selectedDate.toLocaleDateString('fr-FR', { day: 'numeric' })} ${selectedDate.toLocaleDateString('fr-FR', { month: 'long' }).charAt(0).toUpperCase()}${selectedDate.toLocaleDateString('fr-FR', { month: 'long' }).slice(1)} ${selectedDate.getFullYear()}`}
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
-            {(["Samedi", "Dimanche", "Lundi"] as GroupType[]).map((group) => (
-              <Button
-                key={group}
-                variant={selectedGroup === group ? "default" : "outline"}
-                onClick={() => onGroupChange(group)}
-                className={`text-xs sm:text-sm ${
-                  selectedGroup === group 
-                    ? "bg-blue-600 hover:bg-blue-700" 
-                    : "border-slate-300"
-                }`}
-                size="sm"
-              >
-                {group === "Lundi" ? "Nouraniya" : group}
-              </Button>
-            ))}
+          <div className="text-sm text-slate-600">
+            {selectedGroup === "Samedi+Dimanche" 
+              ? "Session Weekend - Groupes réunis" 
+              : `Session ${selectedGroup}`
+            }
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

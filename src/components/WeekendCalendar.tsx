@@ -2,10 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users } from "lucide-react";
 import type { Member, AttendanceStatus } from "@/types/member";
+import type { SessionType } from "@/types/session"; // ← AJOUTEZ CET IMPORT
 
 interface WeekendCalendarProps {
   members: Member[];
-  selectedGroup: "Lundi" | "Samedi" | "Dimanche";
+  selectedGroup: SessionType; // ← CHANGEZ ICI : GroupType → SessionType
   onMarkPresent: (memberId: string, date: string, status: AttendanceStatus) => void;
   isAdmin?: boolean;
   canMarkAttendance?: boolean; 
@@ -30,7 +31,10 @@ export function WeekendCalendar({
     
     const targetDate = new Date(now);
     
-    switch (selectedGroup) {
+    // Pour "Samedi+Dimanche", on prend la date du samedi
+    const effectiveGroup = selectedGroup === "Samedi+Dimanche" ? "Samedi" : selectedGroup;
+    
+    switch (effectiveGroup) {
       case "Lundi":
         if (currentDay === 1) return now;
         const daysUntilMonday = currentDay <= 1 ? 1 - currentDay : 8 - currentDay;
@@ -64,7 +68,12 @@ export function WeekendCalendar({
   };
 
   const nextSession = getNextSessionDate();
-  const groupMembers = members.filter((m) => m.group === selectedGroup);
+  
+  // Filtrer les membres selon la session sélectionnée
+  const groupMembers = selectedGroup === "Samedi+Dimanche" 
+    ? members.filter(m => m.group === "Samedi" || m.group === "Dimanche")
+    : members.filter(m => m.group === selectedGroup);
+    
   const isToday = nextSession.toISOString().split("T")[0] === new Date().toISOString().split("T")[0];
 
   return (
@@ -82,7 +91,7 @@ export function WeekendCalendar({
             </Badge>
           )}
         </CardDescription>
-      </CardHeader> {/* ← BALISE DE FERMETURE CORRECTE */}
+      </CardHeader>
       <CardContent className="space-y-4">
         {/* Statistiques rapides sans la liste des élèves */}
         <div className="text-center py-4">
@@ -91,7 +100,7 @@ export function WeekendCalendar({
             {groupMembers.length} élève{groupMembers.length > 1 ? 's' : ''} inscrit{groupMembers.length > 1 ? 's' : ''}
           </h3>
           <p className="text-sm text-slate-600 mt-1">
-            Groupe {selectedGroup}
+            {selectedGroup === "Samedi+Dimanche" ? "Weekend (Samedi + Dimanche)" : `Groupe ${selectedGroup}`}
           </p>
           {isToday && (
             <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">

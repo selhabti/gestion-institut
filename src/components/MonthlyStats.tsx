@@ -1,3 +1,5 @@
+//Path: src/components/MonthlyStats.tsx
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MonthlyStatsProps } from '@/types/member';

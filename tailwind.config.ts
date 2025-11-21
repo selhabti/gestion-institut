@@ -38,11 +38,11 @@ export default {
           foreground: "hsl(var(--destructive-foreground))",
         },
         success: {
-          DEFAULT: "hsl(142, 76%, 36%)", // Vert pour success
+          DEFAULT: "hsl(142, 76%, 36%)",
           foreground: "hsl(0, 0%, 100%)",
         },
         warning: {
-          DEFAULT: "hsl(38, 92%, 50%)", // Orange/jaune pour warning
+          DEFAULT: "hsl(38, 92%, 50%)",
           foreground: "hsl(0, 0%, 100%)",
         },
         muted: {
@@ -81,7 +81,15 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
-    },
+
+      // AJOUT GEIST VARIABLE – LES POLICES QUE TU VEUX
+      fontFamily: {
+        geist: ['"Geist Variable"', "ui-sans-serif", "system-ui", "sans-serif"],
+        "geist-thin": ['"Geist Variable"', { fontVariationSettings: '"wght" 100' }],
+        "geist-light": ['"Geist Variable"', { fontVariationSettings: '"wght" 300' }],
+        "geist-medium": ['"Geist Variable"', { fontVariationSettings: '"wght" 500' }],
+        "geist-semibold": ['"Geist Variable"', { fontVariationSettings: '"wght" 600' }],
+      },    },
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
