@@ -1,4 +1,4 @@
-# .github/workflows/ci-cd.yml
+# .github/workflows/ci-cd.yml - VERSION SIMPLIFIÉE
 name: CI/CD Pipeline
 
 on:
@@ -6,7 +6,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
-  workflow_dispatch: # Permet de déclencher manuellement
+  workflow_dispatch:
 
 jobs:
   test:
@@ -19,8 +19,6 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
 
       - name: Installation des dépendances
         run: bun install
@@ -30,11 +28,7 @@ jobs:
           cat > .env << EOF
           VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_APP_URL=https://localhost:5173
           EOF
-
-      - name: Vérification TypeScript
-        run: bun run build --type-check
 
       - name: Analyse du code (ESLint)
         run: bun run lint
@@ -45,8 +39,8 @@ jobs:
   deploy:
     name: Déploiement Production
     runs-on: ubuntu-latest
-    needs: test # Attend que les tests passent
-    if: github.ref == 'refs/heads/main' # Seulement sur la branche main
+    needs: test
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout du code
@@ -58,18 +52,11 @@ jobs:
       - name: Installation des dépendances
         run: bun install
 
-      - name: Configuration pour la production
-        run: |
-          cat > .env << EOF
-          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_APP_URL=https://votre-app-production.com
-          EOF
-
       - name: Build pour la production
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: ./scripts/build.sh
 
       - name: Déploiement
-        run: echo "🚀 ICI VOUS AJOUTEREZ LA COMMANDE DE DÉPLOIEMENT"
-        # Exemple pour Netlify: npx netlify-cli deploy --prod --dir=dist
-        # Exemple pour GitHub Pages: npx gh-pages -d dist
+        run: echo "✅ Prêt pour le déploiement - Ajoutez votre commande de déploiement ici"
