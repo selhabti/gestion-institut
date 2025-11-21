@@ -21,34 +21,37 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Nettoyage de l'environnement
+      - name: Debug des secrets
         run: |
-          # Supprime tout fichier .env existant qui aurait pu être commité
-          rm -f .env .env.*.local
+          echo "=== SECRETS DEBUG ==="
+          echo "URL exists: ${{ secrets.VITE_SUPABASE_URL != '' }}"
+          echo "KEY exists: ${{ secrets.VITE_SUPABASE_ANON_KEY != '' }}"
+          echo "URL preview: ${{ secrets.VITE_SUPABASE_URL }}"
+          echo "KEY preview: ${{ secrets.VITE_SUPABASE_ANON_KEY }}"
 
       - name: Installation des dépendances
         run: bun install
 
       - name: Configuration de l'environnement
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          # Crée un NOUVEAU .env avec les secrets GitHub
+          # NOUVELLE MÉTHODE - utilise les variables env
           cat > .env << EOF
-          # Configuration générée automatiquement par GitHub Actions
-          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL=${SUPABASE_URL}
+          VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}
           VITE_APP_URL=https://localhost:5173
-          NODE_ENV=production
           EOF
 
-          echo "✅ Fichier .env créé avec les secrets GitHub"
-          echo "📏 Longueur VITE_SUPABASE_URL: ${#VITE_SUPABASE_URL}"
-          echo "📏 Longueur VITE_SUPABASE_ANON_KEY: ${#VITE_SUPABASE_ANON_KEY }"
+          echo "=== .env CREATED ==="
+          cat .env
+
+      - name: Build de production
+        run: ./scripts/build.sh
 
       - name: Vérification TypeScript
         run: bun run build --type-check
 
       - name: Analyse du code (ESLint)
         run: bun run lint
-
-      - name: Build de production
-        run: ./scripts/build.sh
