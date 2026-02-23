@@ -1,15 +1,128 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/coran.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Institut Manager - Gestion Scolaire</title>
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    
+    <!-- FAVICONS -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/coran.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/coran.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/coran.png" />
+    
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Institut Manager" />
+
+    <title>Institut Manager</title>
+    
+    <!-- POLICE GEIST -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet" />
+
+    <style>
+      body {
+        margin: 0;
+        background: linear-gradient(135deg);
+        min-height: 100vh;
+      }
+      #root { min-height: 100vh; }
+
+      .loading-screen {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.9s ease-out;
+      }
+      .loading-logo {
+        width: 140px;
+        height: 140px;
+        filter: drop-shadow(0 15px 40px rgba(0,0,0,0.4));
+        animation: float 4s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-25px); }
+      }
+      .loaded .loading-screen { opacity: 0; pointer-events: none; }
+
+      /* Bouton d'installation PWA */
+      .install-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #2563eb;
+        color: white;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        font-family: inherit;
+        font-size: 14px;
+        display: none;
+      }
+    </style>
   </head>
+
   <body>
+    <!-- CHARGEMENT -->
+    <div id="loading-screen" class="loading-screen">
+      <img src="/coran.png" alt="Logo" class="loading-logo" />
+    </div>
+
+    <!-- Bouton d'installation PWA -->
+    <button id="install-button" class="install-button" title="Installer l'application">
+      📱 Installer l'App
+    </button>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      // Gestion de l'installation PWA
+      let deferredPrompt;
+      const installButton = document.getElementById('install-button');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installButton.style.display = 'block';
+        
+        installButton.addEventListener('click', async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('Résultat installation:', outcome);
+            installButton.style.display = 'none';
+            deferredPrompt = null;
+          }
+        });
+      });
+
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA installée!');
+        installButton.style.display = 'none';
+      });
+
+      // Chargement
+      window.addEventListener('load', () => {
+        document.body.classList.add('loaded');
+        setTimeout(() => {
+          const loader = document.getElementById('loading-screen');
+          if (loader) loader.remove();
+        }, 900);
+      });
+    </script>
   </body>
 </html>

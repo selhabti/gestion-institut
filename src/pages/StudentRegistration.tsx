@@ -1,31 +1,54 @@
+//path: src/pages/StudentRegistration.tsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { GroupType } from "@/types/member";
 import { z } from "zod";
 
 const studentSchema = z.object({
-  firstName: z.string()
+  firstName: z
+    .string()
     .trim()
     .min(1, { message: "Le prénom est requis" })
     .max(100, { message: "Le prénom est trop long (max 100 caractères)" })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, { message: "Le prénom contient des caractères invalides" }),
-  lastName: z.string()
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
+      message: "Le prénom contient des caractères invalides",
+    }),
+  lastName: z
+    .string()
     .trim()
     .min(1, { message: "Le nom est requis" })
     .max(100, { message: "Le nom est trop long (max 100 caractères)" })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, { message: "Le nom contient des caractères invalides" }),
-  city: z.string()
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
+      message: "Le nom contient des caractères invalides",
+    }),
+  city: z
+    .string()
     .trim()
     .min(1, { message: "La ville est requise" })
     .max(100, { message: "La ville est trop longue (max 100 caractères)" })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, { message: "La ville contient des caractères invalides" })
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
+      message: "La ville contient des caractères invalides",
+    }),
 });
 
 export default function StudentRegistration() {
@@ -38,9 +61,9 @@ export default function StudentRegistration() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const result = studentSchema.safeParse({ firstName, lastName, city });
-    
+
     if (!result.success) {
       toast.error(result.error.errors[0].message);
       return;
@@ -49,22 +72,22 @@ export default function StudentRegistration() {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         toast.error("Vous devez être connecté");
         return;
       }
 
-      const { error } = await supabase
-        .from("members")
-        .insert({
-          first_name: result.data.firstName,
-          last_name: result.data.lastName,
-          city: result.data.city,
-          group_type: group,
-          created_by: user.id,
-        });
+      const { error } = await supabase.from("members").insert({
+        first_name: result.data.firstName,
+        last_name: result.data.lastName,
+        city: result.data.city,
+        group_type: group,
+        created_by: user.id,
+      });
 
       if (error) throw error;
 
@@ -101,7 +124,7 @@ export default function StudentRegistration() {
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="lastName">Nom</Label>
               <Input
@@ -126,7 +149,10 @@ export default function StudentRegistration() {
 
             <div className="space-y-2">
               <Label htmlFor="group">Groupe</Label>
-              <Select value={group} onValueChange={(value) => setGroup(value as GroupType)}>
+              <Select
+                value={group}
+                onValueChange={(value) => setGroup(value as GroupType)}
+              >
                 <SelectTrigger id="group">
                   <SelectValue />
                 </SelectTrigger>

@@ -1,61 +1,139 @@
+import { LogOut, Shield, ShieldOff, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Shield, ShieldOff, LogOut, Users, School } from "lucide-react";
+import { motion } from "framer-motion";
 
-interface AppHeaderProps {
+type AppHeaderProps = {
   user: any;
   shareMode: boolean;
   onShareModeChange: (checked: boolean) => void;
   onSignOut: () => void;
-}
+  extraAction?: React.ReactNode; // ← Ajoutez cette ligne
+};
 
-export const AppHeader = ({ user, shareMode, onShareModeChange, onSignOut }: AppHeaderProps) => {
+export const AppHeader = ({
+  user,
+  shareMode,
+  onShareModeChange,
+  onSignOut,
+  extraAction, // ← Ajoutez cette ligne
+}: AppHeaderProps) => {
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl">
-              <School className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="sticky top-0 z-50 
+             backdrop-blur-xl 
+             bg-gradient-to-r from-indigo-600/90 via-purple-600/90 to-indigo-700/90 
+             border-b border-white/10 
+             shadow-2xl
+             rounded-b-3xl               /* ← coins arrondis en bas */
+             overflow-hidden
+             border       /* ← contour noir ultra-fin tout autour */"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between gap-6">
+          {/* GAUCHE — Logo petit + Titre */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl scale-150 -z-10" />
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl border border-white/30">
+                <img
+                  src="/coran.png"
+                  alt="Logo"
+                  className="h-10 w-10 rounded-lg shadow-lg"
+                />
+              </div>
+            </motion.div>
+
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Institut Manager</h1>
-              <p className="text-slate-600 text-xs sm:text-sm">{user.email}</p>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-transparent">
+                  Institut Manager
+                </span>
+              </h1>
+              <p className="text-white/70 text-sm font-medium">{user?.email}</p>
             </div>
           </div>
-          
-          {/* Le reste du code reste identique */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
+
+          {/* CENTRE — TON LOGO BANNER (2286×492) */}
+          <div className="hidden md:block flex-1 max-w-4xl mx-8">
+            <div className="relative">
+              {/* Ombre douce + glow */}
+              <div className="absolute inset-0 bg-white/20 rounded-3xl blur-3xl scale-105 -z-10" />
+
+              <img
+                src="/Institut_logo.webp"
+                alt="Institut Al-Qur'an"
+                className="w-full h-auto rounded-2xl shadow-2xl border-4 border-black/30"
+                style={{
+                  objectFit: "contain",
+                  objectPosition: "center",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* DROITE — Extra Action + Switch + Déconnexion */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {/* Action supplémentaire */}
+            {extraAction && (
+              <div className="hidden sm:block">{extraAction}</div>
+            )}
+
+            <div className="flex items-center gap-3 px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
               {shareMode ? (
-                <ShieldOff className="h-4 w-4 text-orange-500" />
+                <ShieldOff className="h-5 w-5 text-orange-300" />
               ) : (
-                <Shield className="h-4 w-4 text-green-500" />
+                <Shield className="h-5 w-5 text-emerald-300" />
               )}
               <Switch
                 id="share-mode"
                 checked={shareMode}
-                onCheckedChange={onShareModeChange}
+                onCheckedChange={(newValue) => {
+                  console.log(
+                    "🟡 Tentative de changement shareMode:",
+                    newValue
+                  ); // AJOUTER CECI
+                  onShareModeChange(newValue);
+                }}
+                className="data-[state=checked]:bg-emerald-400"
               />
-              <Label htmlFor="share-mode" className="text-sm text-slate-700 cursor-pointer whitespace-nowrap">
-                {shareMode ? "Partage activé" : "Partage désactivé"}
+              <Label
+                htmlFor="share-mode"
+                className="text-white/90 font-medium text-sm cursor-pointer select-none"
+              >
+                {shareMode ? "Partagé" : "Privé"}
               </Label>
             </div>
-            
-            <Button 
+
+            <Button
               onClick={onSignOut}
-              variant="outline" 
+              variant="ghost"
               size="sm"
-              className="border-slate-300 text-xs sm:text-sm"
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-white rounded-xl"
             >
-              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Déconnexion
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Déconnexion</span>
             </Button>
           </div>
         </div>
+
+        {/* Version mobile : logo banner en dessous */}
+        <div className="md:hidden mt-6 px-8">
+          <img
+            src="/salem_logo.webp"
+            alt="Salem"
+            className="w-full h-auto rounded-2xl shadow-2xl border-4 border-white/20"
+          />
+        </div>
       </div>
-    </header>
+    </motion.header>
   );
 };

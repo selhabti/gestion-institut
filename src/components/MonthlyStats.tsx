@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { MonthlyStatsProps } from '@/types/member';
 
 const MonthlyStats: React.FC<MonthlyStatsProps> = ({ members, selectedGroup }) => {
-  const groupMembers = members.filter(member => member.group === selectedGroup);
+  const groupMembers = members.filter(member => member.group === selectedGroup || 
+    (member.secondaryGroups && member.secondaryGroups.includes(selectedGroup)));
   
   const currentMonth = new Date().toISOString().slice(0, 7);
   
@@ -32,6 +33,8 @@ const MonthlyStats: React.FC<MonthlyStatsProps> = ({ members, selectedGroup }) =
   }).length;
   
   const attendanceRate = totalMembers > 0 ? Math.round((presentThisMonth / totalMembers) * 100) : 0;
+
+ 
 
   return (
     <Card>

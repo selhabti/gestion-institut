@@ -1,14 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, PieChart } from "lucide-react";
 import type { Member } from "@/types/member";
+import { SessionType } from "@/types/session";
 
 interface AnalyticsChartsProps {
   members: Member[];
-  selectedGroup: string;
+  selectedGroup: SessionType;
 }
 
 export const AnalyticsCharts = ({ members, selectedGroup }: AnalyticsChartsProps) => {
-  const filteredMembers = members.filter(m => m.group === selectedGroup);
+  const filteredMembers = members.filter(m => m.group === selectedGroup || (m.secondaryGroups && m.secondaryGroups.includes(selectedGroup))
+  );
   
   // Données pour la répartition des présences
   const attendanceData = {
