@@ -16,9 +16,7 @@ import {
   Users,
   Tag,
   Star,
-  RefreshCw,
   Calendar,
-  AlertTriangle,
 } from "lucide-react";
 import type { Member, AttendanceStatus } from "@/types/member";
 import type { SessionType } from "@/types/session";
@@ -54,14 +52,6 @@ interface MembersTableProps {
   className?: string;
   historicalEditMode?: boolean;
   onHistoricalEditToggle?: (enabled: boolean) => void;
-  onTransferAttendance?: (
-    memberId: string,
-    fromDate: string,
-    toDate: string,
-    fromGroup: SessionType,
-    toGroup: SessionType
-  ) => void;
-  onAutoTransferAbsent?: () => void;
 }
 
 export function MembersTable({
@@ -78,8 +68,6 @@ export function MembersTable({
   className = "",
   historicalEditMode = false,
   onHistoricalEditToggle,
-  onTransferAttendance,
-  onAutoTransferAbsent,
 }: MembersTableProps) {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [showGroupSelector, setShowGroupSelector] = useState<string | null>(null);
@@ -155,464 +143,88 @@ export function MembersTable({
   };
 
   // ==================================================
-  // FONCTIONS POUR LE SUIVI INTER-SÉANCES
+  // FONCTIONS SIMPLIFIÉES SANS TRANSFERT
   // ==================================================
 
   const isWeekendGroup = (group: SessionType): boolean => {
     return group === "Samedi" || group === "Dimanche";
   };
 
-  const getOtherWeekendGroup = (group: SessionType): SessionType => {
-    return group === "Samedi" ? "Dimanche" : "Samedi";
-  };
-
-  const canTransferBetweenWeekend = (member: Member, fromGroup: SessionType, toGroup: SessionType): boolean => {
-    if (!isWeekendGroup(fromGroup) || !isWeekendGroup(toGroup)) return false;
-    
-    const memberGroups = getMemberAllGroups(member);
-    return memberGroups.includes("Samedi") || 
-           memberGroups.includes("Dimanche") || 
-           memberGroups.includes("Samedi+Dimanche");
-  };
-
-  // ==================================================
-  // NOUVELLES FONCTIONS POUR LES TRANSFERTS +/-
-  // ==================================================
-
-  const handleRemoveFromSaturday = (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    if (!member || selectedGroup !== "Samedi") return;
-
-    const today = currentDate;
-
-    // Vérifier si l'élève peut aller en dimanche
-    if (!canTransferBetweenWeekend(member, "Samedi", "Dimanche")) {
-      alert(`${capitalize(member.firstName)} ne peut pas être transféré en Dimanche (pas inscrit dans ce groupe).`);
-      return;
-    }
-
-    // Vérifier s'il est déjà présent en samedi
-    const saturdayAttendance = member.attendances.find(
-      a => a.date === today && a.session_type === "Samedi" && a.status === "present"
-    );
-
-    if (!saturdayAttendance) {
-      alert(`${capitalize(member.firstName)} n'est pas présent en Samedi aujourd'hui.`);
-      return;
-    }
-
-    const confirmMsg = window.confirm(
-      `Retirer ${capitalize(member.firstName)} de la séance Samedi et l'ajouter automatiquement en Dimanche ?\n\n` +
-      `• Samedi : deviendra absent non justifié\n` +
-      `• Dimanche : deviendra présent\n\n` +
-      `Cette action est irréversible.`
-    );
-
-    if (!confirmMsg) return;
-
-    // 1. Marquer absent non justifié le samedi
-    onMarkPresent(memberId, today, "absent_unjustified", "Samedi");
-
-    // 2. Marquer présent le dimanche
-    onMarkPresent(memberId, today, "present", "Dimanche");
-
-    // 3. Notifier le transfert
-    if (onTransferAttendance) {
-      onTransferAttendance(memberId, today, today, "Samedi", "Dimanche");
-    }
-  };
-
-  const handleAddToSaturday = (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    if (!member || selectedGroup !== "Samedi") return;
-
-    const today = currentDate;
-
-    // Vérifier si l'élève peut aller en samedi
-    if (!canTransferBetweenWeekend(member, "Dimanche", "Samedi")) {
-      alert(`${capitalize(member.firstName)} ne peut pas être ajouté en Samedi (pas inscrit dans ce groupe).`);
-      return;
-    }
-
-    // Vérifier s'il est déjà présent en dimanche
-    const sundayAttendance = member.attendances.find(
-      a => a.date === today && a.session_type === "Dimanche" && a.status === "present"
-    );
-
-    if (!sundayAttendance) {
-      alert(`${capitalize(member.firstName)} n'est pas présent en Dimanche aujourd'hui.`);
-      return;
-    }
-
-    const confirmMsg = window.confirm(
-      `Ajouter ${capitalize(member.firstName)} à la séance Samedi et le retirer automatiquement du Dimanche ?\n\n` +
-      `• Dimanche : deviendra absent non justifié\n` +
-      `• Samedi : deviendra présent\n\n` +
-      `Cette action est irréversible.`
-    );
-
-    if (!confirmMsg) return;
-
-    // 1. Marquer absent non justifié le dimanche
-    onMarkPresent(memberId, today, "absent_unjustified", "Dimanche");
-
-    // 2. Marquer présent le samedi
-    onMarkPresent(memberId, today, "present", "Samedi");
-
-    // 3. Notifier le transfert
-    if (onTransferAttendance) {
-      onTransferAttendance(memberId, today, today, "Dimanche", "Samedi");
-    }
-  };
-
-  const handleMarkPresentWithTransfer = (
+  const handleMarkPresent = (
     memberId: string,
     date: string,
     status: AttendanceStatus,
     group?: SessionType
   ) => {
+    onMarkPresent(memberId, date, status, group || selectedGroup);
+  };
+
+  // Ajouter au samedi SANS toucher au dimanche
+  const handleAddToSaturdayOnly = (memberId: string) => {
     const member = members.find(m => m.id === memberId);
-    if (!member) return;
-    
-    const targetGroup = group || selectedGroup;
-    
-    // Si on marque présent dans un groupe weekend
-    if (isWeekendGroup(targetGroup) && status === "present") {
-      const otherGroup = getOtherWeekendGroup(targetGroup);
-      
-      // Vérifier si l'élève est déjà marqué présent dans l'autre groupe ce jour
-      const existingAttendance = member.attendances.find(
-        a => a.date === date && a.session_type === otherGroup && a.status === "present"
-      );
-      
-      if (existingAttendance && canTransferBetweenWeekend(member, otherGroup, targetGroup)) {
-        // Demander confirmation pour le transfert
-        if (window.confirm(
-          `${capitalize(member.firstName)} est déjà marqué présent ${otherGroup}.\n` +
-          `Voulez-vous le transférer vers ${targetGroup} ?\n\n` +
-          `(L'ancienne présence ${otherGroup} sera marquée absente non justifiée)`
-        )) {
-          // D'abord marquer absent dans l'autre groupe
-          onMarkPresent(memberId, date, "absent_unjustified", otherGroup);
-          // Puis marquer présent dans le groupe cible
-          onMarkPresent(memberId, date, status, targetGroup);
-          
-          // Appeler le callback de transfert si disponible
-          if (onTransferAttendance) {
-            onTransferAttendance(memberId, date, date, otherGroup, targetGroup);
-          }
-          return;
-        } else {
-          return; // Annuler si l'utilisateur refuse
-        }
-      }
-    }
-    
-    // Comportement normal
-    onMarkPresent(memberId, date, status, targetGroup);
+    if (!member || selectedGroup !== "Samedi") return;
+
+    // Marquer présent en samedi
+    onMarkPresent(memberId, currentDate, "present", "Samedi");
   };
 
-  const handleMarkAbsentWithTransfer = (
-    memberId: string,
-    date: string,
-    status: "absent_justified" | "absent_unjustified",
-    group?: SessionType
-  ) => {
+  // Retirer du samedi SANS toucher au dimanche
+  const handleRemoveFromSaturdayOnly = (memberId: string) => {
     const member = members.find(m => m.id === memberId);
-    if (!member) return;
-    
-    const targetGroup = group || selectedGroup;
-    
-    // Marquer l'absence
-    onMarkPresent(memberId, date, status, targetGroup);
-    
-    // Si c'est un groupe weekend, aujourd'hui, et absence justifiée
-    if (isWeekendGroup(targetGroup) && isToday() && status === "absent_justified") {
-      const otherGroup = getOtherWeekendGroup(targetGroup);
-      
-      // Vérifier si l'élève peut automatiquement rattraper
-      if (canTransferBetweenWeekend(member, targetGroup, otherGroup)) {
-        // Demander si on veut transférer vers l'autre groupe
-        setTimeout(() => {
-          if (window.confirm(
-            `${capitalize(member.firstName)} est absent ${targetGroup} (justifié).\n` +
-            `Voulez-vous l'ajouter automatiquement à la séance de ${otherGroup} pour rattrapage ?`
-          )) {
-            onMarkPresent(memberId, date, "present", otherGroup);
-            if (onTransferAttendance) {
-              onTransferAttendance(memberId, date, date, targetGroup, otherGroup);
-            }
-          }
-        }, 500);
-      }
-    }
+    if (!member || selectedGroup !== "Samedi") return;
+
+    // Marquer absent non justifié en samedi
+    onMarkPresent(memberId, currentDate, "absent_unjustified", "Samedi");
   };
 
-  const handleAutoTransferAllAbsent = () => {
-    if (!onAutoTransferAbsent || !onTransferAttendance) return;
+  // ==================================================
+  // COMPOSANT STATISTIQUES (optionnel, peut être supprimé)
+  // ==================================================
+
+  const WeekdayStats = () => {
+    if (!isWeekendGroup(selectedGroup)) return null;
+
+    const otherGroup = selectedGroup === "Samedi" ? "Dimanche" : "Samedi";
     
-    const today = new Date().toISOString().split('T')[0];
-    const otherGroup = getOtherWeekendGroup(selectedGroup);
+    const stats = {
+      presentInSelected: 0,
+      presentInOther: 0,
+      bothPresent: 0,
+    };
     
-    // Filtrer les élèves absents aujourd'hui qui peuvent rattraper
-    const absentMembers = members.filter(member => {
-      const todayAttendance = member.attendances.find(a => a.date === today && a.session_type === selectedGroup);
-      const otherAttendance = member.attendances.find(a => a.date === today && a.session_type === otherGroup);
+    members.forEach(member => {
+      const selectedAttendance = member.attendances.find(a => a.date === currentDate && a.session_type === selectedGroup);
+      const otherAttendance = member.attendances.find(a => a.date === currentDate && a.session_type === otherGroup);
       
-      return (
-        isToday() &&
-        isWeekendGroup(selectedGroup) &&
-        (todayAttendance?.status === "absent_unjustified" || todayAttendance?.status === "absent_justified") &&
-        !otherAttendance && // Pas déjà présent dans l'autre groupe
-        canTransferBetweenWeekend(member, selectedGroup, otherGroup)
-      );
+      if (selectedAttendance?.status === "present") stats.presentInSelected++;
+      if (otherAttendance?.status === "present") stats.presentInOther++;
+      if (selectedAttendance?.status === "present" && otherAttendance?.status === "present") stats.bothPresent++;
     });
-    
-    if (absentMembers.length === 0) {
-      alert(`Aucun élève absent ${selectedGroup} ne peut être transféré vers ${otherGroup} aujourd'hui.`);
-      return;
-    }
-    
-    const confirmMsg = window.confirm(
-      `Voulez-vous transférer automatiquement ${absentMembers.length} élève(s) absents ${selectedGroup} vers ${otherGroup} ?\n\n` +
-      "Cette action est irréversible.\n" +
-      "Les élèves seront marqués présents dans l'autre groupe."
-    );
-    
-    if (!confirmMsg) return;
-    
-    // Appliquer les transferts
-    absentMembers.forEach(member => {
-      onMarkPresent(member.id, today, "present", otherGroup);
-      if (onTransferAttendance) {
-        onTransferAttendance(member.id, today, today, selectedGroup, otherGroup);
-      }
-    });
-    
-    onAutoTransferAbsent();
-  };
-
-  // ==================================================
-  // COMPOSANT INTER-SESSION MANAGER (EXISTANT)
-  // ==================================================
-
-  const InterSessionManager = () => {
-    const otherGroup = getOtherWeekendGroup(selectedGroup);
-    
-    if (!isWeekendGroup(selectedGroup)) {
-      return null;
-    }
-    
-    // Calcul des statistiques
-    const getTransferStats = () => {
-      const stats = {
-        absentToday: 0,
-        presentInOther: 0,
-        transferOpportunities: 0,
-      };
-      
-      members.forEach(member => {
-        const todayAttendance = member.attendances.find(a => a.date === currentDate && a.session_type === selectedGroup);
-        const otherAttendance = member.attendances.find(a => a.date === currentDate && a.session_type === otherGroup);
-        
-        if (todayAttendance?.status === "absent_unjustified" || todayAttendance?.status === "absent_justified") {
-          stats.absentToday++;
-          
-          // Vérifie si l'élève peut rattraper dans l'autre groupe
-          if (!otherAttendance && canTransferBetweenWeekend(member, selectedGroup, otherGroup)) {
-            stats.transferOpportunities++;
-          }
-        }
-        
-        if (otherAttendance?.status === "present") {
-          stats.presentInOther++;
-        }
-      });
-      
-      return stats;
-    };
-    
-    const stats = getTransferStats();
-    
-    return (
-      <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
-            <h3 className="text-sm font-semibold text-blue-800">
-              Gestion inter-séances Samedi ↔ Dimanche
-            </h3>
-          </div>
-          
-          <Badge variant="outline" className="bg-white text-blue-700">
-            <Calendar className="h-3 w-3 mr-1" />
-            Transfert automatique
-          </Badge>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-blue-100">
-            <div className="text-xs text-blue-600 mb-1">Absents {selectedGroup}</div>
-            <div className="text-2xl font-bold text-blue-800">{stats.absentToday}</div>
-            <div className="text-xs text-blue-500 mt-1">élève(s) aujourd'hui</div>
-          </div>
-          
-          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-indigo-100">
-            <div className="text-xs text-indigo-600 mb-1">Présents {otherGroup}</div>
-            <div className="text-2xl font-bold text-indigo-800">{stats.presentInOther}</div>
-            <div className="text-xs text-indigo-500 mt-1">élève(s) en rattrapage</div>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="text-xs text-slate-700">
-            <span className="font-semibold">Règles :</span>
-            <ul className="list-disc pl-4 mt-1 space-y-1">
-              <li>Un élève absent {selectedGroup} peut rattraper {otherGroup}</li>
-              <li>Un élève ne peut pas être présent dans les deux séances</li>
-              <li>Le transfert est automatique lors du marquage</li>
-              {isToday() && (
-                <li className="text-amber-600 font-semibold">
-                  Transfert automatique disponible aujourd'hui
-                </li>
-              )}
-            </ul>
-          </div>
-          
-          {isAdmin && isToday() && stats.transferOpportunities > 0 && (
-            <div className="pt-3 border-t border-blue-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-medium text-slate-700">
-                    {stats.transferOpportunities} élève(s) peuvent rattraper aujourd'hui
-                  </span>
-                </div>
-                
-                <Button
-                  size="sm"
-                  onClick={handleAutoTransferAllAbsent}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                >
-                  <RefreshCw className="h-3.5 w-3.5 mr-2" />
-                  Transférer automatiquement
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ==================================================
-  // NOUVEAU COMPOSANT SYSTÈME DE TRANSFERT DIMANCHE → SAMEDI
-  // ==================================================
-
-  const SaturdayTransferSystem = () => {
-    if (selectedGroup !== "Samedi" || !isToday()) return null;
-
-    const getSundayPresentMembers = () => {
-      return members.filter(member => {
-        const sundayAttendance = member.attendances.find(
-          a => a.date === currentDate && a.session_type === "Dimanche" && a.status === "present"
-        );
-        const saturdayAttendance = member.attendances.find(
-          a => a.date === currentDate && a.session_type === "Samedi"
-        );
-
-        return (
-          sundayAttendance && 
-          !saturdayAttendance && 
-          canTransferBetweenWeekend(member, "Dimanche", "Samedi")
-        );
-      });
-    };
-
-    const sundayPresentMembers = getSundayPresentMembers();
-
-    const handleBatchAddToSaturday = () => {
-      if (sundayPresentMembers.length === 0) {
-        alert("Aucun élève présent en Dimanche à transférer.");
-        return;
-      }
-
-      const confirmMsg = window.confirm(
-        `Ajouter ${sundayPresentMembers.length} élève(s) à la séance Samedi ?\n\n` +
-        `Ces élèves seront retirés de la séance Dimanche et ajoutés en Samedi.\n` +
-        `Cette action est irréversible.`
-      );
-
-      if (!confirmMsg) return;
-
-      sundayPresentMembers.forEach(member => {
-        // Retirer du dimanche
-        onMarkPresent(member.id, currentDate, "absent_unjustified", "Dimanche");
-        // Ajouter au samedi
-        onMarkPresent(member.id, currentDate, "present", "Samedi");
-
-        if (onTransferAttendance) {
-          onTransferAttendance(member.id, currentDate, currentDate, "Dimanche", "Samedi");
-        }
-      });
-
-      alert(`${sundayPresentMembers.length} élève(s) transféré(s) avec succès !`);
-    };
-
-    if (sundayPresentMembers.length === 0) return null;
 
     return (
-      <div className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></div>
-            <h3 className="text-sm font-semibold text-amber-800">
-              Transfert Dimanche → Samedi
-            </h3>
+      <div className="mt-4 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+          <h3 className="text-sm font-semibold text-slate-700">
+            Statistiques du jour
+          </h3>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-3 border border-slate-100">
+            <div className="text-xs text-blue-600 mb-1">Présents {selectedGroup}</div>
+            <div className="text-2xl font-bold text-blue-800">{stats.presentInSelected}</div>
           </div>
           
-          <Badge variant="outline" className="bg-white text-amber-700">
-            <RefreshCw className="h-3 w-3 mr-1" />
-            {sundayPresentMembers.length} élève(s) disponible(s)
-          </Badge>
-        </div>
-
-        <p className="text-xs text-slate-600 mb-3">
-          Ces élèves sont actuellement présents en Dimanche. En les transférant vers Samedi, 
-          ils seront automatiquement retirés du Dimanche (absents non justifiés).
-        </p>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-          {sundayPresentMembers.map(member => (
-            <div key={member.id} className="flex items-center justify-between gap-2 bg-white/70 backdrop-blur-sm rounded-lg p-2 border border-amber-100">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-sm font-medium">
-                  {capitalize(member.firstName)} {capitalize(member.lastName)}
-                </span>
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleAddToSaturday(member.id)}
-                className="h-6 w-6 p-0 text-amber-600 hover:bg-amber-50 font-bold text-lg"
-                title="Transférer vers Samedi"
-              >
-                +
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            onClick={handleBatchAddToSaturday}
-            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
-          >
-            <span className="mr-2">+</span>
-            Transférer tout vers Samedi
-          </Button>
+          <div className="bg-white rounded-lg p-3 border border-slate-100">
+            <div className="text-xs text-green-600 mb-1">Présents {otherGroup}</div>
+            <div className="text-2xl font-bold text-green-800">{stats.presentInOther}</div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-3 border border-slate-100">
+            <div className="text-xs text-purple-600 mb-1">Présents les 2 jours</div>
+            <div className="text-2xl font-bold text-purple-800">{stats.bothPresent}</div>
+          </div>
         </div>
       </div>
     );
@@ -637,11 +249,6 @@ export function MembersTable({
       return true;
     }
     
-    if (memberGroups.includes("Lundi") && 
-        (targetGroup === "Samedi" || targetGroup === "Dimanche" || targetGroup === "Samedi+Dimanche")) {
-      return false;
-    }
-    
     return false;
   };
 
@@ -660,8 +267,6 @@ export function MembersTable({
     const attendance = getAttendanceForDate(member, date);
     
     if (!attendance) {
-      const isInGroup = isMemberInGroup(member, selectedGroup);
-      
       return {
         status: "not_in_group",
         isSecondaryGroup: member.group !== selectedGroup,
@@ -1301,7 +906,7 @@ export function MembersTable({
                 {members.filter(m => hasMultipleGroups(m)).length} élève(s) avec plusieurs groupes
               </span>
               <span className="text-xs text-indigo-700">
-                • ★ = Groupe principal • Cliquez sur "Avancé" pour plus d'options
+                • ★ = Groupe principal
               </span>
             </div>
           </div>
@@ -1345,11 +950,6 @@ export function MembersTable({
                 const hasPaid = hasPaidThisMonth(member);
                 const multiGroup = hasMultipleGroups(member);
                 const secondaryGroups = getSecondaryGroups(member);
-
-                // Vérification pour les boutons +/-
-                const isPresentInSunday = member.attendances.find(
-                  a => a.date === currentDate && a.session_type === "Dimanche" && a.status === "present"
-                );
 
                 return (
                   <tr
@@ -1430,7 +1030,7 @@ export function MembersTable({
                         <AttendanceButton
                           status="present"
                           isActive={isPresent}
-                          onClick={(group?: SessionType) => handleMarkPresentWithTransfer(member.id, currentDate, "present", group || selectedGroup)}
+                          onClick={(group?: SessionType) => handleMarkPresent(member.id, currentDate, "present", group || selectedGroup)}
                           icon={Check}
                           tooltip="Présent"
                           member={member}
@@ -1438,7 +1038,7 @@ export function MembersTable({
                         <AttendanceButton
                           status="absent_justified"
                           isActive={isAbsentJustified}
-                          onClick={(group?: SessionType) => handleMarkAbsentWithTransfer(member.id, currentDate, "absent_justified", group || selectedGroup)}
+                          onClick={(group?: SessionType) => handleMarkPresent(member.id, currentDate, "absent_justified", group || selectedGroup)}
                           icon={FileQuestion}
                           tooltip="Absent justifié"
                           member={member}
@@ -1446,43 +1046,38 @@ export function MembersTable({
                         <AttendanceButton
                           status="absent_unjustified"
                           isActive={isAbsentUnjustified}
-                          onClick={(group?: SessionType) => handleMarkAbsentWithTransfer(member.id, currentDate, "absent_unjustified", group || selectedGroup)}
+                          onClick={(group?: SessionType) => handleMarkPresent(member.id, currentDate, "absent_unjustified", group || selectedGroup)}
                           icon={X}
                           tooltip="Absent non justifié"
                           member={member}
                         />
 
-                        {/* BOUTONS + ET - POUR SAMEDI */}
+                        {/* BOUTON + POUR SAMEDI (ajouter au samedi sans retirer du dimanche) */}
                         {selectedGroup === "Samedi" && shouldEnableButtons() && (
-                          <>
-                            {/* Bouton - : Retirer du samedi (si présent en samedi) */}
-                            {isPresent && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleRemoveFromSaturday(member.id)}
-                                className="h-9 w-9 p-0 text-amber-600 hover:bg-amber-50 border-amber-200 font-bold text-lg"
-                                disabled={shareMode}
-                                title="Retirer de la séance Samedi → Ajouter automatiquement en Dimanche"
-                              >
-                                −
-                              </Button>
-                            )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAddToSaturdayOnly(member.id)}
+                            className="h-9 w-9 p-0 text-emerald-600 hover:bg-emerald-50 border-emerald-200 font-bold text-lg"
+                            disabled={shareMode || isPresent}
+                            title="Ajouter au Samedi (ne modifie pas le Dimanche)"
+                          >
+                            +
+                          </Button>
+                        )}
 
-                            {/* Bouton + : Ajouter au samedi (si présent en dimanche) */}
-                            {isPresentInSunday && !isPresent && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleAddToSaturday(member.id)}
-                                className="h-9 w-9 p-0 text-emerald-600 hover:bg-emerald-50 border-emerald-200 font-bold text-lg"
-                                disabled={shareMode}
-                                title="Ajouter à la séance Samedi ← Retirer automatiquement du Dimanche"
-                              >
-                                +
-                              </Button>
-                            )}
-                          </>
+                        {/* BOUTON - POUR SAMEDI (retirer du samedi seulement) */}
+                        {selectedGroup === "Samedi" && shouldEnableButtons() && isPresent && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveFromSaturdayOnly(member.id)}
+                            className="h-9 w-9 p-0 text-amber-600 hover:bg-amber-50 border-amber-200 font-bold text-lg"
+                            disabled={shareMode}
+                            title="Retirer du Samedi seulement"
+                          >
+                            −
+                          </Button>
                         )}
                         
                         <Button
@@ -1542,11 +1137,8 @@ export function MembersTable({
         </div>
       </div>
 
-      {/* COMPOSANT INTER-SESSION MANAGER EXISTANT */}
-      <InterSessionManager />
-
-      {/* NOUVEAU COMPOSANT TRANSFERT DIMANCHE → SAMEDI */}
-      <SaturdayTransferSystem />
+      {/* STATISTIQUES SIMPLES */}
+      <WeekdayStats />
 
       <StudentHistoryModal
         student={selectedStudent}
