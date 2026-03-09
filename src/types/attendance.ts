@@ -57,3 +57,4 @@ export interface Attendance {
   updated_at?: string;
   created_by?: string;
 }
+export type MemberAttendance = Attendance;
