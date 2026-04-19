@@ -1,5 +1,4 @@
 // pages/DashboardPage/DashboardPage.tsx
-// CORRIGÉ : Types explicites pour 'open'
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { lazyImport } from "@/utils/lazyImport";
@@ -14,6 +13,7 @@ import { ChevronRight, BarChart3, Users, ShieldOff, Calendar, Settings, RefreshC
 import { useAuthState } from "./hooks/useAuthState";
 import { useDashboardTabs } from "./hooks/useDashboardTabs";
 import { useDashboardData } from "./hooks/useDashboardData";
+import { useProfessorHours } from '@/hooks/useProfessorHours';
 
 // Composants
 import { HeroSection } from "./components/HeroSection";
@@ -21,6 +21,9 @@ import { DashboardTab } from "./components/DashboardTab";
 import { MembersTab } from "./components/MembersTab";
 import { AttendanceTab } from "./components/AttendanceTab";
 import { AdminTab } from "./components/AdminTab";
+import { SessionReminderModal } from '@/components/professor/SessionReminderModal';
+import { SessionsTable } from '@/components/professor/SessionsTable';
+import { ProfessorButton } from '@/components/professor/ProfessorButton';
 
 // Utilitaires
 import { DAYS_FR, MONTHS_FR } from "./utils/constants";
@@ -42,18 +45,31 @@ import type { SessionType } from "@/types/session";
 
 const DashboardPage = () => {
   // États
-  const [selectedGroup, setSelectedGroup] = useState<SessionType>("Samedi");
+  const [selectedGroup, setSelectedGroup] = useState<SessionType>(() => {
+    const today = new Date().getDay();
+    if (today === 6) return "Samedi";
+    if (today === 0) return "Dimanche";
+    if (today === 1) return "Lundi";
+    return "Samedi";
+  });
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [shareMode, setShareMode] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [transferHistory, setTransferHistory] = useState<any[]>([]);
+  const [activeTransfers, setActiveTransfers] = useState<
+    { memberId: string; fromGroup: SessionType; toGroup: SessionType; date: string }[]
+  >([]);
+
+const [showProfessorReminder, setShowProfessorReminder] = useState(false);
 
   // Hooks personnalisés
   const { user } = useAuthState();
   const isAdmin = true;
 
   const { activeTab, handleTabChange } = useDashboardTabs();
+  // Ajouter après useDashboardData
+const { saveSession: saveProfessorSession } = useProfessorHours();
   const {
     members,
     loading,
@@ -87,6 +103,28 @@ const DashboardPage = () => {
     }
   }, [user, loadMembers, members.length]);
 
+// Rappel automatique pour les heures professeur (18h25-18h35)
+useEffect(() => {
+  const checkSessionEnd = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    
+    // Vérifier entre 18:25 et 18:35
+    if ((hours === 18 && minutes >= 25) || (hours === 18 && minutes <= 35)) {
+      const lastNotified = localStorage.getItem('last_professor_notification_date');
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (lastNotified !== today) {
+        setShowProfessorReminder(true);
+        localStorage.setItem('last_professor_notification_date', today);
+      }
+    }
+  };
+
+  const interval = setInterval(checkSessionEnd, 60000);
+  return () => clearInterval(interval);
+}, []);
   // Utilitaires de date
   const formatFrenchDateSimple = useCallback((date: Date): string => {
     return `${DAYS_FR[date.getDay()]} ${date.getDate()} ${
@@ -152,23 +190,33 @@ const DashboardPage = () => {
   const sessionMembers = useMemo(() => {
     if (members.length === 0) return [];
 
+    const today = new Date().getDay();
+    const isClassDay = today === 6 || today === 0 || today === 1;
+
+    // Si on est sur l'onglet Élèves et pas un jour de cours → tous les membres
+    if (activeTab === "members" && !isClassDay) {
+      return members;
+    }
+
     if (selectedGroup === "Samedi+Dimanche") {
       return members.filter(
-        (member) => 
-          member.group === "Samedi" || 
+        (member) =>
+          member.group === "Samedi" ||
           member.group === "Dimanche" ||
-          (member.secondaryGroups && 
-            (member.secondaryGroups.includes("Samedi") || 
-             member.secondaryGroups.includes("Dimanche")))
+          (member.secondaryGroups &&
+            (member.secondaryGroups.includes("Samedi") ||
+              member.secondaryGroups.includes("Dimanche")))
       );
     }
 
-    return members.filter((member) => 
-      member.group === selectedGroup || 
-      (member.secondaryGroups && member.secondaryGroups.includes(selectedGroup))
+    return members.filter(
+      (member) =>
+        member.group === selectedGroup ||
+        (member.secondaryGroups && member.secondaryGroups.includes(selectedGroup))
     );
-  }, [members, selectedGroup]);
+  }, [members, selectedGroup, activeTab]);
 
+  // Filtrage par recherche (utilisé par tous les onglets)
   const filteredMembers = useMemo(() => {
     if (sessionMembers.length === 0) return [];
 
@@ -193,6 +241,15 @@ const DashboardPage = () => {
 
     return filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
   }, [sessionMembers, searchTerms]);
+
+  // Label du groupe affiché aujourd'hui pour l'onglet Élèves
+  const todayGroupLabel = useMemo(() => {
+    const today = new Date().getDay();
+    if (today === 6) return "Samedi";
+    if (today === 0) return "Dimanche";
+    if (today === 1) return "Lundi";
+    return "Tous les groupes";
+  }, []);
 
   const currentDateString = selectedDate.toISOString().split("T")[0];
 
@@ -276,6 +333,12 @@ const DashboardPage = () => {
     console.log(`📝 Mode historique ${enabled ? 'activé' : 'désactivé'}`);
   }, [setHistoricalEditMode]);
 
+const handleSaveProfessorSession = useCallback((session: { startTime: string; endTime: string; actualHours: number; notes: string }) => {
+  saveProfessorSession({
+    date: new Date().toISOString().split('T')[0],
+    ...session
+  });
+}, [saveProfessorSession]);
   // Écran de connexion
   if (!user) {
     return (
@@ -303,12 +366,15 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/20">
       <ErrorBoundary>
-        <AppHeader
-          user={user}
-          shareMode={shareMode}
-          onShareModeChange={setShareMode}
-          onSignOut={handleSignOut}
-        />
+      <div className="flex items-center justify-between">
+  <AppHeader
+    user={user}
+    shareMode={shareMode}
+    onShareModeChange={setShareMode}
+    onSignOut={handleSignOut}
+  />
+  <ProfessorButton variant="outline" size="sm" className="ml-4" />
+</div>
       </ErrorBoundary>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
@@ -321,13 +387,22 @@ const DashboardPage = () => {
              activeTab === 'attendance' ? 'Présences' : 
              activeTab === 'admin' ? 'Administration' : ''}
           </span>
-          {selectedGroup !== 'Samedi' && activeTab !== 'admin' && (
+          {activeTab === 'members' ? (
             <>
               <ChevronRight className="h-3 w-3 mx-2 text-slate-400" />
               <Badge variant="outline" className="text-xs">
-                {selectedGroup}
+                {todayGroupLabel}
               </Badge>
             </>
+          ) : (
+            selectedGroup !== 'Samedi' && activeTab !== 'admin' && (
+              <>
+                <ChevronRight className="h-3 w-3 mx-2 text-slate-400" />
+                <Badge variant="outline" className="text-xs">
+                  {selectedGroup}
+                </Badge>
+              </>
+            )
           )}
         </div>
       </div>
@@ -362,7 +437,6 @@ const DashboardPage = () => {
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
-
               <div className="relative z-10 flex items-center justify-center gap-3">
                 <BarChart3 className="h-5 w-5" />
                 <span className="hidden sm:inline">Tableau de bord</span>
@@ -383,7 +457,6 @@ const DashboardPage = () => {
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
-
               <div className="relative z-10 flex items-center justify-center gap-3">
                 <Users className="h-5 w-5" />
                 <span>Élèves</span>
@@ -405,7 +478,6 @@ const DashboardPage = () => {
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
-
               <div className="relative z-10 flex items-center justify-center gap-3">
                 <Calendar className="h-5 w-5" />
                 <span>Présences</span>
@@ -425,7 +497,6 @@ const DashboardPage = () => {
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
-
               <div className="relative z-10 flex items-center justify-center gap-3">
                 <Settings className="h-5 w-5" />
                 <span className="hidden sm:inline">Admin</span>
@@ -456,9 +527,9 @@ const DashboardPage = () => {
           <TabsContent value="members" className="mt-8">
             <MembersTab
               shareMode={shareMode}
-              selectedGroup={selectedGroup}
+              selectedGroup={todayGroupLabel}
               loading={loading}
-              members={members}
+              members={filteredMembers}
               searchTerms={searchTerms}
               searchInput={searchInput}
               filteredMembers={filteredMembers}
@@ -475,33 +546,39 @@ const DashboardPage = () => {
           </TabsContent>
 
           {/* Tab Attendance */}
-          <TabsContent value="attendance" className="mt-8">
-            <AttendanceTab
-              filteredMembers={filteredMembers}
-              selectedGroup={selectedGroup}
-              currentDateString={currentDateString}
-              onMarkPresent={handleMarkPresentWithSync}
-              onMarkPayment={(memberId) => handleMarkPayment(memberId)}
-              onUnmarkPayment={(memberId) => handleUnmarkPayment(memberId)}
-              shareMode={shareMode}
-              historicalEditMode={historicalEditMode}
-              onHistoricalEditToggle={handleHistoricalEditToggle}
-              members={members}
-              loading={loading}
-              onTransferAttendance={handleTransferAttendance}
-              onAutoTransferAbsent={handleAutoTransferAbsent}
-            />
-          </TabsContent>
+{/* Tab Attendance */}
+<TabsContent value="attendance" className="mt-8">
+  <AttendanceTab
+    filteredMembers={filteredMembers}
+    selectedGroup={selectedGroup}
+    currentDateString={currentDateString}
+    selectedDate={selectedDate}
+    onDateChange={(date: Date) => setSelectedDate(date)}
+    onMarkPresent={handleMarkPresentWithSync}
+    onMarkPayment={(memberId) => handleMarkPayment(memberId)}
+    onUnmarkPayment={(memberId) => handleUnmarkPayment(memberId)}
+    shareMode={shareMode}
+    historicalEditMode={historicalEditMode}
+    onHistoricalEditToggle={handleHistoricalEditToggle}
+    members={members}
+    loading={loading}
+    onTransferAttendance={handleTransferAttendance}
+    onAutoTransferAbsent={handleAutoTransferAbsent}
+    // <-- Ajout requis pour la gestion des transferts persistants
+    activeTransfers={activeTransfers}
+    onActiveTransfersChange={setActiveTransfers}
+  />
+</TabsContent>
 
           {/* Tab Admin */}
           <TabsContent value="admin" className="mt-8">
-            <AdminTab
-              user={user}
-              shareMode={shareMode}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+  <div className="space-y-6">
+    <AdminTab user={user} shareMode={shareMode} />
+    <SessionsTable />
+  </div>
+</TabsContent>
+                </Tabs>
+              </div>
 
       {reportData && (
         <Suspense fallback={null}>
@@ -513,6 +590,14 @@ const DashboardPage = () => {
               if (!open) setReportData(null);
             }}
           />
+          // Ajouter après le LazyMonthlyReportModal existant
+      <SessionReminderModal
+        isOpen={showProfessorReminder}
+        onClose={() => setShowProfessorReminder(false)}
+        onSave={handleSaveProfessorSession}
+        defaultStartTime="16:30"
+        defaultEndTime="18:30"
+      />
         </Suspense>
       )}
     </div>

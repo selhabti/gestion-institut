@@ -1,7 +1,7 @@
 // src/types/member.ts - VERSION AVEC SUIVI INTER-SÉANCES
 import type { SessionType } from "./session";
 export type GroupType = "Samedi" | "Dimanche" | "Lundi" | "Samedi+Dimanche";
-export type AttendanceStatus = "present" | "absent_justified" | "absent_unjustified";
+export type AttendanceStatus = "present" | "absent_justified" | "absent_unjustified" ;
 
 export interface Attendance {
   id: string;

@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase';
 import type { GroupType, AttendanceStatus, Member } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { toast } from "sonner";
-// Importez les nouvelles fonctions de service
 import { 
   syncWeekendAttendance, 
   transferBetweenGroups,
@@ -133,22 +132,43 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
 
   const handleMarkPresent = useCallback(
     async (
-      memberId: string, 
-      date: string, 
-      status: AttendanceStatus, 
-      session_type?: SessionType, 
-      selectedGroup?: SessionType
+      memberId: string,
+      date: string,
+      status: AttendanceStatus,
+      session_type?: SessionType,
+      selectedGroup?: SessionType,
+      forceEdit = false
     ) => {
       try {
+        const targetSessionType = session_type || selectedGroup;
+  
+        // Détection date passée (format YYYY-MM-DD)
+        const todayStr = new Date().toISOString().split("T")[0];
+        const isPastDate = date < todayStr;
+  
+        if (isPastDate && !forceEdit) {
+          console.warn(
+            "Tentative de modification d'une séance passée sans autorisation (historicalEditMode).",
+            { memberId, date, status, targetSessionType }
+          );
+          if (typeof toast !== "undefined") {
+            toast.error("La modification des séances passées nécessite le mode Édition historique.");
+          } else {
+            alert("La modification des séances passées nécessite le mode Édition historique.");
+          }
+          return;
+        }
+  
+        // Mise à jour optimiste locale
         setMembers((prevMembers) =>
           prevMembers.map((member) => {
             if (member.id !== memberId) return member;
-
+  
             const updatedAttendances = [...member.attendances];
             const existingIndex = updatedAttendances.findIndex(
-              (a) => a.date === date
+              (a) => a.date === date && a.session_type === targetSessionType
             );
-
+  
             if (existingIndex >= 0) {
               if (updatedAttendances[existingIndex].status === status) {
                 updatedAttendances.splice(existingIndex, 1);
@@ -164,74 +184,82 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
                 id: "temp-" + Date.now(),
                 date,
                 status,
-                session_type: session_type || selectedGroup,
+                session_type: targetSessionType,
               });
             }
-
+  
             return {
               ...member,
               attendances: updatedAttendances,
             };
           })
         );
-
+  
         const {
           data: { user: authUser },
         } = await supabase.auth.getUser();
-
+  
         if (!authUser) {
           alert("Veuillez vous reconnecter");
           return;
         }
-
+  
+        // Vérifier l'existence actuelle (read)
         const { data: existing, error: checkError } = await supabase
           .from("attendances")
           .select("id, status")
           .eq("member_id", memberId)
           .eq("date", date)
+          .eq("session_type", targetSessionType)
           .maybeSingle();
-
+  
         if (checkError && checkError.code !== "PGRST116") {
           console.warn("⚠️ Erreur vérification:", checkError);
         }
-
+  
         let operationError = null;
-
+  
         if (existing) {
+          // Si même statut => toggle off => supprimer
           if (existing.status === status) {
-            const { error } = await supabase
-              .from('attendances')
-              .delete()
-              .eq('id', existing.id);
+            const { error } = await supabase.from("attendances").delete().eq("id", existing.id);
             operationError = error;
           } else {
+            // Mise à jour normale (update)
             const { error } = await supabase
-              .from('attendances')
+              .from("attendances")
               .update({
-                status: status,
-                session_type: session_type || selectedGroup,
+                status,
+                session_type: targetSessionType,
                 updated_at: new Date().toISOString(),
               })
-              .eq('id', existing.id);
+              .eq("id", existing.id);
             operationError = error;
           }
         } else {
-          const { error } = await supabase.from('attendances').insert({
+          // Pas d'existant => upsert (évite le duplicate key si insert concurent)
+          const upsertPayload = {
             member_id: memberId,
-            date: date,
-            status: status,
-            session_type: session_type || selectedGroup,
+            date,
+            status,
+            session_type: targetSessionType,
             created_by: authUser.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          };
+  
+          const { error } = await supabase
+            .from("attendances")
+            .upsert(upsertPayload, { onConflict: "member_id,date,session_type" }); // <- important
           operationError = error;
         }
-
+  
         if (operationError) {
           console.error("❌ Erreur serveur:", operationError);
+          // Forcer rechargement en cas d'erreur
           loadMembers(true);
         } else {
+          // légère attente pour laisser le backend propager puis reload léger
           setTimeout(() => {
             loadMembers(false);
           }, 1000);
@@ -239,13 +267,17 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       } catch (error) {
         console.error("💥 Erreur:", error);
         loadMembers(true);
-
+  
         if (error instanceof Error && error.message.includes("permission")) {
           alert("Permission refusée. Vérifiez que vous êtes connecté.");
+        } else {
+          if (typeof toast !== "undefined") {
+            toast.error("Erreur lors de l'enregistrement de la présence");
+          }
         }
       }
     },
-    [loadMembers]
+    [loadMembers, supabase]
   );
 
   // ==================================================
@@ -254,87 +286,97 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
 
   const handleMarkPresentWithSync = useCallback(
     async (
-      memberId: string, 
-      date: string, 
-      status: AttendanceStatus, 
-      session_type?: SessionType, 
+      memberId: string,
+      date: string,
+      status: AttendanceStatus,
+      session_type?: SessionType,
       selectedGroup?: SessionType
     ) => {
       try {
         const targetGroup = session_type || selectedGroup;
-        const member = members.find(m => m.id === memberId);
-        
+        const member = members.find((m) => m.id === memberId);
+  
         if (!member) {
           console.error("Membre non trouvé:", memberId);
           return;
         }
-
-        // Vérifier la synchronisation pour les groupes weekend
+  
+        // --- Détection si la date est passée (comparer en YYYY-MM-DD pour éviter TZ issues) ---
+        const todayStr = new Date().toISOString().split("T")[0];
+        const isPastDate = date < todayStr;
+  
+        // Si c'est passé et que le mode historique n'est pas activé => bloquer et prévenir
+        if (isPastDate && !historicalEditMode) {
+          toast.error("La modification des séances passées nécessite le mode Édition historique.");
+          console.warn("Tentative de modification d'une séance passée sans historicalEditMode");
+          return;
+        }
+  
+        // Si weekend, appliquer la logique de synchronisation habituelle
         if (targetGroup === "Samedi" || targetGroup === "Dimanche") {
-          const syncResult = await syncWeekendAttendance(member, date, targetGroup as SessionType, status);
-          
-          // Gérer les différents cas
+          const syncResult = await syncWeekendAttendance(
+            member,
+            date,
+            targetGroup as SessionType,
+            status
+          );
+  
           if (!syncResult.success) {
             if (syncResult.message.startsWith("already_present:")) {
-              // Déjà présent dans l'autre groupe → demander transfert
               const otherGroup = syncResult.message.split(":")[1] as SessionType;
               const confirm = window.confirm(
                 `${member.firstName} est déjà présent ${otherGroup}.\n` +
-                `Voulez-vous le transférer vers ${targetGroup} ?\n\n` +
-                `(Il sera marqué absent ${otherGroup})`
+                  `Voulez-vous le transférer vers ${targetGroup} ?\n\n` +
+                  `(Il sera marqué absent ${otherGroup})`
               );
-              
+  
               if (confirm) {
                 await transferBetweenGroups(
-                  memberId, 
-                  date, 
-                  otherGroup, 
+                  memberId,
+                  date,
+                  otherGroup,
                   targetGroup as SessionType,
                   "Transfert manuel"
                 );
-                // Recharger les données
                 await loadMembers();
                 return;
               } else {
-                return; // Annuler
+                return;
               }
             }
-            
+  
             if (syncResult.message.startsWith("suggest_catchup:")) {
-              // Absent justifié → proposer ajout à l'autre groupe
               const otherGroup = syncResult.message.split(":")[1] as SessionType;
               const confirm = window.confirm(
                 `${member.firstName} sera absent ${targetGroup} (justifié).\n` +
-                `Voulez-vous l'ajouter automatiquement à ${otherGroup} pour rattrapage ?`
+                  `Voulez-vous l'ajouter automatiquement à ${otherGroup} pour rattrapage ?`
               );
-              
+  
               if (confirm) {
-                // D'abord marquer absent
-                await handleMarkPresent(memberId, date, status, session_type, selectedGroup);
-                // Puis ajouter pour rattrapage
+                // On veut forcer l'ajout même si c'est une date passée et historicalEditMode est activé
+                await handleMarkPresent(memberId, date, status, session_type, selectedGroup, !!historicalEditMode);
                 await addForCatchup(
-                  memberId, 
-                  date, 
-                  otherGroup, 
+                  memberId,
+                  date,
+                  otherGroup,
                   `Rattrapage (absent ${targetGroup})`
                 );
-                // Recharger
                 await loadMembers();
                 return;
               }
             }
           }
         }
-        
-        // Comportement normal
-        await handleMarkPresent(memberId, date, status, session_type, selectedGroup);
-        
+  
+        // Appel final: on transmet forceEdit = true si historicalEditMode est activé
+        await handleMarkPresent(memberId, date, status, session_type, selectedGroup, !!historicalEditMode);
       } catch (error) {
         console.error("Erreur lors du marquage avec synchronisation:", error);
         toast.error("Erreur lors du marquage de la présence");
       }
     },
-    [members, handleMarkPresent, loadMembers]
+    // Ajout de historicalEditMode dans les dépendances
+    [members, handleMarkPresent, loadMembers, historicalEditMode]
   );
 
   const handleTransferAttendance = useCallback(
@@ -356,7 +398,6 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         
         if (result.success) {
           console.log("🔄 Transfert réussi:", result.message);
-          // Recharger les données
           await loadMembers();
           toast.success("Transfert effectué avec succès");
         } else {
@@ -378,9 +419,6 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         const today = new Date().toISOString().split('T')[0];
         const opportunities = await getTransferOpportunities(members, "Samedi", today);
         
-        // Pour le moment, on se concentre sur Samedi → Dimanche
-        // Vous pourrez adapter pour l'autre sens plus tard
-        
         if (opportunities.length === 0) {
           toast.info("Aucun élève absent Samedi ne peut être transféré aujourd'hui.");
           return;
@@ -393,7 +431,6 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         
         if (!confirmMsg) return;
         
-        // Exécuter les transferts
         for (const opp of opportunities) {
           await addForCatchup(
             opp.member.id,
@@ -403,7 +440,6 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           );
         }
         
-        // Recharger
         await loadMembers();
         toast.success(`${opportunities.length} élève(s) transféré(s) avec succès !`);
         
@@ -539,33 +575,49 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
     [user, loadMembers, members, handleAddGroupToExistingMember]
   );
 
-  const handleDeleteMember = useCallback(
-    async (memberId: string) => {
-      if (shareMode) {
-        console.log("🚫 Suppression bloquée - Mode partage actif");
-        return;
-      }
-
-      try {
-        setMembers((prev) => prev.filter((m) => m.id !== memberId));
-        const updatedMembers = members.filter((m) => m.id !== memberId);
-        LocalCache.set("members_data", updatedMembers);
-
-        const { error } = await supabase
-          .from("members")
-          .delete()
-          .eq("id", memberId);
-
-        if (error) throw error;
-
-        setTimeout(() => loadMembers(), 300);
-      } catch (error) {
-        console.error("❌ Erreur de suppression:", error);
-        loadMembers();
-      }
-    },
-    [shareMode, loadMembers, members]
-  );
+  const handleDeleteMember = useCallback(async (memberId: string) => {
+    setLoading(true);
+    try {
+      console.log(`🗑️ Suppression du membre: ${memberId}`);
+      
+      // 1. D'abord, supprimer les dépendances (attendances)
+      const { error: attError } = await supabase
+        .from('attendances')
+        .delete()
+        .eq('member_id', memberId);
+      
+      if (attError) console.warn('Erreur attendances:', attError);
+      
+      // 2. Supprimer les paiements liés
+      const { error: payError } = await supabase
+        .from('payments')
+        .delete()
+        .eq('member_id', memberId);
+      
+      if (payError) console.warn('Erreur paiements:', payError);
+      
+      // 3. Supprimer le membre
+      const { error } = await supabase
+        .from('members')
+        .delete()
+        .eq('id', memberId);  // ← Utilisez 'id', pas 'user_id'
+  
+      if (error) throw error;
+      
+      // 4. Mettre à jour l'état local
+      setMembers(prev => prev.filter(m => m.id !== memberId));
+      toast.success('Membre supprimé avec succès');
+      
+      // 5. Recharger la liste
+      await loadMembers();
+      
+    } catch (error: any) {
+      console.error('❌ Erreur de suppression:', error);
+      toast.error(error.message || 'Erreur lors de la suppression');
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMembers]);
 
   const handleUpdateMember = useCallback(
     async (memberId: string, updates: Partial<Member>) => {
@@ -659,7 +711,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
   
         const currentSecondaryGroups = memberData.secondary_groups || [];
         const updatedSecondaryGroups = currentSecondaryGroups.filter(
-          ( group: string) => group !== groupToRemove
+          (group: string) => group !== groupToRemove
         );
   
         const { error: updateError } = await supabase
@@ -793,7 +845,6 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
     [shareMode, members, loadMembers]
   );
 
-  // ✅ CORRIGÉ : Toutes les fonctions retournées sont maintenant correctement typées
   return {
     members,
     loading,
@@ -816,5 +867,5 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
     handleAddGroupToExistingMember,
     handleTransferAttendance,
     handleAutoTransferAbsent,
-  } as const; // ✅ "as const" résout l'erreur de typage implicite
+  } as const;
 };

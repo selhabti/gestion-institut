@@ -1,7 +1,11 @@
 -- ============================================
--- MIGRATION INCRÉMENTALE : AJOUT DE LA TABLE EVENTS
+-- MIGRATION COMPLÈTE : AJOUT DE LA TABLE EVENTS ET PROFESSOR_SESSIONS
 -- Ne modifie pas le schéma existant
--- Date: 2025-11-09
+-- Date: 2025-11-09 + 2025-12-12
+-- ============================================
+
+-- ============================================
+-- PARTIE 1: CRÉATION DU TYPE EVENT_TYPE
 -- ============================================
 
 -- 1. Créer le type d'événements (si pas existant)
@@ -17,6 +21,10 @@ BEGIN
         );
     END IF;
 END $$;
+
+-- ============================================
+-- PARTIE 2: TABLE EVENTS
+-- ============================================
 
 -- 2. Créer la table events (si pas existante)
 CREATE TABLE IF NOT EXISTS public.events (
@@ -40,7 +48,6 @@ COMMENT ON TABLE public.events IS 'Events calendar (vacations, seminars, holiday
 -- 3. Créer les index (si pas existants)
 DO $$ 
 BEGIN 
-    -- Index pour les dates
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
         WHERE schemaname = 'public' 
@@ -50,7 +57,6 @@ BEGIN
         CREATE INDEX idx_events_dates ON public.events (start_date, end_date);
     END IF;
 
-    -- Index pour le type
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
         WHERE schemaname = 'public' 
@@ -60,7 +66,6 @@ BEGIN
         CREATE INDEX idx_events_type ON public.events (event_type);
     END IF;
 
-    -- Index pour les groupes (GIN pour les arrays)
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
         WHERE schemaname = 'public' 
@@ -70,7 +75,6 @@ BEGIN
         CREATE INDEX idx_events_groups ON public.events USING GIN(groups);
     END IF;
 
-    -- Index pour l'exclusion des stats
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
         WHERE schemaname = 'public' 
@@ -82,13 +86,12 @@ BEGIN
     END IF;
 END $$;
 
--- 4. Activer RLS
+-- 4. Activer RLS sur events
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
--- 5. Politiques RLS (compatibles avec ton style existant)
+-- 5. Politiques RLS pour events
 DO $$ 
 BEGIN 
-    -- Politique SELECT pour tout le monde (comme tes autres tables)
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies 
         WHERE schemaname = 'public' 
@@ -99,7 +102,6 @@ BEGIN
             FOR SELECT USING (true);
     END IF;
 
-    -- Politique INSERT pour utilisateurs authentifiés
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies 
         WHERE schemaname = 'public' 
@@ -110,7 +112,6 @@ BEGIN
             FOR INSERT WITH CHECK (auth.role() = 'authenticated');
     END IF;
 
-    -- Politique UPDATE pour créateur ou admin
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies 
         WHERE schemaname = 'public' 
@@ -124,7 +125,6 @@ BEGIN
             );
     END IF;
 
-    -- Politique DELETE pour admin seulement
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies 
         WHERE schemaname = 'public' 
@@ -136,7 +136,7 @@ BEGIN
     END IF;
 END $$;
 
--- 6. Trigger pour updated_at (si pas existant)
+-- 6. Trigger pour updated_at sur events
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -158,7 +158,7 @@ BEGIN
     END IF;
 END $$;
 
--- 7. Activer realtime pour la table events
+-- 7. Activer realtime pour events
 DO $$ 
 BEGIN 
     IF NOT EXISTS (
@@ -172,7 +172,162 @@ BEGIN
 END $$;
 
 -- ============================================
--- DONNÉES INITIALES : Vacances d'hiver
+-- PARTIE 3: TABLE PROFESSOR_SESSIONS (NOUVEAU)
+-- ============================================
+
+-- 8. Création de la table professor_sessions
+CREATE TABLE IF NOT EXISTS public.professor_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    actual_hours DECIMAL(5,2) NOT NULL CHECK (actual_hours >= 0),
+    notes TEXT,
+    status VARCHAR(20) DEFAULT 'completed' CHECK (status IN ('completed', 'cancelled')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID,
+    
+    -- Contrainte: une seule session par jour et par utilisateur
+    CONSTRAINT unique_user_date UNIQUE(user_id, date)
+);
+
+COMMENT ON TABLE public.professor_sessions IS 'Stockage des heures de cours du professeur';
+COMMENT ON COLUMN public.professor_sessions.actual_hours IS 'Nombre d''heures effectuées (0 pour les séances annulées)';
+COMMENT ON COLUMN public.professor_sessions.status IS 'Statut: completed (effectué) ou cancelled (annulé)';
+
+-- 9. Ajout des clés étrangères pour professor_sessions
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT FROM information_schema.table_constraints
+        WHERE constraint_name = 'fk_professor_sessions_user'
+    ) THEN
+        ALTER TABLE public.professor_sessions
+        ADD CONSTRAINT fk_professor_sessions_user
+        FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT FROM information_schema.table_constraints
+        WHERE constraint_name = 'fk_professor_sessions_created_by'
+    ) THEN
+        ALTER TABLE public.professor_sessions
+        ADD CONSTRAINT fk_professor_sessions_created_by
+        FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT FROM information_schema.table_constraints
+        WHERE constraint_name = 'fk_professor_sessions_updated_by'
+    ) THEN
+        ALTER TABLE public.professor_sessions
+        ADD CONSTRAINT fk_professor_sessions_updated_by
+        FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    END IF;
+END $$;
+
+-- 10. Création des index pour professor_sessions
+CREATE INDEX IF NOT EXISTS idx_prof_sessions_user_date 
+ON public.professor_sessions(user_id, date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_prof_sessions_date 
+ON public.professor_sessions(date);
+
+CREATE INDEX IF NOT EXISTS idx_prof_sessions_status 
+ON public.professor_sessions(status);
+
+CREATE INDEX IF NOT EXISTS idx_prof_sessions_user_status 
+ON public.professor_sessions(user_id, status);
+
+-- 11. Activer RLS sur professor_sessions
+ALTER TABLE public.professor_sessions ENABLE ROW LEVEL SECURITY;
+
+-- 12. Politiques RLS pour professor_sessions
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT FROM pg_policies WHERE policyname = 'professor_sessions_select_own'
+    ) THEN
+        CREATE POLICY "professor_sessions_select_own"
+            ON public.professor_sessions FOR SELECT
+            USING (auth.uid() = user_id);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT FROM pg_policies WHERE policyname = 'professor_sessions_insert_own'
+    ) THEN
+        CREATE POLICY "professor_sessions_insert_own"
+            ON public.professor_sessions FOR INSERT
+            WITH CHECK (auth.uid() = user_id);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT FROM pg_policies WHERE policyname = 'professor_sessions_update_own'
+    ) THEN
+        CREATE POLICY "professor_sessions_update_own"
+            ON public.professor_sessions FOR UPDATE
+            USING (auth.uid() = user_id);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT FROM pg_policies WHERE policyname = 'professor_sessions_delete_own'
+    ) THEN
+        CREATE POLICY "professor_sessions_delete_own"
+            ON public.professor_sessions FOR DELETE
+            USING (auth.uid() = user_id);
+    END IF;
+END $$;
+
+-- 13. Trigger updated_at pour professor_sessions
+CREATE OR REPLACE FUNCTION public.handle_professor_sessions_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    NEW.updated_by = auth.uid();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_professor_sessions_updated_at ON public.professor_sessions;
+CREATE TRIGGER update_professor_sessions_updated_at
+    BEFORE UPDATE ON public.professor_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_professor_sessions_updated_at();
+
+-- 14. Trigger created_at pour professor_sessions
+CREATE OR REPLACE FUNCTION public.handle_professor_sessions_created_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.created_at = NOW();
+    NEW.created_by = auth.uid();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_professor_sessions_created_at ON public.professor_sessions;
+CREATE TRIGGER set_professor_sessions_created_at
+    BEFORE INSERT ON public.professor_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_professor_sessions_created_at();
+
+-- 15. Activer realtime pour professor_sessions
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND schemaname = 'public' 
+        AND tablename = 'professor_sessions'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.professor_sessions;
+    END IF;
+END $$;
+
+-- ============================================
+-- PARTIE 4: DONNÉES INITIALES
 -- ============================================
 
 -- Insérer les vacances d'hiver 2025-2026
@@ -205,7 +360,7 @@ WHERE NOT EXISTS (
 )
 LIMIT 1;
 
--- Insérer quelques événements par défaut
+-- Insérer Aïd al-Fitr
 INSERT INTO public.events (
     title,
     description,
@@ -236,16 +391,65 @@ WHERE NOT EXISTS (
 LIMIT 1;
 
 -- ============================================
--- VÉRIFICATION
+-- PARTIE 5: INDEX SUPPLÉMENTAIRES EXISTANTS
 -- ============================================
 
--- Vérifier que la table a été créée
-SELECT '✅ Table events créée avec succès' as status
+-- Index sur attendances
+CREATE INDEX IF NOT EXISTS idx_attendances_date_group 
+  ON public.attendances USING btree (date, session_type);
+
+CREATE INDEX IF NOT EXISTS idx_attendances_group 
+  ON public.attendances USING btree (group_name);
+
+CREATE INDEX IF NOT EXISTS idx_attendances_group_date 
+  ON public.attendances USING btree (session_type, date);
+
+-- Index GIN sur members
+CREATE INDEX IF NOT EXISTS idx_members_secondary_groups 
+  ON public.members USING GIN (secondary_groups);
+
+-- ============================================
+-- PARTIE 6: AJOUT DES COLONNES À ATTENDANCES
+-- ============================================
+
+ALTER TABLE public.attendances 
+ADD COLUMN IF NOT EXISTS transfer_note TEXT,
+ADD COLUMN IF NOT EXISTS sync_note TEXT,
+ADD COLUMN IF NOT EXISTS auto_transferred BOOLEAN DEFAULT FALSE;
+
+COMMENT ON COLUMN public.attendances.transfer_note IS 'Note pour les transferts manuels';
+COMMENT ON COLUMN public.attendances.sync_note IS 'Note pour les synchronisations automatiques';
+COMMENT ON COLUMN public.attendances.auto_transferred IS 'Si l''attendance a été ajoutée automatiquement';
+
+-- ============================================
+-- PARTIE 7: VÉRIFICATIONS FINALES
+-- ============================================
+
+-- Vérifier les tables créées
+SELECT '✅ Tables créées avec succès' as status
 WHERE EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_schema = 'public' 
-    AND table_name = 'events'
+    AND table_name IN ('events', 'professor_sessions')
 );
+
+-- Afficher la structure de professor_sessions
+SELECT 
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns
+WHERE table_name = 'professor_sessions'
+ORDER BY ordinal_position;
+
+-- Afficher les index de professor_sessions
+SELECT 
+    tablename,
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE tablename = 'professor_sessions';
 
 -- Afficher les événements créés
 SELECT 
@@ -257,42 +461,11 @@ SELECT
 FROM public.events 
 ORDER BY start_date;
 
--- ============================================
--- AJOUT DES INDEX 
--- ============================================
-
--- Index sur attendances pour optimiser les requêtes par date et type de session
-CREATE INDEX IF NOT EXISTS idx_attendances_date_group 
-  ON public.attendances USING btree (date, session_type);
-
--- Index sur attendances pour filtrer par nom de groupe
-CREATE INDEX IF NOT EXISTS idx_attendances_group 
-  ON public.attendances USING btree (group_name);
-
--- Index sur attendances pour les requêtes inversées (session_type puis date)
-CREATE INDEX IF NOT EXISTS idx_attendances_group_date 
-  ON public.attendances USING btree (session_type, date);
-
--- Index GIN sur members pour les recherches dans les groupes secondaires
-CREATE INDEX IF NOT EXISTS idx_members_secondary_groups 
-  ON public.members USING GIN (secondary_groups);
-
--- Vérification
+-- Afficher les index des tables existantes
 SELECT 
     tablename, 
     indexname 
 FROM pg_indexes 
 WHERE schemaname = 'public' 
-  AND tablename IN ('attendances', 'members')
+  AND tablename IN ('attendances', 'members', 'events', 'professor_sessions')
 ORDER BY tablename, indexname;
-
-
--- Ajouter ces colonnes à TABLES ATTENDANCES
-ALTER TABLE public.attendances 
-ADD COLUMN IF NOT EXISTS transfer_note TEXT,
-ADD COLUMN IF NOT EXISTS sync_note TEXT,
-ADD COLUMN IF NOT EXISTS auto_transferred BOOLEAN DEFAULT FALSE;
-
-COMMENT ON COLUMN public.attendances.transfer_note IS 'Note pour les transferts manuels';
-COMMENT ON COLUMN public.attendances.sync_note IS 'Note pour les synchronisations automatiques';
-COMMENT ON COLUMN public.attendances.auto_transferred IS 'Si l\'attendance a été ajoutée automatiquement';

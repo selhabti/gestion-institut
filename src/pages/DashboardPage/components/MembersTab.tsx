@@ -251,7 +251,7 @@ export const MembersTab = ({
                 }
               >
                 <MembersManagementTable
-                  members={members}
+                  members={filteredMembers}
                   loading={loading}
                   onAddMember={onAddMember}
                   onDeleteMember={onDeleteMember}

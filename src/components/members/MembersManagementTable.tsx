@@ -244,16 +244,20 @@ export const MembersManagementTable = ({
                       className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150"
                     >
                       <td className="p-4 font-medium text-slate-900 align-middle h-14">
-                        {member.lastName}
-                      </td>
-                      <td className="p-4 text-slate-700 align-middle h-14">
-                        {member.firstName}
-                      </td>
-                      <td className="p-4 text-slate-600 align-middle h-14">
-                        {member.city || (
-                          <span className="text-slate-400 italic">-</span>
-                        )}
-                      </td>
+  <span className="font-bold uppercase">{member.lastName}</span>
+</td>
+<td className="p-4 text-slate-700 align-middle h-14">
+  <span className="font-bold">
+    {member.firstName.charAt(0).toUpperCase() + member.firstName.slice(1).toLowerCase()}
+  </span>
+</td>
+<td className="p-4 text-slate-600 align-middle h-14">
+  {member.city ? (
+    member.city.charAt(0).toUpperCase() + member.city.slice(1).toLowerCase()
+  ) : (
+    <span className="text-slate-400 italic">-</span>
+  )}
+</td>
                       <td className="p-4 align-middle h-14">
                         <div className="flex flex-wrap gap-1">
                           {/* Groupe principal */}
@@ -311,26 +315,7 @@ export const MembersManagementTable = ({
                           )}
                         </div>
                         
-                        {/* Boutons rapides pour ajouter des groupes */}
-                        {!shareMode && onAddGroupToMember && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {["Samedi", "Dimanche", "Lundi"]
-                              .filter(g => !allGroups.includes(g as GroupType))
-                              .map(group => (
-                                <Button
-                                  key={group}
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleAddGroup(member, group as GroupType)}
-                                  className="h-6 text-xs px-2"
-                                >
-                                  <ArrowRightLeft className="h-3 w-3 mr-1" />
-                                  + {group}
-                                </Button>
-                              ))
-                            }
-                          </div>
-                        )}
+                       
                       </td>
                       <td className="p-4 align-middle h-14">
                         <div className="flex items-center gap-2">
