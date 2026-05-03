@@ -1,7 +1,7 @@
 -- ============================================
 -- MIGRATION COMPLÈTE : AJOUT DE LA TABLE EVENTS ET PROFESSOR_SESSIONS
 -- Ne modifie pas le schéma existant
--- Date: 2025-11-09 + 2025-12-12
+-- Date: 2025-11-09 + 2025-12-12 + 2026-04-19
 -- ============================================
 
 -- ============================================
@@ -422,7 +422,52 @@ COMMENT ON COLUMN public.attendances.sync_note IS 'Note pour les synchronisation
 COMMENT ON COLUMN public.attendances.auto_transferred IS 'Si l''attendance a été ajoutée automatiquement';
 
 -- ============================================
--- PARTIE 7: VÉRIFICATIONS FINALES
+-- PARTIE 7: MIGRATION DES GROUPES (NOUVEAU)
+-- Samedi → Dimanche (sans perte d'historique)
+-- ============================================
+
+DO $$
+DECLARE
+    nb_members INTEGER;
+BEGIN
+    -- Compter les membres à migrer
+    SELECT COUNT(*) INTO nb_members
+    FROM members 
+    WHERE group_type = 'Samedi'::group_type;
+    
+    RAISE NOTICE '📊 % membre(s) vont être migrés de Samedi vers Dimanche', nb_members;
+END $$;
+
+-- Afficher les membres concernés
+SELECT 
+    id,
+    first_name,
+    last_name,
+    group_type as groupe_actuel
+FROM members 
+WHERE group_type = 'Samedi'::group_type
+ORDER BY last_name, first_name;
+
+-- Migration dans une transaction
+BEGIN;
+    
+    UPDATE members 
+    SET 
+        group_type = 'Dimanche'::group_type,
+        updated_at = NOW()
+    WHERE group_type = 'Samedi'::group_type;
+    
+    -- Vérification post-migration
+    SELECT 
+        '✅ Migration des groupes terminée' as status,
+        COUNT(*) as membres_migres
+    FROM members 
+    WHERE group_type = 'Dimanche'::group_type;
+    
+COMMIT;
+
+-- ============================================
+-- PARTIE 8: VÉRIFICATIONS FINALES
 -- ============================================
 
 -- Vérifier les tables créées
@@ -432,6 +477,14 @@ WHERE EXISTS (
     WHERE table_schema = 'public' 
     AND table_name IN ('events', 'professor_sessions')
 );
+
+-- Vérifier la répartition des groupes après migration
+SELECT 
+    group_type,
+    COUNT(*) as nombre
+FROM members 
+GROUP BY group_type
+ORDER BY group_type;
 
 -- Afficher la structure de professor_sessions
 SELECT 

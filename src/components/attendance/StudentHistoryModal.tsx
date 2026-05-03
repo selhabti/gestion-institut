@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,  // ← AJOUTER CET IMPORT
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +69,12 @@ export function StudentHistoryModal({
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chargement</DialogTitle>
+            <DialogDescription>
+              Chargement de l'historique des présences...
+            </DialogDescription>
+          </DialogHeader>
           <div className="p-8 text-center">Chargement...</div>
         </DialogContent>
       </Dialog>
@@ -118,6 +125,9 @@ export function StudentHistoryModal({
               </div>
             </motion.div>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Historique détaillé des présences, absences et paiements pour {student.firstName} {student.lastName}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-8 mt-6">

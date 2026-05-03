@@ -575,40 +575,20 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
     [user, loadMembers, members, handleAddGroupToExistingMember]
   );
 
+
   const handleDeleteMember = useCallback(async (memberId: string) => {
     setLoading(true);
     try {
-      console.log(`🗑️ Suppression du membre: ${memberId}`);
-      
-      // 1. D'abord, supprimer les dépendances (attendances)
-      const { error: attError } = await supabase
-        .from('attendances')
-        .delete()
-        .eq('member_id', memberId);
-      
-      if (attError) console.warn('Erreur attendances:', attError);
-      
-      // 2. Supprimer les paiements liés
-      const { error: payError } = await supabase
-        .from('payments')
-        .delete()
-        .eq('member_id', memberId);
-      
-      if (payError) console.warn('Erreur paiements:', payError);
-      
-      // 3. Supprimer le membre
+      // Supprimer le membre directement
       const { error } = await supabase
         .from('members')
         .delete()
-        .eq('id', memberId);  // ← Utilisez 'id', pas 'user_id'
+        .eq('id', memberId);  // ← Utiliser 'id'
   
       if (error) throw error;
       
-      // 4. Mettre à jour l'état local
       setMembers(prev => prev.filter(m => m.id !== memberId));
       toast.success('Membre supprimé avec succès');
-      
-      // 5. Recharger la liste
       await loadMembers();
       
     } catch (error: any) {

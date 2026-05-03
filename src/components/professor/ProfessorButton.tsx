@@ -33,20 +33,6 @@ export function ProfessorButton({ variant = 'outline', size = 'sm', className = 
 
   return (
     <>
-      <Button 
-        variant={variant} 
-        size={size} 
-        onClick={() => setIsOpen(true)}
-        className={`relative ${className}`}
-      >
-        <Clock className="h-4 w-4 mr-2" />
-        Heures prof
-        {!loading && monthlyStats.totalHours > 0 && (  // ← monthlyStats.totalHours
-          <span className="ml-2 text-xs bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5">
-            {monthlyStats.totalHours}h
-          </span>
-        )}
-      </Button>
       
       <SessionReminderModal
         isOpen={isOpen}

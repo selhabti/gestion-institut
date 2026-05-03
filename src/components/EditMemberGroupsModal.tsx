@@ -1,6 +1,6 @@
 // src/components/attendance/EditMemberGroupsModal.tsx
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, X } from 'lucide-react';
@@ -115,6 +115,9 @@ const EditMemberGroupsModal: React.FC<EditMemberGroupsModalProps> = ({
           <DialogTitle>
             Modifier les groupes de {member.firstName} {member.lastName}
           </DialogTitle>
+          <DialogDescription>
+            Sélectionnez les groupes auxquels cet élève appartient. Le premier groupe dans la liste sera le groupe principal.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

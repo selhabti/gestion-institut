@@ -533,31 +533,30 @@ const MemberForm: React.FC<MemberFormProps> = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Annuler</AlertDialogCancel>
-            // Dans l'AlertDialogAction de MemberForm.tsx
-<AlertDialogAction 
-  onClick={async () => {
-    setIsLoading(true);
-    try {
-      await handleAddGroupToExisting();
-      setShowAddGroupDialog(false);
-    } catch (error) {
-      // L'erreur est déjà gérée dans handleAddGroupToExisting
-    } finally {
-      setIsLoading(false);
-    }
-  }}
-  disabled={isLoading}
-  className="bg-indigo-600 hover:bg-indigo-700"
->
-  {isLoading ? (
-    <>
-      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-      Ajout en cours...
-    </>
-  ) : (
-    `Ajouter ${getGroupDisplayName(primaryGroup)}`
-  )}
-</AlertDialogAction>
+            <AlertDialogAction 
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  await handleAddGroupToExisting();
+                  setShowAddGroupDialog(false);
+                } catch (error) {
+                  // L'erreur est déjà gérée dans handleAddGroupToExisting
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Ajout en cours...
+                </>
+              ) : (
+                `Ajouter ${getGroupDisplayName(primaryGroup)}`
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

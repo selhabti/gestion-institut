@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import type { EventFormData } from "@/types/event";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth"; // CORRECTION ICI
+import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ const CreateVacationModal: React.FC<CreateVacationModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { user } = useAuth(); // CORRECTION ICI
+  const { user } = useAuth(); 
   const { createEvent, loading } = useEvents();
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
