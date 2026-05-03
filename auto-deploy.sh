@@ -6,6 +6,12 @@
 set -e
 
 # ─────────────────────────────────────────────
+# CONFIGURATION GIT POUR ÉVITER L'ÉDITEUR
+# ─────────────────────────────────────────────
+export GIT_EDITOR=true
+export EDITOR=true
+
+# ─────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────
 TARGET_BRANCH="main"
