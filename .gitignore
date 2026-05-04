@@ -45,4 +45,4 @@ pids
 *.pid.lock
 
 # Optional eslint cache
-.eslintcache
+.eslintcachedeploy.log
