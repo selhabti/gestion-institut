@@ -9,7 +9,13 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
+      - name: Install curl (just in case)
+        run: sudo apt-get update && sudo apt-get install -y curl
+
       - name: Attente aléatoire (0-6h) pour lisser les pics
         run: sleep $((RANDOM % 21600))
         shell: bash
@@ -30,12 +36,12 @@ jobs:
           RANDOM_INDEX=$((RANDOM % ${#REQUESTS[@]}))
           REQUEST="${REQUESTS[$RANDOM_INDEX]}"
           METHOD=$(echo "$REQUEST" | cut -d' ' -f1)
-          PATH=$(echo "$REQUEST" | cut -d' ' -f2-)
+          PATH_PART=$(echo "$REQUEST" | cut -d' ' -f2-)
 
-          URL="{{ secrets.SUPABASE_URL }}${PATH}"
-          HEADERS=(-H "apikey: {{ secrets.SUPABASE_ANON_KEY }}" -H "Authorization: Bearer {{ secrets.SUPABASE_ANON_KEY }}")
+          URL="${SUPABASE_URL}${PATH_PART}"
+          HEADERS=(-H "apikey: ${SUPABASE_ANON_KEY}" -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
 
-          echo "Requête cible : $METHOD $PATH"
+          echo "Requête cible : $METHOD $PATH_PART"
 
           MAX_RETRIES=3
           DELAY=10
@@ -52,7 +58,7 @@ jobs:
               if [[ $i -lt $MAX_RETRIES ]]; then
                 echo "Nouvel essai dans ${DELAY}s..."
                 sleep $DELAY
-                DELAY=$((DELAY * 2))  # backoff exponentiel : 10s, 20s, 40s
+                DELAY=$((DELAY * 2))
               fi
             fi
           done
