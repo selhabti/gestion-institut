@@ -2,7 +2,6 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Tous les 3 jours à 06:00 UTC
     - cron: "0 6 */3 * *"
   workflow_dispatch:
 
@@ -13,43 +12,27 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
-      - name: Install curl (just in case)
+      - name: Install curl
         run: sudo apt-get update && sudo apt-get install -y curl
 
-      - name: Attente aléatoire (0-6h) pour lisser les pics
+      - name: Attente aléatoire (0-6h)
         run: sleep $((RANDOM % 21600))
-        shell: bash
 
-      - name: Ping Supabase avec relance (jusqu'à 3 essais)
+      - name: Ping Supabase (avec relance)
         run: |
-          # Liste des requêtes possibles (lecture seule)
-          declare -a REQUESTS=(
-            "GET /rest/v1/members?select=id,created_at&limit=$((RANDOM%5+1))"
-            "GET /rest/v1/users?select=id,email&limit=1"
-            "GET /rest/v1/profiles?select=id,username&order=created_at.desc&limit=3"
-            "POST /rest/v1/rpc/health_check"
-            "GET /storage/v1/bucket"
-            "GET /auth/v1/settings"
-          )
-
-          # Sélection aléatoire
-          RANDOM_INDEX=$((RANDOM % ${#REQUESTS[@]}))
-          REQUEST="${REQUESTS[$RANDOM_INDEX]}"
-          METHOD=$(echo "$REQUEST" | cut -d' ' -f1)
-          PATH_PART=$(echo "$REQUEST" | cut -d' ' -f2-)
-
-          URL="${SUPABASE_URL}${PATH_PART}"
+          # Seul endpoint fiable : /auth/v1/settings
+          URL="${SUPABASE_URL}/auth/v1/settings"
           HEADERS=(-H "apikey: ${SUPABASE_ANON_KEY}" -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
 
-          echo "Requête cible : $METHOD $PATH_PART"
+          echo "Requête : GET ${URL}"
 
           MAX_RETRIES=3
           DELAY=10
 
           for ((i=1; i<=MAX_RETRIES; i++)); do
             echo "Tentative $i / $MAX_RETRIES..."
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X "$METHOD" "$URL" "${HEADERS[@]}")
-            
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$URL" "${HEADERS[@]}")
+
             if [[ "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
               echo "✅ Succès (HTTP $HTTP_CODE)"
               exit 0
@@ -65,4 +48,3 @@ jobs:
 
           echo "💥 Toutes les tentatives ont échoué"
           exit 1
-        shell: bash
