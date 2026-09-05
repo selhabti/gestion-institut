@@ -33,9 +33,9 @@ export default function Auth() {
       console.log("✅ Connexion réussie:", data.user?.email);
       toast.success("Connexion réussie !");
       
-      // ⚠️ REDIRECTION MANUELLE EXPLICITE
+      // ⚠️ REDIRECTION MANUELLE EXPLICITE vers la sélection d'institut
       setTimeout(() => {
-        navigate("/", { replace: true });
+        navigate("/select", { replace: true });
       }, 1000);
       
     } catch (error: any) {

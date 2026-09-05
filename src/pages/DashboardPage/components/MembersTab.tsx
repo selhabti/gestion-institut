@@ -24,6 +24,8 @@ interface MembersTabProps {
     firstName: string,
     lastName: string,
     city: string,
+    phone: string,
+    email: string,
     primaryGroup: GroupType,
     secondaryGroups?: GroupType[]
   ) => Promise<void>;

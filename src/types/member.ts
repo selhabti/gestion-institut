@@ -20,6 +20,8 @@ export interface Member {
   firstName: string;
   lastName: string;
   city?: string;
+  phone?: string;
+  email?: string;
   group: SessionType;
   secondaryGroups?: SessionType[];
   payments: Payment[];

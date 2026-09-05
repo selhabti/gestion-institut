@@ -25,6 +25,8 @@ interface MemberFormProps {
     firstName: string,
     lastName: string,
     city: string,
+    phone: string,
+    email: string,
     primaryGroup: GroupType,
     secondaryGroups?: GroupType[]
   ) => Promise<void>;
@@ -41,6 +43,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [selectedGroups, setSelectedGroups] = useState<GroupType[]>(["Samedi"]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -106,6 +110,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
       setFirstName("");
       setLastName("");
       setCity("");
+      setPhone("");
+      setEmail("");
       setSelectedGroups(["Samedi"]);
       setExistingMemberId(null);
       setDuplicateMember(null);
@@ -134,6 +140,11 @@ const MemberForm: React.FC<MemberFormProps> = ({
       return;
     }
 
+    if (!phone.trim()) {
+      toast.error("Le numéro de téléphone est obligatoire");
+      return;
+    }
+
     if (selectedGroups.length === 0) {
       toast.error("Veuillez sélectionner au moins un groupe");
       return;
@@ -147,6 +158,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
         firstName.trim(), 
         lastName.trim(), 
         city.trim(), 
+        phone.trim(), 
+        email.trim(), 
         primaryGroup,
         secondaryGroups.length > 0 ? secondaryGroups : undefined
       );
@@ -164,6 +177,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
       setFirstName("");
       setLastName("");
       setCity("");
+      setPhone("");
+      setEmail("");
       setSelectedGroups(["Samedi"]);
       setDuplicateMember(null);
 
@@ -318,6 +333,36 @@ const MemberForm: React.FC<MemberFormProps> = ({
                 disabled={isLoading}
                 className="h-14 text-lg font-geist-medium border-black/10 focus:border-indigo-500 focus:ring-indigo-500"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-lg font-geist-bold text-slate-800">
+                  Téléphone *
+                </Label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Numéro de téléphone"
+                  disabled={isLoading}
+                  className="h-14 text-lg font-geist-medium border-black/10 focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-lg font-geist-bold text-slate-800">
+                  Email
+                </Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Adresse email (optionnel)"
+                  disabled={isLoading}
+                  className="h-14 text-lg font-geist-medium border-black/10 focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
             </div>
 
             {/* Détection des doublons */}
@@ -492,7 +537,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
             <Button
               type="submit"
               size="lg"
-              disabled={isLoading || !firstName.trim() || !lastName.trim() || selectedGroups.length === 0}
+              disabled={isLoading || !firstName.trim() || !lastName.trim() || !phone.trim() || selectedGroups.length === 0}
               className="w-full h-16 text-xl font-geist-black bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-xl disabled:opacity-60"
             >
               {isLoading ? (

@@ -56,13 +56,13 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         const membersPromise = (async () => {
           const r1 = await supabase
             .from("members")
-            .select("id, first_name, last_name, city, group_type, secondary_groups, created_at")
+            .select("id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at")
             .order("created_at", { ascending: true });
           if (!r1.error) return r1;
           // Si erreur, on réessaie sans deleted_at (au cas où)
           return supabase
             .from("members")
-            .select("id, first_name, last_name, city, group_type, secondary_groups, created_at")
+            .select("id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at")
             .order("created_at", { ascending: true });
         })();
 
@@ -86,6 +86,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             firstName: member.first_name,
             lastName: member.last_name,
             city: member.city,
+            phone: member.phone || "",
+            email: member.email || undefined,
             group: member.group_type as SessionType,
             secondaryGroups: (member.secondary_groups || []) as SessionType[],
             registrationDate: member.created_at,
@@ -153,6 +155,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       selectedGroup?: SessionType,
       forceEdit = false
     ) => {
+      console.log("🟣 handleMarkPresent (core) appelé", { memberId, date, status, session_type, selectedGroup, forceEdit });
       try {
         const targetSessionType = session_type || selectedGroup;
   
@@ -178,15 +181,22 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           prevMembers.map((member) => {
             if (member.id !== memberId) return member;
   
+            console.log("🟡 Attendances AVANT update:", JSON.stringify(member.attendances));
+            console.log("🟡 targetSessionType:", targetSessionType);
+  
             const updatedAttendances = [...member.attendances];
             const existingIndex = updatedAttendances.findIndex(
               (a) => a.date === date && a.session_type === targetSessionType
             );
   
+            console.log("🟡 existingIndex:", existingIndex);
+  
             if (existingIndex >= 0) {
               if (updatedAttendances[existingIndex].status === status) {
+                console.log("🟡 TOGGLE OFF - suppression");
                 updatedAttendances.splice(existingIndex, 1);
               } else {
+                console.log("🟡 UPDATE status →", status);
                 updatedAttendances[existingIndex] = {
                   ...updatedAttendances[existingIndex],
                   status,
@@ -194,6 +204,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
                 };
               }
             } else {
+              console.log("🟡 PUSH new attendance");
               updatedAttendances.push({
                 id: "temp-" + Date.now(),
                 date,
@@ -201,6 +212,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
                 session_type: targetSessionType,
               });
             }
+  
+            console.log("🟡 Attendances APRES update:", JSON.stringify(updatedAttendances));
   
             return {
               ...member,
@@ -273,9 +286,9 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           // Forcer rechargement en cas d'erreur
           loadMembers(true);
         } else {
-          // légère attente pour laisser le backend propager puis reload léger
+          // rechargement forcé
           setTimeout(() => {
-            loadMembers(false);
+            loadMembers(true);
           }, 1000);
         }
       } catch (error) {
@@ -306,6 +319,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       session_type?: SessionType,
       selectedGroup?: SessionType
     ) => {
+      console.log("🔵 handleMarkPresentWithSync appelé", { memberId, date, status, session_type, selectedGroup, historicalEditMode });
       try {
         const targetGroup = session_type || selectedGroup;
         const member = members.find((m) => m.id === memberId);
@@ -524,6 +538,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       firstName: string,
       lastName: string,
       city: string,
+      phone: string,
+      email: string,
       primaryGroup: GroupType,
       secondaryGroups?: GroupType[]
     ) => {
@@ -538,6 +554,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             first_name: firstName,
             last_name: lastName,
             city: city || null,
+            phone: phone || "",
+            email: email || null,
             group_type: primaryGroup,
             secondary_groups: secondaryGroupsArray,
             created_by: user?.id,
@@ -575,6 +593,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             firstName: data[0].first_name,
             lastName: data[0].last_name,
             city: data[0].city,
+            phone: data[0].phone || "",
+            email: data[0].email || undefined,
             group: data[0].group_type,
             secondaryGroups: data[0].secondary_groups || [],
             payments: data[0].payments || [],
@@ -637,6 +657,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         if (updates.firstName) supabaseUpdates.first_name = updates.firstName;
         if (updates.lastName) supabaseUpdates.last_name = updates.lastName;
         if (updates.city !== undefined) supabaseUpdates.city = updates.city;
+        if (updates.phone !== undefined) supabaseUpdates.phone = updates.phone;
+        if (updates.email !== undefined) supabaseUpdates.email = updates.email;
         if (updates.group) supabaseUpdates.group_type = updates.group;
 
         setMembers((prev) =>

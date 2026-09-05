@@ -46,3 +46,6 @@ pids
 
 # Optional eslint cache
 .eslintcachedeploy.log
+
+# Dossier de sauvegarde local (à ne jamais versionner)
+/gestion-institut-main-backup/

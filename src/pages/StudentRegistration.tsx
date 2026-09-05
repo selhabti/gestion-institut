@@ -49,12 +49,28 @@ const studentSchema = z.object({
     .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
       message: "La ville contient des caractères invalides",
     }),
+  phone: z
+    .string()
+    .trim()
+    .min(8, { message: "Le numéro de téléphone doit contenir au moins 8 caractères" })
+    .max(20, { message: "Le numéro de téléphone est trop long (max 20 caractères)" })
+    .regex(/^[0-9+\s().-]+$/, {
+      message: "Le numéro de téléphone contient des caractères invalides",
+    }),
+  email: z
+    .string()
+    .trim()
+    .email({ message: "L'adresse email est invalide" })
+    .max(255, { message: "L'adresse email est trop longue" })
+    .or(z.literal("")),
 });
 
 export default function StudentRegistration() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [group, setGroup] = useState<GroupType>("Samedi");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -62,7 +78,7 @@ export default function StudentRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = studentSchema.safeParse({ firstName, lastName, city });
+    const result = studentSchema.safeParse({ firstName, lastName, city, phone, email });
 
     if (!result.success) {
       toast.error(result.error.errors[0].message);
@@ -85,6 +101,8 @@ export default function StudentRegistration() {
         first_name: result.data.firstName,
         last_name: result.data.lastName,
         city: result.data.city,
+        phone: result.data.phone,
+        email: result.data.email || null,
         group_type: group,
         created_by: user.id,
       });
@@ -148,6 +166,30 @@ export default function StudentRegistration() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Votre numéro de téléphone"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Votre adresse email (optionnel)"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="group">Groupe</Label>
               <Select
                 value={group}
@@ -164,7 +206,7 @@ export default function StudentRegistration() {
               </Select>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !phone.trim()}>
               {isLoading ? "Inscription..." : "S'inscrire"}
             </Button>
           </form>

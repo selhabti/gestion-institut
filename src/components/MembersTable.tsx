@@ -156,15 +156,16 @@ export function MembersTable({
     date: string,
     status: AttendanceStatus,
     group?: SessionType,
-    forceEdit = false // ✅ Nouveau paramètre
+    forceEdit = false
   ) => {
+    console.log("🟢 handleMarkPresent appelé", { memberId, date, status, group, selectedGroup, forceEdit });
     onMarkPresent(
       memberId,
       date,
       status,
       group || selectedGroup,
-      undefined, // session_type optionnel
-      forceEdit // ✅ Transmet l'autorisation historique
+      undefined,
+      forceEdit
     );
   };
 

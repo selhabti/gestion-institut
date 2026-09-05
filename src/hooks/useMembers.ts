@@ -6,6 +6,8 @@ export interface Member {
   first_name: string;
   last_name: string;
   city: string;
+  phone?: string;
+  email?: string;
   group_type: "Lundi" | "Samedi" | "Dimanche";
   created_at: string;
 }

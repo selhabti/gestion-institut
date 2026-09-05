@@ -1,15 +1,17 @@
-import { LogOut, Shield, ShieldOff, School } from "lucide-react";
+import { LogOut, Shield, ShieldOff, School, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { getCurrentInstitut } from "@/lib/institutes";
 
 type AppHeaderProps = {
   user: any;
   shareMode: boolean;
   onShareModeChange: (checked: boolean) => void;
   onSignOut: () => void;
-  extraAction?: React.ReactNode; // ← Ajoutez cette ligne
+  extraAction?: React.ReactNode;
 };
 
 export const AppHeader = ({
@@ -17,8 +19,11 @@ export const AppHeader = ({
   shareMode,
   onShareModeChange,
   onSignOut,
-  extraAction, // ← Ajoutez cette ligne
+  extraAction,
 }: AppHeaderProps) => {
+  const navigate = useNavigate();
+  const institut = getCurrentInstitut();
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -59,6 +64,11 @@ export const AppHeader = ({
                 </span>
               </h1>
               <p className="text-white/70 text-sm font-medium">{user?.email}</p>
+              {institut && (
+                <p className="text-white/90 text-xs font-bold uppercase tracking-wide bg-white/10 rounded-full px-2 py-0.5 inline-block mt-0.5">
+                  {institut.name}
+                </p>
+              )}
             </div>
           </div>
 
@@ -112,6 +122,16 @@ export const AppHeader = ({
                 {shareMode ? "Partagé" : "Privé"}
               </Label>
             </div>
+
+            <Button
+              onClick={() => navigate("/select")}
+              variant="ghost"
+              size="sm"
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-white rounded-xl"
+            >
+              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Changer</span>
+            </Button>
 
             <Button
               onClick={onSignOut}

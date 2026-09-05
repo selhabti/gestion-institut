@@ -536,7 +536,7 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
     selectedDate={selectedDate}
     onDateChange={(date: Date) => setSelectedDate(date)}
     onMarkPresent={handleMarkPresentWithSync}
-    onMarkPayment={(memberId) => handleMarkPayment(memberId)}
+    onMarkPayment={(memberId, amount) => handleMarkPayment(memberId, amount)}
     onUnmarkPayment={(memberId) => handleUnmarkPayment(memberId)}
     shareMode={shareMode}
     historicalEditMode={historicalEditMode}

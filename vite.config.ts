@@ -3,7 +3,11 @@ import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
+// Base path configurable : vide/custom domain => "/", sinon "/<repo>/" pour GitHub Pages
+const base = process.env.VITE_BASE_PATH?.trim() || "/";
+
 export default defineConfig({
+  base,
   plugins: [
     react({
       jsxImportSource: 'react',
@@ -34,20 +38,20 @@ export default defineConfig({
         name: "Institut Manager",
         short_name: "InstitutApp",
         description: "Application de gestion d'institut pour le suivi des élèves et présences",
-        start_url: "/",
+        start_url: base,
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#2563eb",
         orientation: "portrait-primary",
         icons: [
           {
-            src: "/coran.png",
+            src: `${base}coran.png`,
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable"
           },
           {
-            src: "/coran.png",
+            src: `${base}coran.png`,
             sizes: "512x512", 
             type: "image/png",
             purpose: "any maskable"
