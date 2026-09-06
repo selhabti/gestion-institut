@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { lazyImport } from "@/utils/lazyImport";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ import { supabase } from '@/lib/supabase';
 import type { SessionType } from "@/types/session";
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   // États
   const [selectedGroup, setSelectedGroup] = useState<SessionType>(() => {
     const today = new Date().getDay();
@@ -333,7 +335,7 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
               Non authentifié
             </h2>
             <Button
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => navigate("/auth")}
               className="bg-blue-600 hover:bg-blue-700"
             >
               Se connecter

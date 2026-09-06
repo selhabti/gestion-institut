@@ -192,7 +192,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
             label: 'Voir la liste',
             onClick: () => {
               // Option: naviguer vers la liste des membres
-              window.location.href = '/members';
+              window.location.href = import.meta.env.BASE_URL + "members";
             }
           }
         });
@@ -396,7 +396,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(`/member/${duplicateMember.id}`, '_blank')}
+                          onClick={() => window.open(import.meta.env.BASE_URL + `member/${duplicateMember.id}`, '_blank')}
                         >
                           Voir fiche
                         </Button>

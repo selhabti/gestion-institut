@@ -90,7 +90,7 @@ export const MemberFormDuplicateCheck: React.FC<MemberFormDuplicateCheckProps> =
                 </div>
               </div>
               <button
-                onClick={() => window.open(`/member/${member.id}`, '_blank')}
+                onClick={() => window.open(import.meta.env.BASE_URL + `member/${member.id}`, '_blank')}
                 className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
               >
                 Voir
