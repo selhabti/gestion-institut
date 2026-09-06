@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -59,6 +60,14 @@ jobs:
 
       - name: Build
         run: bun run build
+
+      # Supprime les artefacts "github-pages" restants d'un éventuel re-run
+      # (évite l'erreur "Multiple artifacts named github-pages").
+      - name: Clean previous Pages artifacts
+        uses: actions/delete-run-artifacts@v2
+        with:
+          name: github-pages
+          fail-error: false
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
