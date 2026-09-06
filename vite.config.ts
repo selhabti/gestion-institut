@@ -88,27 +88,6 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'radix-ui';
-            }
-            if (id.includes('@tanstack')) {
-              return 'tanstack';
-            }
-            if (id.includes('date-fns') || id.includes('zod')) {
-              return 'utils';
-            }
-            return 'vendor';
-          }
-        }
-      }
-    },
     chunkSizeWarningLimit: 1000,
     minify: 'terser',
     terserOptions: {
