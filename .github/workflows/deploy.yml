@@ -55,6 +55,31 @@ jobs:
         run: |
           echo "VITE_BASE_PATH=${VITE_BASE_PATH:-$DEFAULT_BASE}" >> "$GITHUB_ENV"
 
+      # Diagnostic: liste les variables manquantes (Settings > Variables and
+      # secrets > Actions > Variables). Affiche uniquement les noms, pas les clés.
+      - name: Check institut variables
+        run: |
+          count=0
+          for pair in \
+            "VITE_INSTITUT_ZAYED_URL:${{ vars.VITE_INSTITUT_ZAYED_URL }}" \
+            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ vars.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
+            "VITE_INSTITUT_ATTANZIL_URL:${{ vars.VITE_INSTITUT_ATTANZIL_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ vars.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
+          ; do
+            name="${pair%%:*}"
+            value="${pair#*:}"
+            if [ -n "$value" ]; then
+              echo "$name -> OK"
+              count=$((count+1))
+            else
+              echo "$name -> MANQUANTE"
+            fi
+          done
+          echo "Variables renseignées: $count/4"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::Aucune variable VITE_INSTITUT_* définie. Ajoute-les dans Settings > Variables and secrets > Actions > Variables, puis relance le workflow."
+          fi
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
