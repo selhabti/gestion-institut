@@ -64,10 +64,23 @@ jobs:
       # Supprime les artefacts "github-pages" restants d'un éventuel re-run
       # (évite l'erreur "Multiple artifacts named github-pages").
       - name: Clean previous Pages artifacts
-        uses: actions/delete-run-artifacts@v2
+        uses: actions/github-script@v7
         with:
-          name: github-pages
-          fail-error: false
+          script: |
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+            const toDelete = data.artifacts.filter(a => a.name === 'github-pages');
+            for (const artifact of toDelete) {
+              console.log(`Suppression de l'artefact ${artifact.name} (id ${artifact.id})`);
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+            }
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
