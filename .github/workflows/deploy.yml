@@ -26,18 +26,18 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      # Injecte les variables d'environnement définies dans Settings > Variables.
-      # Seules les variables remplies sont exportées => un repo configuré pour
-      # un institut n'expose QUE cet institut.
+      # Injecte les variables d'environnement définies dans Settings > Secrets and
+      # variables > Actions > Secrets. Seules les variables remplies sont
+      # exportées => un repo configuré pour un institut n'expose QUE cet institut.
       - name: Inject institut variables
         run: |
           for pair in \
-            "VITE_INSTITUT_ZAYED_URL:${{ vars.VITE_INSTITUT_ZAYED_URL }}" \
-            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ vars.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
-            "VITE_INSTITUT_ATTANZIL_URL:${{ vars.VITE_INSTITUT_ATTANZIL_URL }}" \
-            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ vars.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
-            "VITE_SUPABASE_URL:${{ vars.VITE_SUPABASE_URL }}" \
-            "VITE_SUPABASE_ANON_KEY:${{ vars.VITE_SUPABASE_ANON_KEY }}" \
+            "VITE_INSTITUT_ZAYED_URL:${{ secrets.VITE_INSTITUT_ZAYED_URL }}" \
+            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ secrets.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
+            "VITE_INSTITUT_ATTANZIL_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ secrets.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
+            "VITE_SUPABASE_URL:${{ secrets.VITE_SUPABASE_URL }}" \
+            "VITE_SUPABASE_ANON_KEY:${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
           ; do
             name="${pair%%:*}"
             value="${pair#*:}"
@@ -55,16 +55,16 @@ jobs:
         run: |
           echo "VITE_BASE_PATH=${VITE_BASE_PATH:-$DEFAULT_BASE}" >> "$GITHUB_ENV"
 
-      # Diagnostic: liste les variables manquantes (Settings > Variables and
-      # secrets > Actions > Variables). Affiche uniquement les noms, pas les clés.
+      # Diagnostic: liste les secrets manquants (Settings > Secrets and variables >
+      # Actions > Secrets). Affiche uniquement les noms, pas les clés.
       - name: Check institut variables
         run: |
           count=0
           for pair in \
-            "VITE_INSTITUT_ZAYED_URL:${{ vars.VITE_INSTITUT_ZAYED_URL }}" \
-            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ vars.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
-            "VITE_INSTITUT_ATTANZIL_URL:${{ vars.VITE_INSTITUT_ATTANZIL_URL }}" \
-            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ vars.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
+            "VITE_INSTITUT_ZAYED_URL:${{ secrets.VITE_INSTITUT_ZAYED_URL }}" \
+            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ secrets.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
+            "VITE_INSTITUT_ATTANZIL_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ secrets.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
           ; do
             name="${pair%%:*}"
             value="${pair#*:}"
@@ -77,7 +77,7 @@ jobs:
           done
           echo "Variables renseignées: $count/4"
           if [ "$count" -eq 0 ]; then
-            echo "::error::Aucune variable VITE_INSTITUT_* définie. Ajoute-les dans Settings > Variables and secrets > Actions > Variables, puis relance le workflow."
+            echo "::error::Aucune variable VITE_INSTITUT_* définie. Ajoute-les dans Settings > Secrets and variables > Actions > Secrets, puis relance le workflow."
           fi
 
       - name: Install dependencies
