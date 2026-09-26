@@ -23,14 +23,14 @@ export const INSTITUTS: Record<InstitutId, InstitutConfig> = {
     name: "Zayed Ibn Thabyte",
     url: env.VITE_INSTITUT_ZAYED_URL || "",
     anonKey: env.VITE_INSTITUT_ZAYED_ANON_KEY || "",
-    logoUrl: "/coran.png",
+    logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
   attanzil: {
     id: "attanzil",
     name: "Institut Attanzil",
     url: env.VITE_INSTITUT_ATTANZIL_URL || "",
     anonKey: env.VITE_INSTITUT_ATTANZIL_ANON_KEY || "",
-    logoUrl: "/coran.png",
+    logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
 };
 
