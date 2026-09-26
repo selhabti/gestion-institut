@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getCurrentInstitut } from "@/lib/institutes";
+import SalemImage from "@/public/Salem.webp";
 
 type AppHeaderProps = {
   user: any;
@@ -50,7 +51,7 @@ export const AppHeader = ({
               <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl scale-150 -z-10" />
               <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl border border-white/30">
                 <img
-                  src="/coran.png"
+                  src={import.meta.env.BASE_URL + "coran.png"}
                   alt="Logo"
                   className="h-10 w-10 rounded-lg shadow-lg"
                 />
@@ -79,7 +80,7 @@ export const AppHeader = ({
               <div className="absolute inset-0 bg-white/20 rounded-3xl blur-3xl scale-105 -z-10" />
 
               <img
-                src="/Institut_logo.webp"
+                src={import.meta.env.BASE_URL + "Institut_logo.webp"}
                 alt="Institut Al-Qur'an"
                 className="w-full h-auto rounded-2xl shadow-2xl border-4 border-black/30"
                 style={{
@@ -148,7 +149,7 @@ export const AppHeader = ({
         {/* Version mobile : logo banner en dessous */}
         <div className="md:hidden mt-6 px-8">
           <img
-            src="/Salem.webp"
+            src={SalemImage}
             alt="Salem"
             className="w-full h-auto rounded-2xl shadow-2xl border-4 border-white/20"
           />
