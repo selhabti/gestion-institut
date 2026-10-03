@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Suspense } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays, RotateCcw } from "lucide-react";
-import type { Member, AttendanceStatus } from "@/types/member";
+import type { Member, AttendanceStatus, PaymentMode } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { lazyImport } from "@/utils/lazyImport";
 import { getCurrentInstitutId } from "@/lib/institutes";
@@ -24,7 +24,12 @@ interface AttendanceTabProps {
     status: AttendanceStatus,
     session_type?: SessionType
   ) => void;
-  onMarkPayment: (memberId: string, amount?: number) => void;
+  onMarkPayment: (
+    memberId: string,
+    amount?: number,
+    mode?: PaymentMode,
+    installmentLabel?: string
+  ) => void;
   onUnmarkPayment: (memberId: string) => void;
   shareMode: boolean;
   historicalEditMode: boolean;

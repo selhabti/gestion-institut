@@ -15,7 +15,7 @@ import {
   Users,
   ArrowRightLeft,
 } from "lucide-react";
-import type { Member, AttendanceStatus } from "@/types/member";
+import type { Member, AttendanceStatus, PaymentMode } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import {
   capitalize,
@@ -27,6 +27,7 @@ import {
 } from "@/lib/utils";
 import { useState } from "react";
 import { StudentHistoryModal } from "@/components/attendance/StudentHistoryModal";
+import { PaymentModal } from "@/components/attendance/PaymentModal";
 import { useStudentHistory } from "@/hooks/useStudentHistory";
 import {
   Tooltip,
@@ -55,7 +56,12 @@ interface MembersTableProps {
     session_type?: SessionType,
     forceEdit?: boolean // ✅ Ajouté pour gérer le mode historique
   ) => void;
-  onMarkPayment: (memberId: string, amount?: number) => void;
+  onMarkPayment: (
+    memberId: string,
+    amount?: number,
+    mode?: PaymentMode,
+    installmentLabel?: string
+  ) => void;
   onUnmarkPayment: (memberId: string) => void;
   isAdmin?: boolean;
   canManageMembers?: boolean;
@@ -106,6 +112,9 @@ export function MembersTable({
 
   // Attanzil : une seule séance (Samedi) → pas de colonne Ville ni de transfert temporaire
   const isAttanzil = getCurrentInstitutId() === "attanzil";
+
+  // Modale de paiement (Attanzil : mode mensuel / complet / en plusieurs fois)
+  const [paymentMember, setPaymentMember] = useState<Member | null>(null);
 
   const transfers = activeTransfers;
   const setTransfers = onActiveTransfersChange || (() => {});
@@ -690,15 +699,19 @@ export function MembersTable({
                                 if (window.confirm(`Annuler le paiement de ${capitalize(member.firstName)} ?`)) {
                                   onUnmarkPayment(member.id);
                                 }
-                              } else {
-                                const input = window.prompt(
-                                  `Montant reçu de ${capitalize(member.firstName)} ? (20€ par défaut)`,
-                                  "20"
-                                );
-                                if (input !== null) {
-                                  const amount = parseInt(input) || 20;
-                                  onMarkPayment(member.id, amount);
-                                }
+                                return;
+                              }
+                              if (isAttanzil) {
+                                setPaymentMember(member);
+                                return;
+                              }
+                              const input = window.prompt(
+                                `Montant reçu de ${capitalize(member.firstName)} ? (20€ par défaut)`,
+                                "20"
+                              );
+                              if (input !== null) {
+                                const amount = parseInt(input) || 20;
+                                onMarkPayment(member.id, amount);
                               }
                             }}
                             className="h-9 w-9 p-0"
@@ -747,6 +760,17 @@ export function MembersTable({
         student={selectedStudent}
         isOpen={!!selectedStudent}
         onClose={() => setSelectedStudent(null)}
+      />
+
+      <PaymentModal
+        member={paymentMember}
+        open={!!paymentMember}
+        onOpenChange={(o) => {
+          if (!o) setPaymentMember(null);
+        }}
+        onSubmit={(id, amt, mode, label) =>
+          onMarkPayment(id, amt, mode, label)
+        }
       />
     </>
   );

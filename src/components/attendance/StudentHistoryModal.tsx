@@ -9,11 +9,28 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, Calendar, CreditCard, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Check,
+  X,
+  Calendar,
+  CreditCard,
+  TrendingUp,
+  BookOpen,
+  Plus,
+  Trash2,
+  Shield,
+} from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import type { StudentHistory } from "@/types/attendance";
 import { motion } from "framer-motion";
 import { AttendanceService } from "@/services/attendanceService";
+import { toast } from "sonner";
+import { getCurrentInstitutId } from "@/lib/institutes";
+import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
+import { useStaff } from "@/hooks/useStaff";
 
 interface StudentHistoryModalProps {
   student: StudentHistory | null;
@@ -62,6 +79,19 @@ export function StudentHistoryModal({
     if (!historyData?.monthlyStats) return [];
     return historyData.monthlyStats.map((stats) => stats.month);
   }, [historyData?.monthlyStats]);
+
+  // Attanzil : fiche de mémorisation (riwaya / quantité / validation / tajwid)
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
+  const { currentRole } = useStaff();
+  const isProf = currentRole === "super_admin";
+  const memo = useMemorization(student?.studentId ?? null, isOpen && isAttanzil);
+
+  const [newWeek, setNewWeek] = useState("");
+  const [newQty, setNewQty] = useState("");
+  const [tajwidDraft, setTajwidDraft] = useState("");
+  useEffect(() => {
+    setTajwidDraft(memo.tajwidLevel);
+  }, [memo.tajwidLevel]);
 
   if (!student) return null;
   if (loading) {
@@ -130,6 +160,156 @@ export function StudentHistoryModal({
         </DialogHeader>
 
         <div className="space-y-8 mt-6">
+          {/* Fiche de mémorisation (Attanzil) */}
+          {isAttanzil && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-indigo-600 text-white">
+                      <BookOpen className="h-6 w-6" />
+                    </div>
+                    <span>Fiche de mémorisation</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Riwaya */}
+                  <div className="space-y-2">
+                    <Label>Riwaya</Label>
+                    <div className="flex gap-2">
+                      {(["Hafs", "Warsh"] as Riwaya[]).map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => memo.saveRiwaya(r)}
+                          className={`rounded-xl border-2 px-5 py-2 text-sm font-semibold transition-all ${
+                            memo.riwaya === r
+                              ? "bg-indigo-600 text-white border-transparent"
+                              : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Niveau de tajwid — visible uniquement par le professeur */}
+                  {isProf && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-purple-600" />
+                        Niveau de tajwid (professeur uniquement)
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={tajwidDraft}
+                          onChange={(e) => setTajwidDraft(e.target.value)}
+                          placeholder="ex : Bon, très bon, à revoir…"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => memo.saveTajwid(tajwidDraft)}
+                        >
+                          Enregistrer
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ajout d'une semaine */}
+                  <div className="space-y-2">
+                    <Label>Nouvelle semaine (date du samedi)</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      <Input
+                        type="date"
+                        value={newWeek}
+                        onChange={(e) => setNewWeek(e.target.value)}
+                        className="w-48"
+                      />
+                      <Input
+                        value={newQty}
+                        onChange={(e) => setNewQty(e.target.value)}
+                        placeholder="Quantité (ex : 5 versets, 1 page)"
+                        className="flex-1 min-w-[200px]"
+                      />
+                      <Button
+                        onClick={async () => {
+                          if (!newWeek) {
+                            toast.error("Choisissez la date du samedi");
+                            return;
+                          }
+                          await memo.upsertEntry(newWeek, newQty);
+                          setNewWeek("");
+                          setNewQty("");
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Suivi hebdomadaire */}
+                  {memo.entries.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Aucune mémorisation enregistrée.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {memo.entries.map((e) => (
+                        <div
+                          key={e.id}
+                          className={`flex items-center justify-between p-4 rounded-2xl border-2 ${
+                            e.validated
+                              ? "bg-emerald-50 border-emerald-300"
+                              : "bg-amber-50 border-amber-200"
+                          }`}
+                        >
+                          <div>
+                            <p className="font-semibold capitalize">
+                              {new Date(e.week_start + "T00:00:00").toLocaleDateString(
+                                "fr-FR",
+                                { weekday: "long", day: "numeric", month: "long" }
+                              )}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {e.quantity || "—"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant={e.validated ? "default" : "outline"}
+                              onClick={() => memo.setValidated(e, !e.validated)}
+                            >
+                              {e.validated ? (
+                                <>
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Validé
+                                </>
+                              ) : (
+                                "Valider"
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => memo.deleteEntry(e.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
           {/* Sélecteur de mois */}
           {availableMonths.length > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

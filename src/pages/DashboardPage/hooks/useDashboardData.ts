@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import LocalCache from "@/utils/cache";
 import { supabase } from '@/lib/supabase';
 import { getCurrentInstitutId } from "@/lib/institutes";
-import type { GroupType, AttendanceStatus, Member } from "@/types/member";
+import type { GroupType, AttendanceStatus, Member, PaymentMode } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { toast } from "sonner";
 import { 
@@ -27,6 +27,8 @@ interface MemberRow {
   secondary_groups: string[] | null;
   created_at: string;
   deleted_at?: string | null;
+  riwaya?: string | null;
+  tajwid_level?: string | null;
 }
 
 interface PaymentRow {
@@ -34,6 +36,8 @@ interface PaymentRow {
   member_id: string;
   payment_date: string;
   amount: number;
+  payment_mode?: string | null;
+  installment_label?: string | null;
 }
 
 interface AttendanceRow {
@@ -86,18 +90,15 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         // On tente d'abord avec deleted_at (soft delete).
         // Si la colonne n'existe pas (migration pas encore exécutée),
         // on retente sans.
-        const membersPromise = (async () => {
-          const r1 = await supabase
-            .from("members")
-            .select("id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at")
-            .order("created_at", { ascending: true });
-          if (!r1.error) return r1;
-          // Si erreur, on réessaie sans deleted_at (au cas où)
-          return supabase
-            .from("members")
-            .select("id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at")
-            .order("created_at", { ascending: true });
-        })();
+        const isAttanzil = getCurrentInstitutId() === "attanzil";
+        const memberCols = isAttanzil
+          ? "id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at, riwaya, tajwid_level"
+          : "id, first_name, last_name, city, phone, email, group_type, secondary_groups, created_at";
+
+        const membersPromise = supabase
+          .from("members")
+          .select(memberCols)
+          .order("created_at", { ascending: true });
 
         const [membersResponse, attendancesResponse, paymentsResponse] =
           await Promise.all([
@@ -125,12 +126,16 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             group: member.group_type as SessionType,
             secondaryGroups: (member.secondary_groups || []) as SessionType[],
             registrationDate: member.created_at,
+            riwaya: member.riwaya ?? null,
+            tajwidLevel: member.tajwid_level ?? null,
             payments: ((paymentsResponse.data || []) as PaymentRow[])
               .filter((p) => p.member_id === member.id)
               .map((p) => ({
                 id: p.id,
                 date: p.payment_date,
                 amount: p.amount,
+                mode: (p.payment_mode as PaymentMode | null) ?? null,
+                installmentLabel: p.installment_label ?? null,
               })),
             attendances: ((attendancesResponse.data || []) as AttendanceRow[])
               .filter((a) => a.member_id === member.id)
@@ -815,7 +820,12 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
   );
 
   const handleMarkPayment = useCallback(
-    async (memberId: string, amount: number = 20) => {
+    async (
+      memberId: string,
+      amount: number = 20,
+      mode?: PaymentMode,
+      installmentLabel?: string
+    ) => {
       if (shareMode) {
         console.log("🚫 Paiement bloqué - Mode partage actif");
         return;
@@ -830,7 +840,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         (p) => p.date && p.date.startsWith(currentMonth)
       );
 
-      if (hasPaidThisMonth) {
+      if (hasPaidThisMonth && mode !== "plusieurs_fois") {
         console.log("🛑 Blocage: Paiement déjà enregistré localement pour ce mois.");
         return;
       }
@@ -841,6 +851,8 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         member_id: memberId,
         date: now.toISOString().split("T")[0],
         amount,
+        mode: mode ?? null,
+        installmentLabel: installmentLabel ?? null,
       };
 
       setMembers((prevMembers) =>
@@ -852,12 +864,18 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       );
 
       try {
-        const { error } = await supabase.from("payments").insert({
+        const payload: Record<string, unknown> = {
           member_id: memberId,
           payment_date: now.toISOString().split("T")[0],
           amount,
           created_by: user?.id,
-        });
+        };
+        if (getCurrentInstitutId() === "attanzil") {
+          payload.payment_mode = mode ?? null;
+          payload.installment_label = installmentLabel ?? null;
+        }
+
+        const { error } = await supabase.from("payments").insert(payload);
 
         if (error) throw error;
 

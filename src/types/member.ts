@@ -30,12 +30,29 @@ export interface Member {
   deleted_at?: string | null;
   // Nouveau champ pour le suivi des transferts
   transferHistory?: TransferRecord[];
+  // Attanzil : mémorisation
+  riwaya?: string | null;
+  tajwidLevel?: string | null;
 }
+
+export type PaymentMode = "mensuel" | "complet" | "plusieurs_fois";
 
 export interface Payment {
   id: string;
   date: string;
   amount?: number;
+  mode?: PaymentMode | null;
+  installmentLabel?: string | null;
+}
+
+export interface MemorizationEntry {
+  id: string;
+  member_id: string;
+  week_start: string;
+  quantity: string | null;
+  validated: boolean;
+  validated_at?: string | null;
+  notes?: string | null;
 }
 
 // Nouveau type pour les enregistrements de transfert
