@@ -16,8 +16,18 @@ import StudentRegistration from "@/pages/StudentRegistration";
 import StaffRegistration from "@/pages/StaffRegistration";
 import NotFound from "@/pages/NotFound";
 import SelectInstitutPage from "@/pages/SelectInstitutPage";
-import { getCurrentInstitutId } from "@/lib/institutes";
+import { getCurrentInstitutId, getInstitutList, setCurrentInstitut, type InstitutId } from "@/lib/institutes";
 import "./App.css";
+
+// Permet de cibler un institut directement via l'URL : ?institut=attanzil
+// (pratique pour partager un lien de connexion propre à un institut)
+if (typeof window !== "undefined") {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("institut");
+  if (id && getInstitutList().some((c) => c.id === id)) {
+    setCurrentInstitut(id as InstitutId);
+  }
+}
 
 function AppRoutes() {
   // useLocation force un re-render à chaque navigation,

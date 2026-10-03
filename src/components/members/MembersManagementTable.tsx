@@ -217,7 +217,16 @@ export const MembersManagementTable = ({
               </p>
             </div>
           ) : members.length > 0 ? (
-            <table className="w-full text-sm border-collapse">
+            <table className="w-full min-w-[900px] text-sm border-collapse table-fixed">
+              <colgroup>
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[13%]" />
+                <col className="w-[19%]" />
+                <col className="w-[19%]" />
+                <col className="w-[13%]" />
+              </colgroup>
               <thead className="bg-slate-50 border-b-2 border-slate-200">
                 <tr>
                   <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
@@ -238,7 +247,7 @@ export const MembersManagementTable = ({
                   <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
                     Groupe(s)
                   </th>
-                  <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12 w-48">
+                  <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
                     Actions
                   </th>
                 </tr>
@@ -254,23 +263,39 @@ export const MembersManagementTable = ({
                       className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-150"
                     >
                       <td className="p-4 font-medium text-slate-900 align-middle h-14">
-  <span className="font-bold uppercase">{member.lastName}</span>
-</td>
-<td className="p-4 text-slate-700 align-middle h-14">
-  <span className="font-bold">
-    {member.firstName.charAt(0).toUpperCase() + member.firstName.slice(1).toLowerCase()}
-  </span>
-</td>
+                        <span
+                          className="block truncate font-bold uppercase"
+                          title={member.lastName}
+                        >
+                          {member.lastName}
+                        </span>
+                      </td>
+                      <td className="p-4 text-slate-700 align-middle h-14">
+                        <span
+                          className="block truncate font-bold"
+                          title={member.firstName}
+                        >
+                          {member.firstName.charAt(0).toUpperCase() +
+                            member.firstName.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="p-4 text-slate-600 align-middle h-14">
+                        {member.city ? (
+                          <span className="block truncate" title={member.city}>
+                            {member.city.charAt(0).toUpperCase() +
+                              member.city.slice(1).toLowerCase()}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic">-</span>
+                        )}
+                      </td>
 <td className="p-4 text-slate-600 align-middle h-14">
-  {member.city ? (
-    member.city.charAt(0).toUpperCase() + member.city.slice(1).toLowerCase()
-  ) : (
-    <span className="text-slate-400 italic">-</span>
-  )}
-</td>
-<td className="p-4 text-slate-600 align-middle h-14 whitespace-nowrap">
   {member.phone ? (
-    <a href={`tel:${member.phone}`} className="hover:text-indigo-600">
+    <a
+      href={`tel:${member.phone}`}
+      title={member.phone}
+      className="block truncate hover:text-indigo-600"
+    >
       {member.phone}
     </a>
   ) : (
@@ -281,7 +306,8 @@ export const MembersManagementTable = ({
   {member.email ? (
     <a
       href={`mailto:${member.email}`}
-      className="hover:text-indigo-600 break-all"
+      title={member.email}
+      className="block truncate hover:text-indigo-600"
     >
       {member.email}
     </a>

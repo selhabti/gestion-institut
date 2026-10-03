@@ -266,7 +266,12 @@ useEffect(() => {
   );
 
   const handleSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
+    window.location.href = (import.meta.env.BASE_URL || "/") + "auth";
   }, []);
 
   const handleViewAllStudents = useCallback(() => {
