@@ -43,11 +43,14 @@ import { supabase } from '@/lib/supabase';
 
 // Types
 import type { SessionType } from "@/types/session";
+import { getCurrentInstitutId } from "@/lib/institutes";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   // États
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
   const [selectedGroup, setSelectedGroup] = useState<SessionType>(() => {
+    if (getCurrentInstitutId() === "attanzil") return "Samedi";
     const today = new Date().getDay();
     if (today === 6) return "Samedi";
     if (today === 0) return "Dimanche";
@@ -395,7 +398,9 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
           loading={loading}
           filteredMembersCount={filteredMembers.length}
           onDateChange={navigateDate}
-          onGroupChange={setSelectedGroup}
+          onGroupChange={(g: SessionType) => {
+            if (!isAttanzil) setSelectedGroup(g);
+          }}
           getNextSessionDate={getNextSessionDate}
           isNextSessionToday={isNextSessionToday}
         />

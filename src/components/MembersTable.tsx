@@ -37,6 +37,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 import { DAYS_FR } from "@/pages/DashboardPage/utils/constants";
+import { getCurrentInstitutId } from "@/lib/institutes";
 
 // ================================
 // TYPES ET PROPS
@@ -102,6 +103,9 @@ export function MembersTable({
 }: MembersTableProps) {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const { getStudentHistory } = useStudentHistory(members);
+
+  // Attanzil : une seule séance (Samedi) → pas de colonne Ville ni de transfert temporaire
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
 
   const transfers = activeTransfers;
   const setTransfers = onActiveTransfersChange || (() => {});
@@ -535,17 +539,18 @@ export function MembersTable({
           <table className="w-full min-w-[720px] text-sm table-fixed">
             <colgroup>
               <col className="w-[30%]" />
-              <col className="w-[18%]" />
-              <col className="w-[20%]" />
-              <col className="w-[14%]" />
-              <col className="w-[18%]" />
+              {!isAttanzil && <col className="w-[18%]" />}
+              <col className={isAttanzil ? "w-[26%]" : "w-[20%]"} />
+              <col className={isAttanzil ? "w-[18%]" : "w-[14%]"} />
+              <col className={isAttanzil ? "w-[26%]" : "w-[18%]"} />
             </colgroup>
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Élève</th>
-                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Ville</th>
+                {!isAttanzil && (
+                  <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Ville</th>
+                )}
                 <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Groupe(s)</th>
-               
                 <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Paiement</th>
                 <th className="text-left p-4 font-semibold text-slate-700">Actions</th>
               </tr>
@@ -577,9 +582,11 @@ export function MembersTable({
                           </span>
                         </div>
                       </td>
-                      <td className="p-4 border-r border-slate-100">
-                      {member.city ? capitalize(member.city.toLowerCase()) : "—"}
-                      </td>
+                      {!isAttanzil && (
+                        <td className="p-4 border-r border-slate-100">
+                          {member.city ? capitalize(member.city.toLowerCase()) : "—"}
+                        </td>
+                      )}
                       <td className="p-4 border-r border-slate-100">
                         <Badge variant="outline">{member.group}</Badge>
                         {secondaryGroups.length > 0 &&
@@ -649,7 +656,7 @@ export function MembersTable({
                           />
 
                           {/* Bouton transfert temporaire */}
-                          {getTransferTarget() && shouldEnableButtons() && (
+                          {!isAttanzil && getTransferTarget() && shouldEnableButtons() && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>

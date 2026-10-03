@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, RotateCcw } from "lucide-react
 import type { Member, AttendanceStatus } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { lazyImport } from "@/utils/lazyImport";
+import { getCurrentInstitutId } from "@/lib/institutes";
 
 const LazyMembersTable = lazyImport(() => import("@/components/MembersTable"));
 
@@ -100,6 +101,9 @@ export const AttendanceTab = ({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Attanzil : une seule séance, le Samedi (9h30 – 11h30)
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
+
   const selected = new Date(selectedDate);
   selected.setHours(0, 0, 0, 0);
 
@@ -109,6 +113,7 @@ export const AttendanceTab = ({
 
   const isSessionDay = (date: Date): boolean => {
     const day = date.getDay();
+    if (isAttanzil) return day === 6;
     return day === 6 || day === 0 || day === 1;
   };
 
@@ -162,6 +167,7 @@ export const AttendanceTab = ({
   const getSessionDayForDate = (date: Date): string | null => {
     const day = date.getDay();
     if (day === 6) return "Samedi";
+    if (isAttanzil) return null;
     if (day === 0) return "Dimanche";
     if (day === 1) return "Lundi";
     return null;
@@ -245,6 +251,14 @@ export const AttendanceTab = ({
               {isPast && historicalEditMode && (
                 <Badge className="bg-purple-500 text-white text-xs px-2 py-0.5">
                   📝 Édition active
+                </Badge>
+              )}
+              {isAttanzil && sessionDay === "Samedi" && (
+                <Badge
+                  variant="outline"
+                  className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-2 py-0.5"
+                >
+                  9h30 – 11h30
                 </Badge>
               )}
             </div>

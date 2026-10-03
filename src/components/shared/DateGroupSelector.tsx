@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import type { SessionType } from "@/types/session";
 import { motion } from "framer-motion";
+import { getCurrentInstitutId } from "@/lib/institutes";
 
 const groups = [
   {
@@ -62,6 +63,12 @@ export const DateGroupSelector = ({
   onGroupChange: (g: SessionType) => void;
 }) => {
   const { day, dateNum, monthYear } = formatFrenchDate(selectedDate);
+
+  // Attanzil : une seule séance (Samedi)
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
+  const visibleGroups = isAttanzil
+    ? groups.filter((g) => g.value === "Samedi")
+    : groups;
 
   return (
     <div className="max-w-6xl mx-auto px-4">
@@ -178,8 +185,8 @@ export const DateGroupSelector = ({
                 Groupe
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {groups.map((g) => (
+            <div className={`grid gap-3 ${isAttanzil ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
+              {visibleGroups.map((g) => (
                 <motion.button
                   key={g.value}
                   whileHover={{ scale: 1.06 }}
