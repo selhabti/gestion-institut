@@ -29,6 +29,14 @@ export const registerStaff = async (
   email: string,
   password: string
 ): Promise<RegisterStaffResult> => {
+  // Repartir d'une session vierge : sinon Better Auth peut renvoyer la session
+  // en cours (utilisateur déjà connecté) et le rôle serait attaché au mauvais compte.
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // pas de session active : on ignore
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
