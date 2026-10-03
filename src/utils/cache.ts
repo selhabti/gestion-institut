@@ -6,7 +6,7 @@ interface CacheItem<T> {
   }
   
   class LocalCache {
-    private static readonly CACHE_VERSION = '1.0.0';
+    private static readonly CACHE_VERSION = '1.1.0';
     private static readonly CACHE_PREFIX = 'institut_cache_';
     
     // Durées de cache en millisecondes

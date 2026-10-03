@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import LocalCache from "@/utils/cache";
 import { supabase } from '@/lib/supabase';
+import { getCurrentInstitutId } from "@/lib/institutes";
 import type { GroupType, AttendanceStatus, Member } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { toast } from "sonner";
@@ -10,6 +11,10 @@ import {
   addForCatchup,
   getTransferOpportunities 
 } from "@/services/attendanceSyncService";
+
+// Cache cloisonné par institut (sinon les élèves d'un institut s'affichent dans l'autre)
+const membersCacheKey = () =>
+  `members_data_${getCurrentInstitutId() ?? "default"}`;
 
 interface MemberRow {
   id: string;
@@ -63,7 +68,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       if (!forceRefresh && hasLoadedRef.current && members.length > 0) return;
 
       if (!forceRefresh) {
-        const cachedData = LocalCache.get<Member[]>("members_data");
+        const cachedData = LocalCache.get<Member[]>(membersCacheKey());
         if (cachedData && cachedData.length > 0) {
           setMembers(cachedData);
           hasLoadedRef.current = true;
@@ -142,7 +147,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
 
         setMembers(transformedMembers);
         hasLoadedRef.current = true;
-        LocalCache.set("members_data", transformedMembers);
+        LocalCache.set(membersCacheKey(), transformedMembers);
 
         console.log(
           `✅ ${transformedMembers.length} membres chargés en ${Math.round(
@@ -152,7 +157,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       } catch (error) {
         console.error("💥 Erreur de chargement:", error);
 
-        const cachedData = LocalCache.get<Member[]>("members_data");
+        const cachedData = LocalCache.get<Member[]>(membersCacheKey());
         if (cachedData && cachedData.length > 0) {
           setMembers(cachedData);
           hasLoadedRef.current = true;
@@ -632,7 +637,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           };
 
           setMembers((prev) => [...prev, newMember]);
-          LocalCache.set("members_data", [...members, newMember]);
+          LocalCache.set(membersCacheKey(), [...members, newMember]);
 
           console.log(
             `✅ Membre ajouté: ${newMember.firstName} ${newMember.lastName}`
@@ -671,7 +676,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
 
       setMembers(prev => prev.filter(m => m.id !== memberId));
       hasLoadedRef.current = false;
-      LocalCache.remove("members_data");
+      LocalCache.remove(membersCacheKey());
       toast.success('Membre supprimé');
     } catch (error: any) {
       console.error('❌ Erreur:', error);
@@ -702,7 +707,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         const updatedMembers = members.map((member) =>
           member.id === memberId ? { ...member, ...updates } : member
         );
-        LocalCache.set("members_data", updatedMembers);
+        LocalCache.set(membersCacheKey(), updatedMembers);
 
         const { error } = await supabase
           .from("members")

@@ -50,6 +50,12 @@ function InstitutRedirect({ tab }: { tab: string }) {
   return <Navigate to={id ? `/${id}/${tab}` : "/select"} replace />;
 }
 
+// Remonte DashboardPage quand on change d'institut (évite de garder les données du précédent)
+function InstitutDashboard() {
+  const { institutId } = useParams();
+  return <DashboardPage key={institutId} />;
+}
+
 function AppRoutes() {
   // useLocation force un re-render à chaque navigation
   useLocation();
@@ -78,7 +84,7 @@ function AppRoutes() {
           path="/:institutId/dashboard"
           element={
             <RequireInstitut>
-              <DashboardPage />
+              <InstitutDashboard />
             </RequireInstitut>
           }
         />
@@ -86,7 +92,7 @@ function AppRoutes() {
           path="/:institutId/members"
           element={
             <RequireInstitut>
-              <DashboardPage />
+              <InstitutDashboard />
             </RequireInstitut>
           }
         />
@@ -94,7 +100,7 @@ function AppRoutes() {
           path="/:institutId/attendance"
           element={
             <RequireInstitut>
-              <DashboardPage />
+              <InstitutDashboard />
             </RequireInstitut>
           }
         />
@@ -102,7 +108,7 @@ function AppRoutes() {
           path="/:institutId/admin"
           element={
             <RequireInstitut>
-              <DashboardPage />
+              <InstitutDashboard />
             </RequireInstitut>
           }
         />
