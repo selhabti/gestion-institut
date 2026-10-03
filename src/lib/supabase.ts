@@ -32,8 +32,8 @@ let currentClient: NeonClient | null = null;
 
 function resolveClient(): NeonClient {
   if (typeof window === "undefined") {
-    const fallbackAuth = import.meta.env.VITE_INSTITUT_ZAYED_AUTH_URL;
-    const fallbackData = import.meta.env.VITE_INSTITUT_ZAYED_DATA_API_URL;
+    const fallbackAuth = (import.meta.env.VITE_INSTITUT_ZAYED_AUTH_URL || "").trim();
+    const fallbackData = (import.meta.env.VITE_INSTITUT_ZAYED_DATA_API_URL || "").trim();
     if (fallbackAuth && fallbackData) {
       return createClientForInstitut("zayed", fallbackAuth, fallbackData);
     }
@@ -45,8 +45,8 @@ function resolveClient(): NeonClient {
   const dataApiUrl = institut?.dataApiUrl;
 
   if (!institut || !authUrl || !dataApiUrl) {
-    const legacyAuth = import.meta.env.VITE_INSTITUT_ZAYED_AUTH_URL;
-    const legacyData = import.meta.env.VITE_INSTITUT_ZAYED_DATA_API_URL;
+    const legacyAuth = (import.meta.env.VITE_INSTITUT_ZAYED_AUTH_URL || "").trim();
+    const legacyData = (import.meta.env.VITE_INSTITUT_ZAYED_DATA_API_URL || "").trim();
     if (legacyAuth && legacyData && !currentClient) {
       currentClient = createClientForInstitut("zayed", legacyAuth, legacyData);
       return currentClient;

@@ -23,15 +23,15 @@ export const INSTITUTS: Record<InstitutId, InstitutConfig> = {
   zayed: {
     id: "zayed",
     name: "Zayed Ibn Thabyte",
-    authUrl: env.VITE_INSTITUT_ZAYED_AUTH_URL || "",
-    dataApiUrl: env.VITE_INSTITUT_ZAYED_DATA_API_URL || "",
+    authUrl: (env.VITE_INSTITUT_ZAYED_AUTH_URL || "").trim(),
+    dataApiUrl: (env.VITE_INSTITUT_ZAYED_DATA_API_URL || "").trim(),
     logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
   attanzil: {
     id: "attanzil",
     name: "Institut Attanzil",
-    authUrl: env.VITE_INSTITUT_ATTANZIL_AUTH_URL || "",
-    dataApiUrl: env.VITE_INSTITUT_ATTANZIL_DATA_API_URL || "",
+    authUrl: (env.VITE_INSTITUT_ATTANZIL_AUTH_URL || "").trim(),
+    dataApiUrl: (env.VITE_INSTITUT_ATTANZIL_DATA_API_URL || "").trim(),
     logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
 };
