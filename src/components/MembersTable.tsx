@@ -532,15 +532,22 @@ export function MembersTable({
       {/* TABLEAU */}
       <div className={`overflow-hidden border border-slate-200 rounded-lg bg-white ${className}`}>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[720px] text-sm table-fixed">
+            <colgroup>
+              <col className="w-[30%]" />
+              <col className="w-[18%]" />
+              <col className="w-[20%]" />
+              <col className="w-[14%]" />
+              <col className="w-[18%]" />
+            </colgroup>
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-center p-4 font-semibold text-slate-700 border-r border-slate-200">Élève</th>
-                <th className="text-center p-4 font-semibold text-slate-700 border-r border-slate-200">Ville</th>
-                <th className="text-center p-4 font-semibold text-slate-700 border-r border-slate-200">Groupe(s)</th>
+                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Élève</th>
+                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Ville</th>
+                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Groupe(s)</th>
                
-                <th className="text-center p-4 font-semibold text-slate-700 border-r border-slate-200">Paiement</th>
-                <th className="text-center p-4 font-semibold text-slate-700">Actions</th>
+                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Paiement</th>
+                <th className="text-left p-4 font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

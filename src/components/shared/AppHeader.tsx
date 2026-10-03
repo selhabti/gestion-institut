@@ -61,15 +61,10 @@ export const AppHeader = ({
             <div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 <span className="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-transparent">
-                  Institut Manager
+                  {institut?.name || "Institut Manager"}
                 </span>
               </h1>
               <p className="text-white/70 text-sm font-medium">{user?.email}</p>
-              {institut && (
-                <p className="text-white/90 text-xs font-bold uppercase tracking-wide bg-white/10 rounded-full px-2 py-0.5 inline-block mt-0.5">
-                  {institut.name}
-                </p>
-              )}
             </div>
           </div>
 
