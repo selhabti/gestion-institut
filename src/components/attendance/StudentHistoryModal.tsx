@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Check,
   X,
   Calendar,
@@ -22,6 +29,7 @@ import {
   Plus,
   Trash2,
   Shield,
+  Table2,
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import type { StudentHistory } from "@/types/attendance";
@@ -31,6 +39,7 @@ import { toast } from "sonner";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
+import { JUZ_REFERENCE, QUANTITY_OPTIONS } from "@/lib/quranReference";
 
 interface StudentHistoryModalProps {
   student: StudentHistory | null;
@@ -89,6 +98,7 @@ export function StudentHistoryModal({
   const [newWeek, setNewWeek] = useState("");
   const [newQty, setNewQty] = useState("");
   const [tajwidDraft, setTajwidDraft] = useState("");
+  const [showRef, setShowRef] = useState(false);
   useEffect(() => {
     setTajwidDraft(memo.tajwidLevel);
   }, [memo.tajwidLevel]);
@@ -111,6 +121,7 @@ export function StudentHistoryModal({
   }
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-border/80 shadow-2xl">
         <DialogHeader>
@@ -164,13 +175,21 @@ export function StudentHistoryModal({
           {isAttanzil && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="flex items-center gap-3">
                     <div className="p-3 rounded-2xl bg-indigo-600 text-white">
                       <BookOpen className="h-6 w-6" />
                     </div>
                     <span>Fiche de mémorisation</span>
                   </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowRef(true)}
+                  >
+                    <Table2 className="h-4 w-4 mr-1" />
+                    Juz / Hizb
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Riwaya */}
@@ -227,12 +246,18 @@ export function StudentHistoryModal({
                         onChange={(e) => setNewWeek(e.target.value)}
                         className="w-48"
                       />
-                      <Input
-                        value={newQty}
-                        onChange={(e) => setNewQty(e.target.value)}
-                        placeholder="Quantité (ex : 5 versets, 1 page)"
-                        className="flex-1 min-w-[200px]"
-                      />
+                      <Select value={newQty} onValueChange={setNewQty}>
+                        <SelectTrigger className="flex-1 min-w-[200px]">
+                          <SelectValue placeholder="Quantité" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {QUANTITY_OPTIONS.map((q) => (
+                            <SelectItem key={q} value={q}>
+                              {q}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button
                         onClick={async () => {
                           if (!newWeek) {
@@ -555,5 +580,39 @@ export function StudentHistoryModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={showRef} onOpenChange={setShowRef}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Correspondance Juz / Hizb / Sourate</DialogTitle>
+          <DialogDescription>
+            30 juz • 60 hizb (2 hizb par juz). Point de départ de chaque juz.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-slate-500">
+                <th className="py-2 pr-4 font-medium">Juz</th>
+                <th className="py-2 pr-4 font-medium">Hizb</th>
+                <th className="py-2 pr-4 font-medium">Sourate (début)</th>
+                <th className="py-2 font-medium">Verset</th>
+              </tr>
+            </thead>
+            <tbody>
+              {JUZ_REFERENCE.map((j) => (
+                <tr key={j.juz} className="border-b last:border-0">
+                  <td className="py-2 pr-4 font-semibold">{j.juz}</td>
+                  <td className="py-2 pr-4">{j.hizb}</td>
+                  <td className="py-2 pr-4">{j.startSurah}</td>
+                  <td className="py-2 text-slate-500">{j.startAyah}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

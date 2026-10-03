@@ -9,6 +9,7 @@ import type { Member, AttendanceStatus, PaymentMode } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { lazyImport } from "@/utils/lazyImport";
 import { getCurrentInstitutId } from "@/lib/institutes";
+import { SessionTimer } from "@/components/attendance/SessionTimer";
 
 const LazyMembersTable = lazyImport(() => import("@/components/MembersTable"));
 
@@ -308,6 +309,9 @@ export const AttendanceTab = ({
           </div>
         )}
       </div>
+
+      {/* MINUTEUR DE SÉANCE (Attanzil) */}
+      {isAttanzil && <SessionTimer />}
 
       {/* TABLEAU */}
       <Card className="border border-slate-300 shadow-sm">
