@@ -44,9 +44,22 @@ export const getInstitutList = (): InstitutConfig[] => {
     .filter((c) => Boolean(c.authUrl && c.dataApiUrl));
 };
 
+const parseInstitutFromUrl = (): InstitutId | null => {
+  if (typeof window === "undefined") return null;
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  let path = window.location.pathname;
+  if (base && path.startsWith(base)) path = path.slice(base.length);
+  const seg = path.split("/").filter(Boolean)[0];
+  return seg === "zayed" || seg === "attanzil" ? (seg as InstitutId) : null;
+};
+
 export const getCurrentInstitutId = (): InstitutId | null => {
   if (typeof window === "undefined") return null;
   const enabled = getInstitutList();
+
+  // Priorité à l'institut présent dans l'URL (/attanzil/dashboard)
+  const fromUrl = parseInstitutFromUrl();
+  if (fromUrl && enabled.some((c) => c.id === fromUrl)) return fromUrl;
 
   // Si un seul institut est configuré, on le force (pas de choix possible)
   if (enabled.length === 1) return enabled[0].id;

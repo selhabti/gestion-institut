@@ -6,6 +6,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useParams,
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,11 +17,15 @@ import StudentRegistration from "@/pages/StudentRegistration";
 import StaffRegistration from "@/pages/StaffRegistration";
 import NotFound from "@/pages/NotFound";
 import SelectInstitutPage from "@/pages/SelectInstitutPage";
-import { getCurrentInstitutId, getInstitutList, setCurrentInstitut, type InstitutId } from "@/lib/institutes";
+import {
+  getCurrentInstitutId,
+  getInstitutList,
+  setCurrentInstitut,
+  type InstitutId,
+} from "@/lib/institutes";
 import "./App.css";
 
-// Permet de cibler un institut directement via l'URL : ?institut=attanzil
-// (pratique pour partager un lien de connexion propre à un institut)
+// Compatibilité : ?institut=attanzil sur l'URL de base
 if (typeof window !== "undefined") {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("institut");
@@ -29,54 +34,88 @@ if (typeof window !== "undefined") {
   }
 }
 
+// Vérifie que le segment d'institut de l'URL est valide, sinon renvoie au choix
+function RequireInstitut({ children }: { children: React.ReactNode }) {
+  const { institutId } = useParams();
+  const enabled = getInstitutList();
+  if (!institutId || !enabled.some((c) => c.id === institutId)) {
+    return <Navigate to="/select" replace />;
+  }
+  return <>{children}</>;
+}
+
+// Redirige les anciens chemins (/dashboard) vers le chemin préfixé (/attanzil/dashboard)
+function InstitutRedirect({ tab }: { tab: string }) {
+  const id = getCurrentInstitutId();
+  return <Navigate to={id ? `/${id}/${tab}` : "/select"} replace />;
+}
+
 function AppRoutes() {
-  // useLocation force un re-render à chaque navigation,
-  // donc le garde d'institut est recalculé à jour
+  // useLocation force un re-render à chaque navigation
   useLocation();
-  const hasInstitut = typeof window !== "undefined" && getCurrentInstitutId() !== null;
+  const hasInstitut =
+    typeof window !== "undefined" && getCurrentInstitutId() !== null;
 
   return (
     <div className="min-h-screen bg-background">
       <Routes>
-        {/* Page de sélection d'institut (icones à la racine) */}
+        {/* Choix de l'institut (global) */}
         <Route path="/select" element={<SelectInstitutPage />} />
 
-        {/* Redirection par défaut : vers sélection si aucun institut, sinon dashboard */}
+        {/* Racine : dashboard de l'institut (URL-aware) sinon choix */}
         <Route
           path="/"
           element={
             <Navigate
-              to={hasInstitut ? "/dashboard" : "/select"}
+              to={hasInstitut ? `/${getCurrentInstitutId()}/dashboard` : "/select"}
               replace
             />
           }
         />
 
-        {/* Dashboard + Tabs - protégé par sélection d'institut */}
+        {/* App préfixée par l'institut dans l'URL */}
         <Route
-          path="/dashboard"
+          path="/:institutId/dashboard"
           element={
-            hasInstitut ? <DashboardPage /> : <Navigate to="/select" replace />
+            <RequireInstitut>
+              <DashboardPage />
+            </RequireInstitut>
           }
         />
         <Route
-          path="/members"
+          path="/:institutId/members"
           element={
-            hasInstitut ? <DashboardPage /> : <Navigate to="/select" replace />
+            <RequireInstitut>
+              <DashboardPage />
+            </RequireInstitut>
           }
         />
+        <Route
+          path="/:institutId/attendance"
+          element={
+            <RequireInstitut>
+              <DashboardPage />
+            </RequireInstitut>
+          }
+        />
+        <Route
+          path="/:institutId/admin"
+          element={
+            <RequireInstitut>
+              <DashboardPage />
+            </RequireInstitut>
+          }
+        />
+        <Route path="/:institutId/select" element={<SelectInstitutPage />} />
+
+        {/* Anciens chemins -> redirection vers le chemin préfixé */}
+        <Route path="/dashboard" element={<InstitutRedirect tab="dashboard" />} />
+        <Route path="/members" element={<InstitutRedirect tab="members" />} />
         <Route
           path="/attendance"
-          element={
-            hasInstitut ? <DashboardPage /> : <Navigate to="/select" replace />
-          }
+          element={<InstitutRedirect tab="attendance" />}
         />
-        <Route
-          path="/admin"
-          element={
-            hasInstitut ? <DashboardPage /> : <Navigate to="/select" replace />
-          }
-        />
+        <Route path="/admin" element={<InstitutRedirect tab="admin" />} />
 
         {/* Auth */}
         <Route path="/auth" element={<Auth />} />

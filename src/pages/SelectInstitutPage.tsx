@@ -29,7 +29,7 @@ export default function SelectInstitutPage() {
       return;
     }
     setCurrentInstitut(id);
-    navigate("/dashboard");
+    navigate(`/${id}/dashboard`);
   };
 
   return (

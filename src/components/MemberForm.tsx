@@ -8,6 +8,7 @@ import { CheckCircle, AlertCircle, Loader2, UserPlus, Star, X, Users } from "luc
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import type { GroupType } from "@/types/member";
+import { getCurrentInstitutId } from "@/lib/institutes";
 import { MemberFormDuplicateCheck } from "./MemberFormDuplicateCheck";
 import {
   AlertDialog,
@@ -192,7 +193,10 @@ const MemberForm: React.FC<MemberFormProps> = ({
             label: 'Voir la liste',
             onClick: () => {
               // Option: naviguer vers la liste des membres
-              window.location.href = import.meta.env.BASE_URL + "members";
+              window.location.href =
+                import.meta.env.BASE_URL +
+                (getCurrentInstitutId() ?? "") +
+                "/members";
             }
           }
         });
