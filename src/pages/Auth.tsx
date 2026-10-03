@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from '@/lib/supabase';
+import { getCurrentInstitut } from '@/lib/institutes';
 import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const institut = getCurrentInstitut();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,6 +59,11 @@ export default function Auth() {
             <CardTitle className="text-3xl text-slate-900">Connexion</CardTitle>
             <CardDescription className="text-slate-600 text-lg mt-2">
               Entrez vos identifiants
+              {institut && (
+                <span className="block text-sm font-semibold text-indigo-600 mt-1">
+                  {institut.name}
+                </span>
+              )}
             </CardDescription>
           </div>
         </CardHeader>

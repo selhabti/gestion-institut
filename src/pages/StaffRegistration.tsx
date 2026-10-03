@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -12,6 +13,13 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { registerStaff } from "@/hooks/useStaff";
+import {
+  INSTITUTS,
+  getCurrentInstitut,
+  getInstitutList,
+  setCurrentInstitut,
+  type InstitutId,
+} from "@/lib/institutes";
 
 export default function StaffRegistration() {
   const navigate = useNavigate();
@@ -20,9 +28,25 @@ export default function StaffRegistration() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const instituts = getInstitutList();
+  const [institutId, setInstitutId] = useState<InstitutId | null>(
+    getCurrentInstitut()?.id ?? (instituts.length === 1 ? instituts[0].id : null)
+  );
+
+  const currentInstitut = institutId ? INSTITUTS[institutId] : null;
+
+  const handlePickInstitut = (id: InstitutId) => {
+    setCurrentInstitut(id);
+    setInstitutId(id);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!institutId) {
+      toast.error("Veuillez d'abord choisir l'institut.");
+      return;
+    }
     if (!name.trim()) {
       toast.error("Le nom est requis");
       return;
@@ -53,13 +77,19 @@ export default function StaffRegistration() {
         role === "super_admin"
           ? "Compte super administrateur créé !"
           : "Compte créé !",
-        { description: "Vous êtes maintenant connecté." }
+        {
+          description: `Institut : ${currentInstitut?.name} — vous êtes connecté.`,
+        }
       );
       navigate("/select");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erreur lors de l'inscription";
-      toast.error(message);
+      toast.error(message, {
+        description: currentInstitut
+          ? `Institut ciblé : ${currentInstitut.name}`
+          : undefined,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -71,19 +101,42 @@ export default function StaffRegistration() {
         <CardHeader>
           <CardTitle>Créer un compte staff</CardTitle>
           <CardDescription>
-            Le premier compte créé devient super administrateur. Les suivants
-            sont gestionnaires.
+            Le premier compte d'un institut devient super administrateur. Les
+            suivants sont gestionnaires.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Institut</Label>
+              {instituts.length > 1 ? (
+                <div className="flex flex-wrap gap-2">
+                  {instituts.map((c) => (
+                    <Button
+                      key={c.id}
+                      type="button"
+                      size="sm"
+                      variant={institutId === c.id ? "default" : "outline"}
+                      onClick={() => handlePickInstitut(c.id)}
+                    >
+                      {c.name}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <Badge variant="outline" className="text-sm">
+                  {instituts[0]?.name ?? "Aucun institut configuré"}
+                </Badge>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="staff-name">Nom complet</Label>
               <Input
                 id="staff-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Said / Takoua"
+                placeholder="Saïd / Takoua"
                 disabled={isLoading}
               />
             </div>
@@ -114,8 +167,14 @@ export default function StaffRegistration() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Création..." : "Créer le compte"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !institutId}
+            >
+              {isLoading
+                ? "Création..."
+                : `Créer le compte${currentInstitut ? ` — ${currentInstitut.name}` : ""}`}
             </Button>
           </form>
 
