@@ -11,6 +11,34 @@ import {
   getTransferOpportunities 
 } from "@/services/attendanceSyncService";
 
+interface MemberRow {
+  id: string;
+  first_name: string;
+  last_name: string;
+  city: string;
+  phone: string | null;
+  email: string | null;
+  group_type: string;
+  secondary_groups: string[] | null;
+  created_at: string;
+  deleted_at?: string | null;
+}
+
+interface PaymentRow {
+  id: string;
+  member_id: string;
+  payment_date: string;
+  amount: number;
+}
+
+interface AttendanceRow {
+  id: string;
+  member_id: string;
+  date: string;
+  status: string;
+  session_type: string | null;
+}
+
 export const useDashboardData = (user: any, shareMode: boolean) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,8 +107,9 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         if (attendancesResponse.error) throw attendancesResponse.error;
         if (paymentsResponse.error) throw paymentsResponse.error;
 
-        const transformedMembers: Member[] = (membersResponse.data || [])
-          .map(
+        const transformedMembers: Member[] = (
+          (membersResponse.data || []) as MemberRow[]
+        ).map(
           (member) => ({
             id: member.id,
             firstName: member.first_name,
@@ -91,14 +120,14 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             group: member.group_type as SessionType,
             secondaryGroups: (member.secondary_groups || []) as SessionType[],
             registrationDate: member.created_at,
-            payments: (paymentsResponse.data || [])
+            payments: ((paymentsResponse.data || []) as PaymentRow[])
               .filter((p) => p.member_id === member.id)
               .map((p) => ({
                 id: p.id,
                 date: p.payment_date,
                 amount: p.amount,
               })),
-            attendances: (attendancesResponse.data || [])
+            attendances: ((attendancesResponse.data || []) as AttendanceRow[])
               .filter((a) => a.member_id === member.id)
               .map((a) => ({
                 id: a.id,
@@ -660,6 +689,9 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         if (updates.phone !== undefined) supabaseUpdates.phone = updates.phone;
         if (updates.email !== undefined) supabaseUpdates.email = updates.email;
         if (updates.group) supabaseUpdates.group_type = updates.group;
+        if (updates.secondaryGroups !== undefined) {
+          supabaseUpdates.secondary_groups = updates.secondaryGroups || [];
+        }
 
         setMembers((prev) =>
           prev.map((member) =>
@@ -926,7 +958,9 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
 
       if (error) throw error;
 
-      const archived = (data || []).filter((m) => m.deleted_at).map((m) => ({
+      const archived = ((data || []) as MemberRow[])
+        .filter((m) => m.deleted_at)
+        .map((m) => ({
         id: m.id,
         firstName: m.first_name,
         lastName: m.last_name,

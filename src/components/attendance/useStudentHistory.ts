@@ -3,6 +3,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { StudentHistory, MonthlyStats, SessionDetail, PaymentStatus } from '@/types/attendance';
 
+interface AttendanceRow {
+  id: string;
+  member_id: string;
+  date: string;
+  status: string;
+  session_type?: string | null;
+}
+
 export function useStudentHistory(studentId: string) {
   const [history, setHistory] = useState<StudentHistory | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,8 +38,9 @@ export function useStudentHistory(studentId: string) {
           .order('date', { ascending: false });
 
         const sessionsByMonth = new Map<string, SessionDetail[]>();
+        const attendanceRows = (attendances || []) as AttendanceRow[];
         
-        attendances?.forEach(att => {
+        attendanceRows.forEach(att => {
           const month = att.date.substring(0, 7);
           if (!sessionsByMonth.has(month)) {
             sessionsByMonth.set(month, []);
@@ -39,7 +48,7 @@ export function useStudentHistory(studentId: string) {
           sessionsByMonth.get(month)!.push({
             date: att.date,
             day: new Date(att.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
-            status: att.status,
+            status: att.status as SessionDetail['status'],
             sessionType: att.session_type || 'default'
           });
         });
@@ -68,10 +77,10 @@ export function useStudentHistory(studentId: string) {
 
         monthlyStats.sort((a, b) => b.month.localeCompare(a.month));
 
-        const totalSessions = attendances?.length || 0;
-        const presentCount = attendances?.filter(a => a.status === 'present').length || 0;
-        const justifiedCount = attendances?.filter(a => a.status === 'absent_justified').length || 0;
-        const unjustifiedCount = attendances?.filter(a => a.status === 'absent_unjustified').length || 0;
+        const totalSessions = attendanceRows.length;
+        const presentCount = attendanceRows.filter(a => a.status === 'present').length;
+        const justifiedCount = attendanceRows.filter(a => a.status === 'absent_justified').length;
+        const unjustifiedCount = attendanceRows.filter(a => a.status === 'absent_unjustified').length;
 
         setHistory({
           studentId: member.id,

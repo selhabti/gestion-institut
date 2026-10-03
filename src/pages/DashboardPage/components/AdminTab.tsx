@@ -22,7 +22,8 @@ import {
   Briefcase,
   Euro,
   Archive,
-  RotateCcw
+  RotateCcw,
+  UserPlus
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -35,7 +36,9 @@ import { SESSION_TYPES } from "@/pages/DashboardPage/utils/constants";
 import { useEvents } from "@/hooks/useEvents";
 import { FinanceTab } from "./FinanceTab";
 import { CashRegisterTab } from "./CashRegisterTab";
-import type { Member } from "@/types/member";
+import { RegistrationForm } from "@/components/members";
+import { useStaff, type AppRole } from "@/hooks/useStaff";
+import type { Member, GroupType } from "@/types/member";
 
 interface AdminTabProps {
   user: any;
@@ -45,10 +48,20 @@ interface AdminTabProps {
   archivedMembers?: Member[];
   loadingArchived?: boolean;
   onLoadArchived?: () => void;
+  onAddMember?: (
+    firstName: string,
+    lastName: string,
+    city: string,
+    phone: string,
+    email: string,
+    primaryGroup: GroupType,
+    secondaryGroups?: GroupType[]
+  ) => Promise<void>;
 }
 
-export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived }: AdminTabProps) => {
-  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash">("events");
+export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember }: AdminTabProps) => {
+  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff">("events");
+  const { staff, loading: staffLoading, isSuperAdmin, updateRole, removeStaff } = useStaff();
 
   useEffect(() => {
     if ((adminSubTab === "events" || adminSubTab === "cash") && archivedMembers === undefined && onLoadArchived) {
@@ -189,6 +202,17 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
       {/* Sous-navigation Admin */}
       <div className="flex gap-2 bg-white/95 backdrop-blur-xl rounded-2xl border border-black/10 shadow-lg p-2">
         <button
+          onClick={() => setAdminSubTab("registration")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+            adminSubTab === "registration"
+              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <UserPlus className="h-4 w-4" />
+          Inscription
+        </button>
+        <button
           onClick={() => setAdminSubTab("events")}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
             adminSubTab === "events"
@@ -221,12 +245,182 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           <Euro className="h-4 w-4" />
           Encaissements
         </button>
+        <button
+          onClick={() => setAdminSubTab("staff")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+            adminSubTab === "staff"
+              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Shield className="h-4 w-4" />
+          Équipe
+        </button>
       </div>
 
       {adminSubTab === "finance" ? (
         <FinanceTab members={members} />
       ) : adminSubTab === "cash" ? (
         <CashRegisterTab members={members} />
+      ) : adminSubTab === "registration" ? (
+        shareMode ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Settings className="h-16 w-16 mx-auto mb-4 text-orange-500" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                Accès restreint
+              </h3>
+              <p className="text-slate-600 mb-4">
+                L'inscription n'est pas disponible en mode partage.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="py-4">
+            <RegistrationForm
+              title="Inscription Élève"
+              description="Ajoutez un nouvel élève à l'institut"
+              submitLabel="Ajouter l'élève"
+              onSubmit={async (data) => {
+                if (!onAddMember) {
+                  toast.error("Fonction d'ajout indisponible");
+                  throw new Error("onAddMember manquant");
+                }
+                await onAddMember(
+                  data.firstName,
+                  data.lastName,
+                  data.city,
+                  data.phone,
+                  data.email,
+                  data.group
+                );
+                toast.success(
+                  `${data.firstName} ${data.lastName} ajouté avec succès`
+                );
+              }}
+            />
+          </div>
+        )
+      ) : adminSubTab === "staff" ? (
+        !isSuperAdmin ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Shield className="h-16 w-16 mx-auto mb-4 text-orange-500" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                Accès restreint
+              </h3>
+              <p className="text-slate-600">
+                Seul le super administrateur peut gérer les comptes.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Équipe
+              </CardTitle>
+              <CardDescription>
+                Comptes et rôles du staff. Le super administrateur gère les
+                comptes ; les gestionnaires ont accès à tout le reste.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    window.open(
+                      (import.meta.env.BASE_URL || "/") + "staff",
+                      "_blank"
+                    )
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau compte staff
+                </Button>
+              </div>
+
+              {staffLoading ? (
+                <div className="text-center py-8 text-slate-500">
+                  Chargement…
+                </div>
+              ) : staff.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <Users className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                  <p>Aucun compte pour le moment.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-slate-500">
+                        <th className="pb-3 font-medium">Nom</th>
+                        <th className="pb-3 font-medium">Email</th>
+                        <th className="pb-3 font-medium">Rôle</th>
+                        <th className="pb-3 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {staff.map((s) => (
+                        <tr
+                          key={s.id}
+                          className="border-b last:border-0 hover:bg-slate-50"
+                        >
+                          <td className="py-3 font-medium">{s.name || "—"}</td>
+                          <td className="py-3 text-slate-600">
+                            {s.email || "—"}
+                          </td>
+                          <td className="py-3">
+                            <Select
+                              value={s.role}
+                              onValueChange={(v) =>
+                                updateRole(s.id, v as AppRole)
+                              }
+                            >
+                              <SelectTrigger className="w-40">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="super_admin">
+                                  Super admin
+                                </SelectItem>
+                                <SelectItem value="admin">
+                                  Gestionnaire
+                                </SelectItem>
+                                <SelectItem value="user">Utilisateur</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="py-3">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              disabled={s.role === "super_admin"}
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    `Retirer ${s.name || s.email} de l'équipe ?`
+                                  )
+                                ) {
+                                  removeStaff(s.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
       ) : shareMode ? (
         <Card>
           <CardContent className="p-8 text-center">

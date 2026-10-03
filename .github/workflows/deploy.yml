@@ -32,12 +32,10 @@ jobs:
       - name: Inject institut variables
         run: |
           for pair in \
-            "VITE_INSTITUT_ZAYED_URL:${{ secrets.VITE_INSTITUT_ZAYED_URL }}" \
-            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ secrets.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
-            "VITE_INSTITUT_ATTANZIL_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_URL }}" \
-            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ secrets.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
-            "VITE_SUPABASE_URL:${{ secrets.VITE_SUPABASE_URL }}" \
-            "VITE_SUPABASE_ANON_KEY:${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            "VITE_INSTITUT_ZAYED_AUTH_URL:${{ secrets.VITE_INSTITUT_ZAYED_AUTH_URL }}" \
+            "VITE_INSTITUT_ZAYED_DATA_API_URL:${{ secrets.VITE_INSTITUT_ZAYED_DATA_API_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_AUTH_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_AUTH_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_DATA_API_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_DATA_API_URL }}" \
           ; do
             name="${pair%%:*}"
             value="${pair#*:}"
@@ -61,10 +59,10 @@ jobs:
         run: |
           count=0
           for pair in \
-            "VITE_INSTITUT_ZAYED_URL:${{ secrets.VITE_INSTITUT_ZAYED_URL }}" \
-            "VITE_INSTITUT_ZAYED_ANON_KEY:${{ secrets.VITE_INSTITUT_ZAYED_ANON_KEY }}" \
-            "VITE_INSTITUT_ATTANZIL_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_URL }}" \
-            "VITE_INSTITUT_ATTANZIL_ANON_KEY:${{ secrets.VITE_INSTITUT_ATTANZIL_ANON_KEY }}" \
+            "VITE_INSTITUT_ZAYED_AUTH_URL:${{ secrets.VITE_INSTITUT_ZAYED_AUTH_URL }}" \
+            "VITE_INSTITUT_ZAYED_DATA_API_URL:${{ secrets.VITE_INSTITUT_ZAYED_DATA_API_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_AUTH_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_AUTH_URL }}" \
+            "VITE_INSTITUT_ATTANZIL_DATA_API_URL:${{ secrets.VITE_INSTITUT_ATTANZIL_DATA_API_URL }}" \
           ; do
             name="${pair%%:*}"
             value="${pair#*:}"

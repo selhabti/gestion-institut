@@ -1,6 +1,16 @@
 import { supabase } from '@/lib/supabase';
 import type { ProfessorSession } from '@/types/professorHours';
 
+interface ProfessorSessionRow {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  actual_hours: number;
+  notes: string | null;
+  status?: string;
+}
+
 class ProfessorHoursService {
   
   async saveSession(session: Omit<ProfessorSession, 'id'>): Promise<ProfessorSession> {
@@ -52,14 +62,14 @@ class ProfessorHoursService {
 
     if (error) throw error;
 
-    return (data || []).map(item => ({
+    return ((data || []) as ProfessorSessionRow[]).map(item => ({
       id: item.id,
       date: item.date,
       startTime: item.start_time,
       endTime: item.end_time,
       actualHours: item.actual_hours,
-      notes: item.notes,
-      status: item.status
+      notes: item.notes ?? undefined,
+      status: item.status as ProfessorSession['status']
     }));
   }
 

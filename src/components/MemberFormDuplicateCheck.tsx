@@ -4,6 +4,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
+interface MemberLite {
+  id: string;
+  first_name: string;
+  last_name: string;
+  city?: string | null;
+  group_type: string;
+  secondary_groups?: string[] | null;
+}
+
 interface MemberFormDuplicateCheckProps {
   firstName: string;
   lastName: string;
@@ -16,7 +25,7 @@ export const MemberFormDuplicateCheck: React.FC<MemberFormDuplicateCheckProps> =
   onDuplicateFound
 }) => {
   const [loading, setLoading] = useState(false);
-  const [potentialDuplicates, setPotentialDuplicates] = useState<any[]>([]);
+  const [potentialDuplicates, setPotentialDuplicates] = useState<MemberLite[]>([]);
 
   useEffect(() => {
     const checkForDuplicates = async () => {
@@ -36,7 +45,7 @@ export const MemberFormDuplicateCheck: React.FC<MemberFormDuplicateCheckProps> =
         if (error) throw error;
 
         // Filtrer les doublons potentiels (insensible à la casse)
-        const duplicates = (data || []).filter(member => 
+        const duplicates = ((data || []) as MemberLite[]).filter(member => 
           member.first_name.toLowerCase().includes(firstName.toLowerCase()) ||
           member.last_name.toLowerCase().includes(lastName.toLowerCase())
         );
@@ -84,8 +93,8 @@ export const MemberFormDuplicateCheck: React.FC<MemberFormDuplicateCheckProps> =
                   <p className="text-sm text-slate-600">
                     {member.city && `Ville: ${member.city} • `}
                     Groupes: {member.group_type}
-                    {member.secondary_groups?.length > 0 && 
-                      ` + ${member.secondary_groups.length} secondaire(s)`}
+                    {(member.secondary_groups?.length ?? 0) > 0 && 
+                      ` + ${member.secondary_groups?.length} secondaire(s)`}
                   </p>
                 </div>
               </div>

@@ -3,43 +3,45 @@ export type InstitutId = "zayed" | "attanzil";
 export interface InstitutConfig {
   id: InstitutId;
   name: string;
-  url: string;
-  anonKey: string;
+  /** Base URL de Neon Auth (Managed Better Auth) pour cet institut */
+  authUrl: string;
+  /** URL de la Neon Data API (PostgREST) pour cet institut */
+  dataApiUrl: string;
   logoUrl?: string;
 }
 
 export const STORAGE_KEY = "selected-institut";
 export const INSTITUT_ID_CHANGED_EVENT = "institut-id-changed";
 
-// Les configs sont injectées via .env
-// Format attendu :
-//   VITE_INSTITUT_ZAYED_URL, VITE_INSTITUT_ZAYED_ANON_KEY
-//   VITE_INSTITUT_ATTANZIL_URL, VITE_INSTITUT_ATTANZIL_ANON_KEY
+// Les configs sont injectées via .env.
+// Format attendu (Neon) :
+//   VITE_INSTITUT_ZAYED_AUTH_URL, VITE_INSTITUT_ZAYED_DATA_API_URL
+//   VITE_INSTITUT_ATTANZIL_AUTH_URL, VITE_INSTITUT_ATTANZIL_DATA_API_URL
 const env = (import.meta as any).env;
 
 export const INSTITUTS: Record<InstitutId, InstitutConfig> = {
   zayed: {
     id: "zayed",
     name: "Zayed Ibn Thabyte",
-    url: env.VITE_INSTITUT_ZAYED_URL || "",
-    anonKey: env.VITE_INSTITUT_ZAYED_ANON_KEY || "",
+    authUrl: env.VITE_INSTITUT_ZAYED_AUTH_URL || "",
+    dataApiUrl: env.VITE_INSTITUT_ZAYED_DATA_API_URL || "",
     logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
   attanzil: {
     id: "attanzil",
     name: "Institut Attanzil",
-    url: env.VITE_INSTITUT_ATTANZIL_URL || "",
-    anonKey: env.VITE_INSTITUT_ATTANZIL_ANON_KEY || "",
+    authUrl: env.VITE_INSTITUT_ATTANZIL_AUTH_URL || "",
+    dataApiUrl: env.VITE_INSTITUT_ATTANZIL_DATA_API_URL || "",
     logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
   },
 };
 
-// Seuls les instituts dont URL + clé sont remplis dans .env sont activés.
+// Seuls les instituts dont Auth + Data API sont remplis dans .env sont activés.
 // → Chaque déploiement ne monte QUE son institut => zéro interdépendance.
 export const getInstitutList = (): InstitutConfig[] => {
   return (Object.keys(INSTITUTS) as InstitutId[])
     .map((id) => INSTITUTS[id])
-    .filter((c) => Boolean(c.url && c.anonKey));
+    .filter((c) => Boolean(c.authUrl && c.dataApiUrl));
 };
 
 export const getCurrentInstitutId = (): InstitutId | null => {
@@ -62,8 +64,8 @@ export const setCurrentInstitut = (id: InstitutId) => {
 export const clearCurrentInstitut = () => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STORAGE_KEY);
-  window.localStorage.removeItem("app-supabase-auth-zayed");
-  window.localStorage.removeItem("app-supabase-auth-attanzil");
+  window.localStorage.removeItem("neon-auth-zayed");
+  window.localStorage.removeItem("neon-auth-attanzil");
 };
 
 export const getCurrentInstitut = (): InstitutConfig | null => {

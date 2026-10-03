@@ -1,25 +1,32 @@
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
 
+interface AuthUserLike {
+  id: string;
+  email?: string | null;
+}
+
+interface AuthSessionLike {
+  user: AuthUserLike | null;
+}
+
 export const useAuthState = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUserLike | null>(null);
 
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
+    } = supabase.auth.onAuthStateChange(
+      (_event: string, session: AuthSessionLike | null) => {
+        setUser(session?.user ?? null);
       }
-    });
+    );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-      }
-    });
+    supabase.auth
+      .getSession()
+      .then((res: { data: { session: AuthSessionLike | null } }) => {
+        setUser(res.data.session?.user ?? null);
+      });
 
     return () => subscription.unsubscribe();
   }, []);

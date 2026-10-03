@@ -9,8 +9,8 @@ import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@institut.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -105,12 +105,17 @@ export default function Auth() {
             </Button>
           </form>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <h4 className="font-semibold text-blue-900 mb-3 text-center">Compte de test</h4>
-            <div className="text-sm text-blue-700 space-y-1 text-center">
-              <p><strong>Email:</strong> admin@institut.com</p>
-              <p><strong>Mot de passe:</strong> admin123</p>
-            </div>
+          <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-center">
+            <p className="text-sm text-blue-700 mb-2">
+              Pas encore de compte staff ?
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/staff")}
+              className="text-sm font-semibold text-blue-800 hover:text-blue-900 underline"
+            >
+              Créer un compte staff
+            </button>
           </div>
         </CardContent>
       </Card>

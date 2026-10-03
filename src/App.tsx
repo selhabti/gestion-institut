@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DashboardPage from "@/pages/DashboardPage";
 import Auth from "@/pages/Auth";
 import StudentRegistration from "@/pages/StudentRegistration";
+import StaffRegistration from "@/pages/StaffRegistration";
 import NotFound from "@/pages/NotFound";
 import SelectInstitutPage from "@/pages/SelectInstitutPage";
 import { getCurrentInstitutId } from "@/lib/institutes";
@@ -70,6 +71,7 @@ function AppRoutes() {
         {/* Auth */}
         <Route path="/auth" element={<Auth />} />
         <Route path="/register" element={<StudentRegistration />} />
+        <Route path="/staff" element={<StaffRegistration />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />

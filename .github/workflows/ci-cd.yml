@@ -26,8 +26,10 @@ jobs:
       - name: Configuration de l'environnement
         run: |
           cat > .env << EOF
-          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_INSTITUT_ZAYED_AUTH_URL=${{ secrets.VITE_INSTITUT_ZAYED_AUTH_URL }}
+          VITE_INSTITUT_ZAYED_DATA_API_URL=${{ secrets.VITE_INSTITUT_ZAYED_DATA_API_URL }}
+          VITE_INSTITUT_ATTANZIL_AUTH_URL=${{ secrets.VITE_INSTITUT_ATTANZIL_AUTH_URL }}
+          VITE_INSTITUT_ATTANZIL_DATA_API_URL=${{ secrets.VITE_INSTITUT_ATTANZIL_DATA_API_URL }}
           EOF
 
       - name: Build de production (inclut la vérification TypeScript)
@@ -51,8 +53,10 @@ jobs:
 
       - name: Build pour la production
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_INSTITUT_ZAYED_AUTH_URL: ${{ secrets.VITE_INSTITUT_ZAYED_AUTH_URL }}
+          VITE_INSTITUT_ZAYED_DATA_API_URL: ${{ secrets.VITE_INSTITUT_ZAYED_DATA_API_URL }}
+          VITE_INSTITUT_ATTANZIL_AUTH_URL: ${{ secrets.VITE_INSTITUT_ATTANZIL_AUTH_URL }}
+          VITE_INSTITUT_ATTANZIL_DATA_API_URL: ${{ secrets.VITE_INSTITUT_ATTANZIL_DATA_API_URL }}
         run: ./scripts/build.sh
 
       - name: Déploiement

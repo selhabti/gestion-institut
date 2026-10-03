@@ -116,8 +116,10 @@ export const MembersManagementTable = ({
         firstName: editingMember.firstName,
         lastName: editingMember.lastName,
         city: editingMember.city,
+        phone: editingMember.phone,
+        email: editingMember.email,
         group: newPrimaryGroup,
-        secondaryGroups: newSecondaryGroups.length > 0 ? newSecondaryGroups : undefined,
+        secondaryGroups: newSecondaryGroups,
       });
 
       setEditingMember(null);
@@ -228,6 +230,12 @@ export const MembersManagementTable = ({
                     Ville
                   </th>
                   <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
+                    Téléphone
+                  </th>
+                  <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
+                    Email
+                  </th>
+                  <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12">
                     Groupe(s)
                   </th>
                   <th className="text-left p-4 font-semibold text-slate-700 uppercase tracking-wider text-xs align-middle h-12 w-48">
@@ -260,8 +268,29 @@ export const MembersManagementTable = ({
     <span className="text-slate-400 italic">-</span>
   )}
 </td>
-                      <td className="p-4 align-middle h-14">
-                        <div className="flex flex-wrap gap-1">
+<td className="p-4 text-slate-600 align-middle h-14 whitespace-nowrap">
+  {member.phone ? (
+    <a href={`tel:${member.phone}`} className="hover:text-indigo-600">
+      {member.phone}
+    </a>
+  ) : (
+    <span className="text-slate-400 italic">-</span>
+  )}
+</td>
+<td className="p-4 text-slate-600 align-middle h-14">
+  {member.email ? (
+    <a
+      href={`mailto:${member.email}`}
+      className="hover:text-indigo-600 break-all"
+    >
+      {member.email}
+    </a>
+  ) : (
+    <span className="text-slate-400 italic">-</span>
+  )}
+</td>
+<td className="p-4 align-middle h-14">
+  <div className="flex flex-wrap gap-1">
                           {/* Groupe principal */}
                           <Badge
                             className={`
@@ -424,6 +453,36 @@ export const MembersManagementTable = ({
                 }
                 placeholder="Ville (optionnel)"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Téléphone</label>
+                <Input
+                  type="tel"
+                  value={editingMember?.phone || ""}
+                  onChange={(e) =>
+                    setEditingMember((prev) =>
+                      prev ? { ...prev, phone: e.target.value } : null
+                    )
+                  }
+                  placeholder="Numéro de téléphone"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={editingMember?.email || ""}
+                  onChange={(e) =>
+                    setEditingMember((prev) =>
+                      prev ? { ...prev, email: e.target.value } : null
+                    )
+                  }
+                  placeholder="Adresse email (optionnel)"
+                />
+              </div>
             </div>
 
             {/* Gestion des groupes multiples */}

@@ -22,9 +22,9 @@ export default function SelectInstitutPage() {
 
   const handleSelect = (id: InstitutId) => {
     const config = INSTITUTS[id];
-    if (!config.url || !config.anonKey) {
+    if (!config.authUrl || !config.dataApiUrl) {
       setError(
-        `La configuration de ${config.name} est incomplète (URL/clé manquante dans .env).`
+        `La configuration de ${config.name} est incomplète (Auth/Data API manquantes dans .env).`
       );
       return;
     }
@@ -81,7 +81,8 @@ export default function SelectInstitutPage() {
         ) : (
           <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 font-medium text-center">
             Aucun institut configuré. Renseignez les variables
-            VITE_INSTITUT_*_URL / VITE_INSTITUT_*_ANON_KEY dans le fichier .env.
+            VITE_INSTITUT_*_AUTH_URL / VITE_INSTITUT_*_DATA_API_URL dans le
+            fichier .env.
           </div>
         )}
 

@@ -12,6 +12,20 @@ export interface AttendanceRecord {
   group?: SessionType;
 }
 
+interface AttendanceRow {
+  id: string;
+  member_id: string;
+  date: string;
+  status: AttendanceStatus;
+  group?: string | null;
+  session_type?: string | null;
+}
+
+interface PeriodRow {
+  start_date: string;
+  end_date: string;
+}
+
 export class AttendanceService {
   /**
    * Récupérer la présence d'un membre pour une date et un groupe spécifique
@@ -277,7 +291,7 @@ static async markAttendance(record: AttendanceRecord) {
    */
   static async getAttendanceGroups(memberId: string, date: string): Promise<SessionType[]> {
     try {
-      const attendances = await this.getMemberAttendancesForDate(memberId, date);
+      const attendances = (await this.getMemberAttendancesForDate(memberId, date)) as AttendanceRow[];
       return attendances
         .map(a => a.group)
         .filter((group): group is SessionType => group !== null && group !== undefined);
@@ -381,7 +395,7 @@ static async markAttendance(record: AttendanceRecord) {
     existingAttendances?: any[];
   }> {
     try {
-      const attendances = await this.getMemberAttendancesForDate(memberId, date);
+      const attendances = (await this.getMemberAttendancesForDate(memberId, date)) as AttendanceRow[];
       
       if (attendances.length === 0) {
         return { hasConflict: false };
@@ -588,9 +602,9 @@ static async getStudentHistoryWithExclusion(studentId: string) {
     console.log('📅 Périodes exclues trouvées:', excludedPeriods?.length || 0);
 
     // 4. Filtrer les présences pour exclure les périodes de vacances
-    const filteredAttendances = (attendances || []).filter(attendance => {
+    const filteredAttendances = ((attendances || []) as AttendanceRow[]).filter(attendance => {
       // Vérifier si cette date est pendant une période exclue
-      const isExcluded = (excludedPeriods || []).some(period => {
+      const isExcluded = ((excludedPeriods || []) as PeriodRow[]).some(period => {
         return attendance.date >= period.start_date && attendance.date <= period.end_date;
       });
       

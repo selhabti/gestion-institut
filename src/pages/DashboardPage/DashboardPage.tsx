@@ -195,11 +195,8 @@ useEffect(() => {
   const sessionMembers = useMemo(() => {
     if (members.length === 0) return [];
 
-    const today = new Date().getDay();
-    const isClassDay = today === 6 || today === 0 || today === 1;
-
-    // Si on est sur l'onglet Élèves et pas un jour de cours → tous les membres
-    if (activeTab === "members" && !isClassDay) {
+    // L'onglet Élèves est une liste de gestion : on affiche toujours tout le monde.
+    if (activeTab === "members") {
       return members;
     }
 
@@ -247,12 +244,8 @@ useEffect(() => {
     return filtered.sort((a, b) => a.lastName.localeCompare(b.lastName));
   }, [sessionMembers, searchTerms]);
 
-  // Label du groupe affiché aujourd'hui pour l'onglet Élèves
+  // Label affiché pour l'onglet Élèves (liste de gestion = tous les groupes)
   const todayGroupLabel = useMemo(() => {
-    const today = new Date().getDay();
-    if (today === 6) return "Samedi";
-    if (today === 0) return "Dimanche";
-    if (today === 1) return "Lundi";
     return "Tous les groupes";
   }, []);
 
@@ -560,6 +553,7 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
       user={user}
       shareMode={shareMode}
       members={members}
+      onAddMember={handleAddMember}
       onRestoreMember={handleRestoreMember}
       archivedMembers={archivedMembers}
       loadingArchived={loadingArchived}
