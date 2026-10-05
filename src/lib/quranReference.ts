@@ -40,22 +40,27 @@ export const JUZ_REFERENCE: JuzReference[] = [
 ];
 
 // Options de quantité de mémorisation
+// Fractions : uniquement pour le hizb (1/8 … 1 hizb)
+export const HIZB_FRACTIONS = [
+  "1/8 hizb",
+  "1/4 hizb",
+  "1/2 hizb",
+  "5/8 hizb",
+  "3/4 hizb",
+  "7/8 hizb",
+];
+
+// Pages : nombres entiers
+export const PAGE_OPTIONS = Array.from({ length: 10 }, (_, i) => {
+  const n = i + 1;
+  return `${n} page${n > 1 ? "s" : ""}`;
+});
+
+// Hizb entiers
+export const HIZB_OPTIONS = Array.from({ length: 5 }, (_, i) => `${i + 1} hizb`);
+
 export const QUANTITY_OPTIONS = [
-  "1/8 page",
-  "1/4 page",
-  "1/2 page",
-  "5/8 page",
-  "3/4 page",
-  "7/8 page",
-  "1 page",
-  "2 pages",
-  "3 pages",
-  "4 pages",
-  "5 pages",
-  "6 pages",
-  "7 pages",
-  "8 pages",
-  "9 pages",
-  "10 pages",
-  "1 Hizb",
+  ...HIZB_FRACTIONS,
+  ...PAGE_OPTIONS,
+  ...HIZB_OPTIONS,
 ];

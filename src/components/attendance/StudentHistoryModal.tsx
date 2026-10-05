@@ -13,13 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Check,
   X,
   Calendar,
@@ -39,7 +32,8 @@ import { toast } from "sonner";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
-import { JUZ_REFERENCE, QUANTITY_OPTIONS } from "@/lib/quranReference";
+import { JUZ_REFERENCE } from "@/lib/quranReference";
+import { QuantityCombobox } from "@/components/attendance/QuantityCombobox";
 
 interface StudentHistoryModalProps {
   student: StudentHistory | null;
@@ -246,18 +240,7 @@ export function StudentHistoryModal({
                         onChange={(e) => setNewWeek(e.target.value)}
                         className="w-48"
                       />
-                      <Select value={newQty} onValueChange={setNewQty}>
-                        <SelectTrigger className="flex-1 min-w-[200px]">
-                          <SelectValue placeholder="Quantité" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {QUANTITY_OPTIONS.map((q) => (
-                            <SelectItem key={q} value={q}>
-                              {q}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <QuantityCombobox value={newQty} onChange={setNewQty} />
                       <Button
                         onClick={async () => {
                           if (!newWeek) {
