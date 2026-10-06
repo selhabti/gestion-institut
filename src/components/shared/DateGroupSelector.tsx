@@ -6,43 +6,17 @@ import { motion } from "framer-motion";
 import { getCurrentInstitutId } from "@/lib/institutes";
 
 const groups = [
-  {
-    value: "Samedi" as const,
-    label: "Samedi",
-    color: "from-blue-500 to-indigo-600",
-  },
-  {
-    value: "Dimanche" as const,
-    label: "Dimanche",
-    color: "from-emerald-500 to-teal-600",
-  },
-  {
-    value: "Samedi+Dimanche" as const,
-    label: "Weekend",
-    color: "from-purple-500 to-pink-600",
-  },
-  {
-    value: "Lundi" as const,
-    label: "Nouraniya",
-    color: "from-orange-500 to-amber-600",
-  },
+  { value: "Samedi" as const, label: "Samedi", dot: "bg-blue-500" },
+  { value: "Dimanche" as const, label: "Dimanche", dot: "bg-emerald-500" },
+  { value: "Samedi+Dimanche" as const, label: "Weekend", dot: "bg-purple-500" },
+  { value: "Lundi" as const, label: "Nouraniya", dot: "bg-orange-500" },
 ];
 
 const formatFrenchDate = (date: Date) => {
   const days = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
   const months = [
-    "JAN",
-    "FÉV",
-    "MAR",
-    "AVR",
-    "MAI",
-    "JUI",
-    "JUL",
-    "AOÛ",
-    "SEP",
-    "OCT",
-    "NOV",
-    "DÉC",
+    "JAN", "FÉV", "MAR", "AVR", "MAI", "JUI",
+    "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC",
   ];
   return {
     day: days[date.getDay()],
@@ -64,38 +38,28 @@ export const DateGroupSelector = ({
 }) => {
   const { day, dateNum, monthYear } = formatFrenchDate(selectedDate);
 
-  // Attanzil : une seule séance (Samedi)
   const isAttanzil = getCurrentInstitutId() === "attanzil";
   const visibleGroups = isAttanzil
     ? groups.filter((g) => g.value === "Samedi")
     : groups;
 
   return (
-    <div className="max-w-6xl mx-auto px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-xl border border-black/8 overflow-hidden"
-      >
-        {/* Header compact */}
-        <div className="px-6 py-5 flex items-center justify-between bg-gradient-to-r from-indigo-50/70 to-purple-50/50">
-          <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl shadow-lg">
-              <Calendar className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-geist-black text-slate-900">
-                Séance du jour
-              </h2>
-            </div>
+    <div className="max-w-6xl mx-auto">
+      <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <span className="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <Calendar className="h-5 w-5" />
+            </span>
+            <h2 className="font-semibold text-slate-900">Séance du jour</h2>
           </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="icon"
               onClick={() => onDateChange("prev")}
-              className="h-10 w-10 rounded-xl border-slate-300 hover:bg-slate-100"
+              className="h-9 w-9 rounded-lg border-slate-200"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -103,139 +67,88 @@ export const DateGroupSelector = ({
               variant="outline"
               size="icon"
               onClick={() => onDateChange("next")}
-              className="h-10 w-10 rounded-xl border-slate-300 hover:bg-slate-100"
+              className="h-9 w-9 rounded-lg border-slate-200"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Contenu principal – tout sur une ligne */}
-        <div className="p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Date — cadre magique qui suit la couleur du groupe actif */}
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              {/* Glow extérieur qui suit aussi la couleur du groupe */}
-              <div
-                className={`
-      absolute -inset-2 rounded-3xl blur-2xl -z-10 opacity-60
-      ${selectedGroup === "Samedi" ? "bg-blue-400/40" : ""}
-      ${selectedGroup === "Dimanche" ? "bg-emerald-400/40" : ""}
-      ${selectedGroup === "Samedi+Dimanche" ? "bg-purple-400/40" : ""}
-      ${selectedGroup === "Lundi" ? "bg-orange-400/40" : ""}
-    `}
-              />
-
-              {/* Le cadre principal */}
-              <div className="bg-white rounded-2xl shadow-2xl border-4 border-black/12 overflow-hidden w-48">
-                {/* RUBAN DU HAUT — CHANGE DE COULEUR SELON LE GROUPE */}
-                <div
-                  className={`
-        h-11 flex items-center justify-center
-        ${
-          selectedGroup === "Samedi"
-            ? "bg-gradient-to-r from-blue-600 to-indigo-700"
-            : ""
-        }
-        ${
-          selectedGroup === "Dimanche"
-            ? "bg-gradient-to-r from-emerald-600 to-teal-700"
-            : ""
-        }
-        ${
-          selectedGroup === "Samedi+Dimanche"
-            ? "bg-gradient-to-r from-purple-600 to-pink-700"
-            : ""
-        }
-        ${
-          selectedGroup === "Lundi"
-            ? "bg-gradient-to-r from-orange-600 to-amber-700"
-            : ""
-        }
-      `}
-                >
-                  <Calendar className="h-7 w-7 text-white" />
-                </div>
-
-                {/* Jour du mois */}
-                <div className="py-6 text-center bg-white">
-                  <p className="text-8xl font-geist-black text-slate-900 leading-none -mt-3">
-                    {dateNum}
-                  </p>
-                </div>
-
-                {/* Jour + mois en bas */}
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-3 text-center">
-                  <p className="text-sm font-geist-bold uppercase tracking-wider">
-                    {day}
-                  </p>
-                  <p className="text-xs font-geist-medium uppercase tracking-widest opacity-90">
-                    {monthYear}
-                  </p>
-                </div>
+        {/* Corps */}
+        <div className="p-5 flex flex-col lg:flex-row lg:items-center gap-6">
+          {/* Date */}
+          <div className="flex items-center gap-5">
+            <div className="rounded-2xl border border-slate-200 shadow-sm overflow-hidden w-36 shrink-0">
+              <div className="py-4 text-center bg-slate-50">
+                <p className="text-5xl font-bold text-slate-900 leading-none">
+                  {dateNum}
+                </p>
+              </div>
+              <div className="bg-slate-900 text-white py-2 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wider">
+                  {day}
+                </p>
+                <p className="text-[10px] uppercase tracking-widest opacity-75">
+                  {monthYear}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Sélecteur de groupe – compact et parfait */}
-          <div className="flex-1 max-w-2xl">
-            <div className="flex items-center gap-3 mb-3">
-              <Users className="h-6 w-6 text-slate-700" />
-              <span className="text-lg font-geist-black text-slate-900">
+          {/* Groupes */}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-slate-500" />
+              <span className="text-sm font-semibold text-slate-700">
                 Groupe
               </span>
             </div>
-            <div className={`grid gap-3 ${isAttanzil ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
-              {visibleGroups.map((g) => (
-                <motion.button
-                  key={g.value}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => onGroupChange(g.value)}
-                  className={`
-                    relative overflow-hidden rounded-xl border-2 py-3 px-4 transition-all
-                    h-20 flex flex-col items-center justify-center text-center
-                    ${
-                      selectedGroup === g.value
-                        ? `bg-gradient-to-br ${g.color} text-white shadow-xl border-transparent`
-                        : "bg-gray-50 border-gray-200 text-slate-800 hover:bg-gray-100 hover:border-gray-400"
-                    }
-                  `}
-                >
-                  <span
-                    className={`font-geist-bold ${
-                      g.label.length > 8 ? "text-base" : "text-lg"
-                    } leading-tight`}
+            <div
+              className={`grid gap-2 ${
+                isAttanzil ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"
+              }`}
+            >
+              {visibleGroups.map((g) => {
+                const isActive = selectedGroup === g.value;
+                return (
+                  <motion.button
+                    key={g.value}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onGroupChange(g.value)}
+                    className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-colors text-left ${
+                      isActive
+                        ? "border-primary bg-primary text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                   >
-                    {g.label}
-                  </span>
-                  <span className="text-xs opacity-70 mt-0.5">Session</span>
-                  {selectedGroup === g.value && (
-                    <div className="absolute inset-0 bg-white/15 rounded-xl" />
-                  )}
-                </motion.button>
-              ))}
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          isActive ? "bg-white" : g.dot
+                        }`}
+                      />
+                      {g.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Barre de statut ultra fine */}
-        <div className="px-6 py-3 bg-gradient-to-r from-indigo-500/8 to-purple-500/8 border-t border-indigo-100">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-geist-semibold text-slate-800">
-              Groupe actif :{" "}
-              <span className="font-geist-bold text-indigo-700">
-                {selectedGroup === "Samedi+Dimanche"
-                  ? "Weekend"
-                  : selectedGroup}
-              </span>
+        {/* Statut */}
+        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-sm">
+          <span className="text-slate-600">
+            Groupe actif :{" "}
+            <span className="font-semibold text-slate-900">
+              {selectedGroup === "Samedi+Dimanche" ? "Weekend" : selectedGroup}
             </span>
-            <span className="px-4 py-1.5 bg-white/90 rounded-full font-geist-bold text-slate-800 text-xs shadow">
-              Présences ouvertes
-            </span>
-          </div>
+          </span>
+          <span className="px-3 py-1 bg-white rounded-full text-xs font-medium text-emerald-600 border border-emerald-100">
+            Présences ouvertes
+          </span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -1,11 +1,9 @@
-import { LogOut, Shield, ShieldOff, School, ArrowLeftRight } from "lucide-react";
+import { LogOut, Shield, ShieldOff, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getCurrentInstitut } from "@/lib/institutes";
-import SalemImage from "@/public/Salem.webp";
 
 type AppHeaderProps = {
   user: any;
@@ -24,108 +22,70 @@ export const AppHeader = ({
 }: AppHeaderProps) => {
   const navigate = useNavigate();
   const institut = getCurrentInstitut();
+  const base = import.meta.env.BASE_URL || "/";
 
   return (
     <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="sticky top-0 z-50 
-             backdrop-blur-xl 
-             bg-gradient-to-r from-indigo-600/90 via-purple-600/90 to-indigo-700/90 
-             border-b border-white/10 
-             shadow-2xl
-             rounded-b-3xl               /* ← coins arrondis en bas */
-             overflow-hidden
-             border       /* ← contour noir ultra-fin tout autour */"
+      initial={{ y: -24, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 32 }}
+      className="sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-slate-200/70"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between gap-6">
-          {/* GAUCHE — Logo petit + Titre */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl scale-150 -z-10" />
-              <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl border border-white/30">
-                <img
-                  src={import.meta.env.BASE_URL + "coran.png"}
-                  alt="Logo"
-                  className="h-10 w-10 rounded-lg shadow-lg"
-                />
-              </div>
-            </motion.div>
-
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                <span className="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-transparent">
-                  {institut?.name || "Institut Manager"}
-                </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          {/* Logo + noms */}
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={base + "coran.png"}
+              alt="Logo"
+              className="h-9 w-9 rounded-xl object-cover ring-1 ring-black/5 shadow-sm"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold leading-none">
+                Institut Manager
+              </p>
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate leading-tight">
+                {institut?.name || "Institut"}
               </h1>
-              <p className="text-white/70 text-sm font-medium">{user?.email}</p>
             </div>
           </div>
 
-          {/* CENTRE — TON LOGO BANNER (2286×492) */}
-          <div className="hidden md:block flex-1 max-w-4xl mx-8">
-            <div className="relative">
-              {/* Ombre douce + glow */}
-              <div className="absolute inset-0 bg-white/20 rounded-3xl blur-3xl scale-105 -z-10" />
+          {/* Bannière (desktop) */}
+          <img
+            src={base + "Institut_logo.webp"}
+            alt="Institut"
+            className="hidden lg:block h-9 w-auto opacity-90 select-none"
+          />
 
-              <img
-                src={import.meta.env.BASE_URL + "Institut_logo.webp"}
-                alt="Institut Al-Qur'an"
-                className="w-full h-auto rounded-2xl shadow-2xl border-4 border-black/30"
-                style={{
-                  objectFit: "contain",
-                  objectPosition: "center",
-                }}
-              />
-            </div>
-          </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {extraAction && <div className="hidden sm:block">{extraAction}</div>}
 
-          {/* DROITE — Extra Action + Switch + Déconnexion */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            {/* Action supplémentaire */}
-            {extraAction && (
-              <div className="hidden sm:block">{extraAction}</div>
-            )}
-
-            <div className="flex items-center gap-3 px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60">
               {shareMode ? (
-                <ShieldOff className="h-5 w-5 text-orange-300" />
+                <ShieldOff className="h-4 w-4 text-amber-500" />
               ) : (
-                <Shield className="h-5 w-5 text-emerald-300" />
+                <Shield className="h-4 w-4 text-emerald-500" />
               )}
+              <span className="text-xs font-medium text-slate-600">
+                {shareMode ? "Partagé" : "Privé"}
+              </span>
               <Switch
                 id="share-mode"
                 checked={shareMode}
-                onCheckedChange={(newValue) => {
-                  console.log(
-                    "🟡 Tentative de changement shareMode:",
-                    newValue
-                  ); // AJOUTER CECI
-                  onShareModeChange(newValue);
-                }}
-                className="data-[state=checked]:bg-emerald-400"
+                onCheckedChange={onShareModeChange}
+                className="data-[state=checked]:bg-emerald-500 scale-90"
               />
-              <Label
-                htmlFor="share-mode"
-                className="text-white/90 font-medium text-sm cursor-pointer select-none"
-              >
-                {shareMode ? "Partagé" : "Privé"}
-              </Label>
             </div>
 
             <Button
               onClick={() => navigate("/select")}
               variant="ghost"
               size="sm"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-white rounded-xl"
+              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              title="Changer d'institut"
             >
-              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              <ArrowLeftRight className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Changer</span>
             </Button>
 
@@ -133,23 +93,17 @@ export const AppHeader = ({
               onClick={onSignOut}
               variant="ghost"
               size="sm"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-white rounded-xl"
+              className="text-slate-600 hover:text-red-600 hover:bg-red-50"
+              title="Déconnexion"
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Déconnexion</span>
             </Button>
           </div>
-        </div>
-
-        {/* Version mobile : logo banner en dessous */}
-        <div className="md:hidden mt-6 px-8">
-          <img
-            src={SalemImage}
-            alt="Salem"
-            className="w-full h-auto rounded-2xl shadow-2xl border-4 border-white/20"
-          />
         </div>
       </div>
     </motion.header>
   );
 };
+
+export default AppHeader;

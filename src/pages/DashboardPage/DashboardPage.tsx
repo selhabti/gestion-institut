@@ -348,7 +348,7 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/20">
+    <div className="min-h-screen bg-slate-50">
       <ErrorBoundary>
       <div className="flex items-center justify-between">
   <AppHeader
@@ -410,21 +410,21 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
           onValueChange={handleTabChange}
           className="space-y-4 sm:space-y-6"
         >
-          <TabsList className="grid grid-cols-4 w-full h-16 bg-white/95 backdrop-blur-xl rounded-3xl border border-black/10 shadow-2xl p-3 gap-3">
+          <TabsList className="grid grid-cols-4 w-full h-14 bg-slate-100 rounded-2xl p-1.5 gap-1.5 border border-slate-200/70">
             {/* Tab Tableau de bord */}
             <TabsTrigger
               value="dashboard"
-              className="relative rounded-2xl font-geist-bold text-slate-700 data-[state=active]:text-white transition-all"
+              className="relative rounded-xl font-medium text-slate-600 data-[state=active]:text-slate-900 data-[disabled]:opacity-50 transition-colors"
             >
               {activeTab === "dashboard" && (
                 <motion.div
                   layoutId="activeTabPill"
-                  className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl border-2 border-black shadow-lg"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-200/70"
+                  transition={{ type: "spring", stiffness: 400, damping: 34 }}
                 />
               )}
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <BarChart3 className="h-5 w-5" />
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <BarChart3 className="h-[18px] w-[18px]" />
                 <span className="hidden sm:inline">Tableau de bord</span>
                 <span className="sm:hidden">Dashboard</span>
               </div>
@@ -434,20 +434,20 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
             <TabsTrigger
               value="members"
               disabled={shareMode}
-              className="relative rounded-2xl font-geist-bold text-slate-700 data-[state=active]:text-white data-[disabled]:opacity-50 transition-all"
+              className="relative rounded-xl font-medium text-slate-600 data-[state=active]:text-slate-900 data-[disabled]:opacity-50 transition-colors"
             >
               {activeTab === "members" && (
                 <motion.div
                   layoutId="activeTabPill"
-                  className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl border-2 border-black shadow-lg"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-200/70"
+                  transition={{ type: "spring", stiffness: 400, damping: 34 }}
                 />
               )}
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <Users className="h-5 w-5" />
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <Users className="h-[18px] w-[18px]" />
                 <span>Élèves</span>
                 {shareMode && (
-                  <ShieldOff className="h-4 w-4 ml-1 text-orange-500" />
+                  <ShieldOff className="h-4 w-4 ml-1 text-amber-500" />
                 )}
               </div>
             </TabsTrigger>
@@ -455,17 +455,17 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
             {/* Tab Présences */}
             <TabsTrigger
               value="attendance"
-              className="relative rounded-2xl font-geist-bold text-slate-700 data-[state=active]:text-white transition-all"
+              className="relative rounded-xl font-medium text-slate-600 data-[state=active]:text-slate-900 transition-colors"
             >
               {activeTab === "attendance" && (
                 <motion.div
                   layoutId="activeTabPill"
-                  className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl border-2 border-black shadow-lg"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-200/70"
+                  transition={{ type: "spring", stiffness: 400, damping: 34 }}
                 />
               )}
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <Calendar className="h-5 w-5" />
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <Calendar className="h-[18px] w-[18px]" />
                 <span>Présences</span>
               </div>
             </TabsTrigger>
@@ -474,21 +474,20 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
             <TabsTrigger
               value="admin"
               disabled={shareMode}
-              className="relative rounded-2xl font-geist-bold text-slate-700 data-[state=active]:text-white data-[disabled]:opacity-50 transition-all"
+              className="relative rounded-xl font-medium text-slate-600 data-[state=active]:text-slate-900 data-[disabled]:opacity-50 transition-colors"
             >
               {activeTab === "admin" && (
                 <motion.div
                   layoutId="activeTabPill"
-                  className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl border-2 border-black shadow-lg"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-200/70"
+                  transition={{ type: "spring", stiffness: 400, damping: 34 }}
                 />
               )}
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <Settings className="h-5 w-5" />
-                <span className="hidden sm:inline">Admin</span>
-                <span className="sm:hidden">Admin</span>
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                <Settings className="h-[18px] w-[18px]" />
+                <span>Admin</span>
                 {shareMode && (
-                  <ShieldOff className="h-4 w-4 ml-1 text-orange-500" />
+                  <ShieldOff className="h-4 w-4 ml-1 text-amber-500" />
                 )}
               </div>
             </TabsTrigger>
