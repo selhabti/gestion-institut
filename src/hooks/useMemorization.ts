@@ -1,9 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { MemorizationEntry } from "@/types/member";
+import type {
+  MemorizationEntry,
+  MemorizationKind,
+  MemorizationStatus,
+} from "@/types/member";
 
 export type Riwaya = "Hafs" | "Warsh";
+
+export interface MemorizationInput {
+  weekStart: string;
+  kind: MemorizationKind;
+  quantity: string;
+  surahFrom?: string;
+  ayahFrom?: string;
+  surahTo?: string;
+  ayahTo?: string;
+  status: MemorizationStatus;
+  quality?: string;
+}
 
 export const useMemorization = (memberId: string | null, enabled: boolean) => {
   const [riwaya, setRiwaya] = useState<Riwaya | null>(null);
@@ -65,21 +81,34 @@ export const useMemorization = (memberId: string | null, enabled: boolean) => {
         .update({ tajwid_level: value })
         .eq("id", memberId);
       if (error) toast.error("Impossible d'enregistrer le niveau de tajwid");
+      else toast.success("Niveau de tajwid enregistré");
     },
     [memberId]
   );
 
   const upsertEntry = useCallback(
-    async (weekStart: string, quantity: string) => {
+    async (input: MemorizationInput) => {
       if (!memberId) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { error } = await supabase.from("memorization").upsert(
         {
           member_id: memberId,
-          week_start: weekStart,
-          quantity: quantity || null,
+          week_start: input.weekStart,
+          kind: input.kind,
+          quantity: input.quantity || null,
+          surah_from: input.surahFrom || null,
+          ayah_from: input.ayahFrom || null,
+          surah_to: input.surahTo || null,
+          ayah_to: input.ayahTo || null,
+          status: input.status,
+          quality: input.quality || null,
+          created_by: user?.id ?? null,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "member_id,week_start" }
+        { onConflict: "member_id,week_start,kind" }
       );
       if (error) {
         toast.error("Impossible d'enregistrer la mémorisation");
@@ -92,11 +121,15 @@ export const useMemorization = (memberId: string | null, enabled: boolean) => {
 
   const setValidated = useCallback(
     async (entry: MemorizationEntry, validated: boolean) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const { error } = await supabase
         .from("memorization")
         .update({
           validated,
           validated_at: validated ? new Date().toISOString() : null,
+          validated_by: validated ? user?.id ?? null : null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", entry.id);

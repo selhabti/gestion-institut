@@ -45,13 +45,24 @@ export interface Payment {
   installmentLabel?: string | null;
 }
 
+export type MemorizationKind = "nouvelle" | "recente" | "ancienne";
+export type MemorizationStatus = "fait" | "partiel" | "a_revoir";
+
 export interface MemorizationEntry {
   id: string;
   member_id: string;
   week_start: string;
+  kind: MemorizationKind;
   quantity: string | null;
+  surah_from: string | null;
+  ayah_from: string | null;
+  surah_to: string | null;
+  ayah_to: string | null;
+  status: MemorizationStatus;
+  quality: string | null;
   validated: boolean;
   validated_at?: string | null;
+  validated_by?: string | null;
   notes?: string | null;
 }
 

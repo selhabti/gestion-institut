@@ -64,3 +64,27 @@ export const QUANTITY_OPTIONS = [
   ...PAGE_OPTIONS,
   ...HIZB_OPTIONS,
 ];
+
+// Les 114 sourates (noms translittérés)
+export const SURAHS = [
+  "Al-Fâtiha", "Al-Baqara", "Âl-‘Imrân", "An-Nisâ", "Al-Mâ’ida", "Al-An‘âm",
+  "Al-A‘râf", "Al-Anfâl", "At-Tawba", "Yûnus", "Hûd", "Yûsuf", "Ar-Ra‘d",
+  "Ibrâhîm", "Al-Hijr", "An-Nahl", "Al-Isrâ", "Al-Kahf", "Maryam", "Tâ-Hâ",
+  "Al-Anbiyâ", "Al-Hajj", "Al-Mu’minûn", "An-Nûr", "Al-Furqân", "Ash-Shu‘arâ",
+  "An-Naml", "Al-Qasas", "Al-‘Ankabût", "Ar-Rûm", "Luqmân", "As-Sajda",
+  "Al-Ahzâb", "Saba’", "Fâtir", "Yâ-Sîn", "As-Sâffât", "Sâd", "Az-Zumar",
+  "Ghâfir", "Fussilat", "Ash-Shûrâ", "Az-Zukhruf", "Ad-Dukhân", "Al-Jâthiya",
+  "Al-Ahqâf", "Muhammad", "Al-Fath", "Al-Hujurât", "Qâf", "Adh-Dhâriyât",
+  "At-Tûr", "An-Najm", "Al-Qamar", "Ar-Rahmân", "Al-Wâqi‘a", "Al-Hadîd",
+  "Al-Mujâdala", "Al-Hashr", "Al-Mumtahana", "As-Saff", "Al-Jumu‘a",
+  "Al-Munâfiqûn", "At-Taghâbun", "At-Talâq", "At-Tahrîm", "Al-Mulk",
+  "Al-Qalam", "Al-Hâqqa", "Al-Ma‘ârij", "Nûh", "Al-Jinn", "Al-Muzzammil",
+  "Al-Muddaththir", "Al-Qiyâma", "Al-Insân", "Al-Mursalât", "An-Naba’",
+  "An-Nâzi‘ât", "‘Abasa", "At-Takwîr", "Al-Infitâr", "Al-Mutaffifîn",
+  "Al-Inshiqâq", "Al-Burûj", "At-Târiq", "Al-A‘lâ", "Al-Ghâshiya", "Al-Fajr",
+  "Al-Balad", "Ash-Shams", "Al-Layl", "Ad-Duhâ", "Ash-Sharh", "At-Tîn",
+  "Al-‘Alaq", "Al-Qadr", "Al-Bayyina", "Az-Zalzala", "Al-‘Âdiyât", "Al-Qâri‘a",
+  "At-Takâthur", "Al-‘Asr", "Al-Humaza", "Al-Fîl", "Quraysh", "Al-Mâ‘ûn",
+  "Al-Kawthar", "Al-Kâfirûn", "An-Nasr", "Al-Masad", "Al-Ikhlâs", "Al-Falaq",
+  "An-Nâs",
+];

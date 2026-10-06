@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Check,
   X,
   Calendar,
@@ -32,8 +39,34 @@ import { toast } from "sonner";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
-import { JUZ_REFERENCE } from "@/lib/quranReference";
+import { JUZ_REFERENCE, SURAHS } from "@/lib/quranReference";
 import { QuantityCombobox } from "@/components/attendance/QuantityCombobox";
+import type {
+  MemorizationEntry,
+  MemorizationKind,
+  MemorizationStatus,
+} from "@/types/member";
+
+const KIND_LABELS: Record<MemorizationKind, string> = {
+  nouvelle: "Nouvelle",
+  recente: "Récente",
+  ancienne: "Ancienne",
+};
+
+const KIND_CLASS: Record<MemorizationKind, string> = {
+  nouvelle: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  recente: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  ancienne: "bg-amber-100 text-amber-700 border-amber-200",
+};
+
+const STATUS_LABELS: Record<MemorizationStatus, string> = {
+  fait: "Fait",
+  partiel: "Partiel",
+  a_revoir: "À revoir",
+};
+
+const KINDS: MemorizationKind[] = ["nouvelle", "recente", "ancienne"];
+const STATUSES: MemorizationStatus[] = ["fait", "partiel", "a_revoir"];
 
 interface StudentHistoryModalProps {
   student: StudentHistory | null;
@@ -91,11 +124,27 @@ export function StudentHistoryModal({
 
   const [newWeek, setNewWeek] = useState("");
   const [newQty, setNewQty] = useState("");
+  const [newKind, setNewKind] = useState<MemorizationKind>("nouvelle");
+  const [newSurah, setNewSurah] = useState("");
+  const [newAyahFrom, setNewAyahFrom] = useState("");
+  const [newAyahTo, setNewAyahTo] = useState("");
+  const [newStatus, setNewStatus] = useState<MemorizationStatus>("fait");
+  const [newQuality, setNewQuality] = useState("");
   const [tajwidDraft, setTajwidDraft] = useState("");
   const [showRef, setShowRef] = useState(false);
   useEffect(() => {
     setTajwidDraft(memo.tajwidLevel);
   }, [memo.tajwidLevel]);
+
+  const weeks = useMemo(() => {
+    const map = new Map<string, MemorizationEntry[]>();
+    for (const e of memo.entries) {
+      const arr = map.get(e.week_start) ?? [];
+      arr.push(e);
+      map.set(e.week_start, arr);
+    }
+    return Array.from(map.entries());
+  }, [memo.entries]);
 
   if (!student) return null;
   if (loading) {
@@ -230,84 +279,205 @@ export function StudentHistoryModal({
                     </div>
                   )}
 
-                  {/* Ajout d'une semaine */}
-                  <div className="space-y-2">
-                    <Label>Nouvelle semaine (date du samedi)</Label>
-                    <div className="flex gap-2 flex-wrap">
+                  {/* Ajout / mise à jour d'une ligne */}
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <Label>Ajouter une ligne de suivi</Label>
+
+                    <div className="flex flex-wrap items-center gap-2">
                       <Input
                         type="date"
                         value={newWeek}
                         onChange={(e) => setNewWeek(e.target.value)}
-                        className="w-48"
+                        className="w-44"
                       />
+                      <div className="flex gap-1">
+                        {KINDS.map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => setNewKind(k)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
+                              newKind === k
+                                ? KIND_CLASS[k]
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {KIND_LABELS[k]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Select value={newSurah} onValueChange={setNewSurah}>
+                        <SelectTrigger className="w-52">
+                          <SelectValue placeholder="Sourate" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {SURAHS.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={newAyahFrom}
+                        onChange={(e) => setNewAyahFrom(e.target.value)}
+                        placeholder="de (verset)"
+                        className="w-28"
+                      />
+                      <Input
+                        value={newAyahTo}
+                        onChange={(e) => setNewAyahTo(e.target.value)}
+                        placeholder="à (verset)"
+                        className="w-28"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
                       <QuantityCombobox value={newQty} onChange={setNewQty} />
+                      <div className="flex gap-1">
+                        {STATUSES.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setNewStatus(s)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                              newStatus === s
+                                ? "bg-slate-800 text-white border-transparent"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {STATUS_LABELS[s]}
+                          </button>
+                        ))}
+                      </div>
+                      {isProf && (
+                        <Input
+                          value={newQuality}
+                          onChange={(e) => setNewQuality(e.target.value)}
+                          placeholder="Qualité (prof)"
+                          className="w-40"
+                        />
+                      )}
                       <Button
                         onClick={async () => {
                           if (!newWeek) {
                             toast.error("Choisissez la date du samedi");
                             return;
                           }
-                          await memo.upsertEntry(newWeek, newQty);
-                          setNewWeek("");
+                          await memo.upsertEntry({
+                            weekStart: newWeek,
+                            kind: newKind,
+                            quantity: newQty,
+                            surahFrom: newSurah,
+                            ayahFrom: newAyahFrom,
+                            ayahTo: newAyahTo,
+                            surahTo: newSurah,
+                            status: newStatus,
+                            quality: newQuality,
+                          });
                           setNewQty("");
+                          setNewSurah("");
+                          setNewAyahFrom("");
+                          setNewAyahTo("");
+                          setNewQuality("");
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" />
-                        Ajouter
+                        Enregistrer
                       </Button>
                     </div>
                   </div>
 
                   {/* Suivi hebdomadaire */}
-                  {memo.entries.length === 0 ? (
+                  {weeks.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       Aucune mémorisation enregistrée.
                     </p>
                   ) : (
-                    <div className="space-y-3">
-                      {memo.entries.map((e) => (
+                    <div className="space-y-4">
+                      {weeks.map(([week, items]) => (
                         <div
-                          key={e.id}
-                          className={`flex items-center justify-between p-4 rounded-2xl border-2 ${
-                            e.validated
-                              ? "bg-emerald-50 border-emerald-300"
-                              : "bg-amber-50 border-amber-200"
-                          }`}
+                          key={week}
+                          className="rounded-2xl border border-slate-200 overflow-hidden"
                         >
-                          <div>
-                            <p className="font-semibold capitalize">
-                              {new Date(e.week_start + "T00:00:00").toLocaleDateString(
-                                "fr-FR",
-                                { weekday: "long", day: "numeric", month: "long" }
-                              )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {e.quantity || "—"}
-                            </p>
+                          <div className="px-4 py-2 bg-slate-100 font-semibold capitalize text-slate-700">
+                            {new Date(week + "T00:00:00").toLocaleDateString(
+                              "fr-FR",
+                              {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant={e.validated ? "default" : "outline"}
-                              onClick={() => memo.setValidated(e, !e.validated)}
-                            >
-                              {e.validated ? (
-                                <>
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Validé
-                                </>
-                              ) : (
-                                "Valider"
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => memo.deleteEntry(e.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <div className="divide-y divide-slate-100">
+                            {items.map((e) => {
+                              const position = e.surah_from
+                                ? `${e.surah_from}${
+                                    e.ayah_from ? ` ${e.ayah_from}` : ""
+                                  }${e.ayah_to ? ` → ${e.ayah_to}` : ""}`
+                                : "—";
+                              return (
+                                <div
+                                  key={e.id}
+                                  className="flex items-center justify-between gap-3 p-3"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <Badge
+                                      variant="outline"
+                                      className={KIND_CLASS[e.kind]}
+                                    >
+                                      {KIND_LABELS[e.kind]}
+                                    </Badge>
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-sm truncate">
+                                        {position}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {e.quantity || "—"} •{" "}
+                                        {STATUS_LABELS[e.status]}
+                                        {isProf && e.quality
+                                          ? ` • ${e.quality}`
+                                          : ""}
+                                        {e.validated ? " • validé ✓" : ""}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Button
+                                      size="sm"
+                                      variant={
+                                        e.validated ? "default" : "outline"
+                                      }
+                                      onClick={() =>
+                                        memo.setValidated(e, !e.validated)
+                                      }
+                                    >
+                                      {e.validated ? (
+                                        <>
+                                          <Check className="h-4 w-4 mr-1" />
+                                          Validé
+                                        </>
+                                      ) : (
+                                        "Valider"
+                                      )}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => memo.deleteEntry(e.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
