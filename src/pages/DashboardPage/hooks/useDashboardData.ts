@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import LocalCache from "@/utils/cache";
 import { supabase } from '@/lib/supabase';
 import { getCurrentInstitutId } from "@/lib/institutes";
-import type { GroupType, AttendanceStatus, Member, PaymentMode } from "@/types/member";
+import type { GroupType, AttendanceStatus, Member, PaymentMode, PaymentPlanEntry } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { toast } from "sonner";
 import { 
@@ -100,11 +100,14 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           .select(memberCols)
           .order("created_at", { ascending: true });
 
-        const [membersResponse, attendancesResponse, paymentsResponse] =
+        const [membersResponse, attendancesResponse, paymentsResponse, planResponse] =
           await Promise.all([
             membersPromise,
             supabase.from("attendances").select("*"),
             supabase.from("payments").select("*"),
+            isAttanzil
+              ? supabase.from("payment_plan").select("*")
+              : Promise.resolve({ data: [], error: null } as any),
           ]);
 
         if (!isMountedRef.current) return;
@@ -128,6 +131,11 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
             registrationDate: member.created_at,
             riwaya: member.riwaya ?? null,
             tajwidLevel: member.tajwid_level ?? null,
+            paymentPlan: isAttanzil
+              ? ((planResponse.data || []) as PaymentPlanEntry[]).filter(
+                  (p) => p.member_id === member.id
+                )
+              : undefined,
             payments: ((paymentsResponse.data || []) as PaymentRow[])
               .filter((p) => p.member_id === member.id)
               .map((p) => ({

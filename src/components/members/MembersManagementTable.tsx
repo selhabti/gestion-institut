@@ -256,6 +256,13 @@ export const MembersManagementTable = ({
                 {members.map((member) => {
                   const allGroups = [member.group, ...(member.secondaryGroups || [])];
                   const hasMultipleGroups = allGroups.length > 1;
+                  const today = new Date(new Date().toISOString().split("T")[0]);
+                  const hasOverdue = (member.paymentPlan || []).some(
+                    (p) =>
+                      !p.paid &&
+                      p.due_date &&
+                      new Date(p.due_date) < today
+                  );
                   
                   return (
                     <tr
@@ -269,6 +276,11 @@ export const MembersManagementTable = ({
                         >
                           {member.lastName}
                         </span>
+                        {hasOverdue && (
+                          <Badge className="bg-red-500 text-white text-[10px] mt-1 px-1.5 py-0">
+                            Relance
+                          </Badge>
+                        )}
                       </td>
                       <td className="p-4 text-slate-700 align-middle h-14">
                         <span

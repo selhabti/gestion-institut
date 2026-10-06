@@ -41,6 +41,7 @@ import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
 import { JUZ_REFERENCE, SURAHS } from "@/lib/quranReference";
 import { QuantityCombobox } from "@/components/attendance/QuantityCombobox";
+import { PaymentPlanSection } from "@/components/attendance/PaymentPlanSection";
 import type {
   MemorizationEntry,
   MemorizationKind,
@@ -494,6 +495,14 @@ export function StudentHistoryModal({
                 </CardContent>
               </Card>
             </motion.div>
+          )}
+
+          {/* Paiements (Attanzil) */}
+          {isAttanzil && (
+            <PaymentPlanSection
+              memberId={student.studentId}
+              enabled={isOpen && isAttanzil}
+            />
           )}
 
           {/* Sélecteur de mois */}

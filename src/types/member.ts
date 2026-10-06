@@ -33,6 +33,19 @@ export interface Member {
   // Attanzil : mémorisation
   riwaya?: string | null;
   tajwidLevel?: string | null;
+  // Attanzil : plan de paiement (échéances)
+  paymentPlan?: PaymentPlanEntry[];
+}
+
+export interface PaymentPlanEntry {
+  id: string;
+  member_id: string;
+  number: number;
+  amount: number;
+  due_date: string | null;
+  paid: boolean;
+  paid_at?: string | null;
+  payment_id?: string | null;
 }
 
 export type PaymentMode = "mensuel" | "complet" | "plusieurs_fois";
