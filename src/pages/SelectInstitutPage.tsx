@@ -3,11 +3,13 @@ import { School, Landmark, ArrowRight, BookOpen } from "lucide-react";
 import {
   INSTITUTS,
   getInstitutList,
+  getCurrentInstitutId,
   setCurrentInstitut,
   type InstitutId,
 } from "@/lib/institutes";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useStaff } from "@/hooks/useStaff";
 
 const INSTITUT_ICONS: Record<InstitutId, any> = {
   zayed: Landmark,
@@ -17,6 +19,16 @@ const INSTITUT_ICONS: Record<InstitutId, any> = {
 export default function SelectInstitutPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const { currentRole, isSuperAdmin } = useStaff();
+
+  // Le changement d'institut est réservé au super admin.
+  // Un admin (gestionnaire) est renvoyé sur son institut.
+  useEffect(() => {
+    if (currentRole && !isSuperAdmin) {
+      const id = getCurrentInstitutId();
+      if (id) navigate(`/${id}/dashboard`, { replace: true });
+    }
+  }, [currentRole, isSuperAdmin, navigate]);
 
   const enabled = getInstitutList();
 

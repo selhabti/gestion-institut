@@ -32,7 +32,8 @@ export const INSTITUTS: Record<InstitutId, InstitutConfig> = {
     name: "Institut Attanzil",
     authUrl: (env.VITE_INSTITUT_ATTANZIL_AUTH_URL || "").trim(),
     dataApiUrl: (env.VITE_INSTITUT_ATTANZIL_DATA_API_URL || "").trim(),
-    logoUrl: (import.meta.env.BASE_URL || "/") + "coran.png",
+    // Pas encore de logo pour Attanzil → placeholder dans l'en-tête
+    logoUrl: "",
   },
 };
 
