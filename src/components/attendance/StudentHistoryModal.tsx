@@ -83,9 +83,15 @@ export function StudentHistoryModal({
   const [loading, setLoading] = useState(false);
   const [historyData, setHistoryData] = useState<StudentHistory | null>(null);
 
-  // Charger l'historique avec exclusion quand le modal s'ouvre
+  // Charger l'historique à l'ouverture.
+  // On part des données déjà en mémoire (student) pour ne jamais afficher une fiche vide,
+  // puis on les remplace par la version serveur si elle est disponible.
   useEffect(() => {
     if (student?.studentId && isOpen) {
+      setHistoryData(student);
+      if (student.monthlyStats?.length) {
+        setSelectedMonth(student.monthlyStats[0].month);
+      }
       loadStudentHistory();
     }
   }, [student?.studentId, isOpen]);
@@ -93,15 +99,17 @@ export function StudentHistoryModal({
   const loadStudentHistory = async () => {
     setLoading(true);
     try {
-      const history = await AttendanceService.getStudentHistoryWithExclusion(student!.studentId);
-      setHistoryData(history);
-      
-      // Sélectionner le mois le plus récent
-      if (history.monthlyStats.length > 0) {
+      const history = await AttendanceService.getStudentHistoryWithExclusion(
+        student!.studentId
+      );
+      // On ne remplace que si le serveur renvoie des données exploitables
+      if (history?.monthlyStats?.length) {
+        setHistoryData(history);
         setSelectedMonth(history.monthlyStats[0].month);
       }
     } catch (error) {
       console.error("Erreur chargement historique:", error);
+      // on conserve les données en mémoire
     } finally {
       setLoading(false);
     }
