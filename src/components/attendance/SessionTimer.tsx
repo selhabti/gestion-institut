@@ -2,14 +2,11 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, RotateCcw, Timer, Check } from "lucide-react";
-import { useProfessorHours } from "@/hooks/useProfessorHours";
-import { useStaff } from "@/hooks/useStaff";
+import { Play, RotateCcw, Timer } from "lucide-react";
 
 interface SessionTimerProps {
   sessionStart?: string; // "HH:MM"
   sessionEnd?: string;
-  actualHours?: number;
 }
 
 const parseHM = (hhmm: string) => {
@@ -20,7 +17,6 @@ const parseHM = (hhmm: string) => {
 export function SessionTimer({
   sessionStart = "09:30",
   sessionEnd = "11:30",
-  actualHours = 2,
 }: SessionTimerProps) {
   const todayStr = new Date().toISOString().split("T")[0];
   const key = `session_start_${todayStr}`;
@@ -30,10 +26,6 @@ export function SessionTimer({
     return v ? parseInt(v, 10) : null;
   });
   const [now, setNow] = useState(Date.now());
-
-  const { saveSession } = useProfessorHours();
-  const { isSuperAdmin } = useStaff();
-  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -64,23 +56,6 @@ export function SessionTimer({
   const reset = () => {
     localStorage.removeItem(key);
     setStartedAt(null);
-    setClosed(false);
-  };
-
-  const closeSession = async () => {
-    try {
-      await saveSession({
-        date: todayStr,
-        startTime: sessionStart,
-        endTime: sessionEnd,
-        actualHours,
-        notes: "Séance (Attanzil)",
-        status: "completed",
-      });
-      setClosed(true);
-    } catch {
-      // géré par le hook
-    }
   };
 
   const elapsed = startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
@@ -104,7 +79,7 @@ export function SessionTimer({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           {!startedAt ? (
             <Button onClick={start}>
               <Play className="h-4 w-4 mr-1" />
@@ -116,19 +91,6 @@ export function SessionTimer({
               Réinitialiser
             </Button>
           )}
-
-          {isSuperAdmin && (
-            <Button
-              variant={closed ? "outline" : "default"}
-              onClick={closeSession}
-              disabled={closed}
-            >
-              <Check className="h-4 w-4 mr-1" />
-              {closed
-                ? `Clôturée (${actualHours}h = ${actualHours * 30}€)`
-                : `Clôturer (${actualHours}h × 30€)`}
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -136,4 +98,3 @@ export function SessionTimer({
 }
 
 export default SessionTimer;
-
