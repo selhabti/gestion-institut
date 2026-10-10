@@ -23,7 +23,8 @@ import {
   Euro,
   Archive,
   RotateCcw,
-  UserPlus
+  UserPlus,
+  Wallet
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -38,6 +39,8 @@ import { FinanceTab } from "./FinanceTab";
 import { CashRegisterTab } from "./CashRegisterTab";
 import { RegistrationForm } from "@/components/members";
 import { useStaff, type AppRole } from "@/hooks/useStaff";
+import { getCurrentInstitutId } from "@/lib/institutes";
+import { PaymentsAdminTab } from "./PaymentsAdminTab";
 import type { Member, GroupType } from "@/types/member";
 
 interface AdminTabProps {
@@ -60,8 +63,9 @@ interface AdminTabProps {
 }
 
 export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember }: AdminTabProps) => {
-  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff">("events");
+  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff" | "paiements">("events");
   const { staff, loading: staffLoading, isSuperAdmin, updateRole, removeStaff } = useStaff();
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
 
   useEffect(() => {
     if ((adminSubTab === "events" || adminSubTab === "cash") && archivedMembers === undefined && onLoadArchived) {
@@ -223,6 +227,19 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           <Calendar className="h-4 w-4" />
           Événements
         </button>
+        {isAttanzil && (
+          <button
+            onClick={() => setAdminSubTab("paiements")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+              adminSubTab === "paiements"
+                ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Wallet className="h-4 w-4" />
+            Paiements
+          </button>
+        )}
         <button
           onClick={() => setAdminSubTab("finance")}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
@@ -258,7 +275,9 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
         </button>
       </div>
 
-      {adminSubTab === "finance" ? (
+      {adminSubTab === "paiements" ? (
+        <PaymentsAdminTab members={members} />
+      ) : adminSubTab === "finance" ? (
         <FinanceTab members={members} />
       ) : adminSubTab === "cash" ? (
         <CashRegisterTab members={members} />

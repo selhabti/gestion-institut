@@ -547,11 +547,10 @@ export function MembersTable({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm table-fixed">
             <colgroup>
-              <col className="w-[30%]" />
-              {!isAttanzil && <col className="w-[18%]" />}
-              <col className={isAttanzil ? "w-[26%]" : "w-[20%]"} />
-              <col className={isAttanzil ? "w-[18%]" : "w-[14%]"} />
-              <col className={isAttanzil ? "w-[26%]" : "w-[18%]"} />
+              <col className={isAttanzil ? "w-[34%]" : "w-[32%]"} />
+              {!isAttanzil && <col className="w-[20%]" />}
+              <col className={isAttanzil ? "w-[30%]" : "w-[24%]"} />
+              <col className={isAttanzil ? "w-[36%]" : "w-[24%]"} />
             </colgroup>
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -560,7 +559,6 @@ export function MembersTable({
                   <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Ville</th>
                 )}
                 <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Groupe(s)</th>
-                <th className="text-left p-4 font-semibold text-slate-700 border-r border-slate-200">Paiement</th>
                 <th className="text-left p-4 font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
@@ -571,7 +569,6 @@ export function MembersTable({
                   const isPresent = attendance?.status === "present";
                   const isAbsentJustified = attendance?.status === "absent_justified";
                   const isAbsentUnjustified = attendance?.status === "absent_unjustified";
-                  const hasPaid = hasPaidThisMonth(member);
                   const multiGroup = hasMultipleGroups(member);
                   const secondaryGroups = getSecondaryGroups(member);
 
@@ -606,13 +603,6 @@ export function MembersTable({
                           ))}
                       </td>
                       
-                      <td className="p-4 border-r border-slate-100">
-                        {hasPaid ? (
-                          <Badge className="bg-green-500 text-white">Payé</Badge>
-                        ) : (
-                          <Badge variant="outline">En attente</Badge>
-                        )}
-                      </td>
                       <td className="p-4">
                         <div className="flex flex-wrap items-center gap-2">
                           <AttendanceButton
@@ -688,37 +678,6 @@ export function MembersTable({
                               </Tooltip>
                             </TooltipProvider>
                           )}
-
-                          {/* Paiement */}
-                          <Button
-                            size="sm"
-                            variant={hasPaid ? "default" : "outline"}
-                            onClick={() => {
-                              if (shareMode) return alert("Mode partage actif");
-                              if (hasPaid) {
-                                if (window.confirm(`Annuler le paiement de ${capitalize(member.firstName)} ?`)) {
-                                  onUnmarkPayment(member.id);
-                                }
-                                return;
-                              }
-                              if (isAttanzil) {
-                                setPaymentMember(member);
-                                return;
-                              }
-                              const input = window.prompt(
-                                `Montant reçu de ${capitalize(member.firstName)} ? (20€ par défaut)`,
-                                "20"
-                              );
-                              if (input !== null) {
-                                const amount = parseInt(input) || 20;
-                                onMarkPayment(member.id, amount);
-                              }
-                            }}
-                            className="h-9 w-9 p-0"
-                            disabled={shareMode}
-                          >
-                            <CreditCard className="h-4 w-4" />
-                          </Button>
 
                           {/* Historique */}
                           <Button
