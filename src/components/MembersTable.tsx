@@ -537,8 +537,19 @@ export function MembersTable({
 
   return (
     <>
-      {/* ✅ RETOUR DU TOGGLE HISTORIQUE */}
-      <div className="flex justify-end mb-4">
+      {/* Légende du pointage + toggle historique */}
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+        <div className="flex items-center gap-3 text-xs text-slate-500">
+          <span className="inline-flex items-center gap-1">
+            <Check className="h-3.5 w-3.5 text-green-600" /> Présent
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <FileQuestion className="h-3.5 w-3.5 text-blue-600" /> Absent justifié
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <X className="h-3.5 w-3.5 text-red-600" /> Absent non justifié
+          </span>
+        </div>
         <HistoricalEditToggle />
       </div>
 
@@ -604,7 +615,8 @@ export function MembersTable({
                       </td>
                       
                       <td className="p-4">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                           <AttendanceButton
                             status="present"
                             isActive={isPresent}
@@ -653,6 +665,7 @@ export function MembersTable({
                             tooltip="Absent non justifié"
                             member={member}
                           />
+                          </div>
 
                           {/* Bouton transfert temporaire */}
                           {!isAttanzil && getTransferTarget() && shouldEnableButtons() && (
