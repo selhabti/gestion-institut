@@ -39,13 +39,14 @@ import { toast } from "sonner";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
-import { JUZ_REFERENCE, SURAHS } from "@/lib/quranReference";
-import { QuantityCombobox } from "@/components/attendance/QuantityCombobox";
+import { JUZ_REFERENCE, SURAHS, SURAH_VERSES, surahVerseCount } from "@/lib/quranReference";
 import type {
   MemorizationEntry,
   MemorizationKind,
   MemorizationStatus,
 } from "@/types/member";
+
+const FRACTIONS_LABELS = ["1/8", "1/4", "3/8", "1/2", "5/8", "3/4", "7/8", "1"];
 
 const KIND_LABELS: Record<MemorizationKind, string> = {
   nouvelle: "Nouvelle",
@@ -138,6 +139,9 @@ export function StudentHistoryModal({
   const [newAyahTo, setNewAyahTo] = useState("");
   const [newStatus, setNewStatus] = useState<MemorizationStatus>("fait");
   const [newQuality, setNewQuality] = useState("");
+  const [qtyMode, setQtyMode] = useState<"hizb" | "sourate">("hizb");
+  const [newHizb, setNewHizb] = useState(1);
+  const [newFraction, setNewFraction] = useState(8);
   const [tajwidDraft, setTajwidDraft] = useState("");
   const [showRef, setShowRef] = useState(false);
   useEffect(() => {
@@ -316,35 +320,97 @@ export function StudentHistoryModal({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Select value={newSurah} onValueChange={setNewSurah}>
-                        <SelectTrigger className="w-52">
-                          <SelectValue placeholder="Sourate" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-72">
-                          {SURAHS.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        value={newAyahFrom}
-                        onChange={(e) => setNewAyahFrom(e.target.value)}
-                        placeholder="de (verset)"
-                        className="w-28"
-                      />
-                      <Input
-                        value={newAyahTo}
-                        onChange={(e) => setNewAyahTo(e.target.value)}
-                        placeholder="à (verset)"
-                        className="w-28"
-                      />
+                    {/* Mode de quantité : par Hizb (/8) ou par Sourate/versets */}
+                    <div className="flex gap-1">
+                      {(["hizb", "sourate"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setQtyMode(m)}
+                          className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
+                            qtyMode === m
+                              ? "bg-indigo-600 text-white border-transparent"
+                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {m === "hizb" ? "Par Hizb (/8)" : "Par Sourate"}
+                        </button>
+                      ))}
                     </div>
 
+                    {qtyMode === "hizb" ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                          value={String(newHizb)}
+                          onValueChange={(v) => setNewHizb(Number(v))}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            {Array.from({ length: 60 }, (_, i) => i + 1).map(
+                              (n) => (
+                                <SelectItem key={n} value={String(n)}>
+                                  Hizb {n}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex gap-1 flex-wrap">
+                          {FRACTIONS_LABELS.map((lbl, i) => (
+                            <button
+                              key={lbl}
+                              type="button"
+                              onClick={() => setNewFraction(i + 1)}
+                              className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                                newFraction === i + 1
+                                  ? "bg-indigo-600 text-white border-transparent"
+                                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                              }`}
+                            >
+                              {lbl}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select value={newSurah} onValueChange={setNewSurah}>
+                          <SelectTrigger className="w-64">
+                            <SelectValue placeholder="Sourate" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            {SURAHS.map((s, i) => (
+                              <SelectItem key={s} value={s}>
+                                {s} — {SURAH_VERSES[i]} v.
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={surahVerseCount(newSurah) ?? undefined}
+                          value={newAyahFrom}
+                          onChange={(e) => setNewAyahFrom(e.target.value)}
+                          placeholder="de"
+                          className="w-24"
+                        />
+                        <span className="text-slate-400">→</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={surahVerseCount(newSurah) ?? undefined}
+                          value={newAyahTo}
+                          onChange={(e) => setNewAyahTo(e.target.value)}
+                          placeholder="à"
+                          className="w-24"
+                        />
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-2">
-                      <QuantityCombobox value={newQty} onChange={setNewQty} />
                       <div className="flex gap-1">
                         {STATUSES.map((s) => (
                           <button
@@ -375,14 +441,25 @@ export function StudentHistoryModal({
                             toast.error("Choisissez la date du samedi");
                             return;
                           }
+                          const isSourate = qtyMode === "sourate";
+                          const quantity =
+                            qtyMode === "hizb"
+                              ? `Hizb ${newHizb} — ${
+                                  FRACTIONS_LABELS[newFraction - 1]
+                                }`
+                              : newSurah
+                              ? `${newSurah} : ${newAyahFrom || "?"} → ${
+                                  newAyahTo || "?"
+                                }`
+                              : "";
                           await memo.upsertEntry({
                             weekStart: newWeek,
                             kind: newKind,
-                            quantity: newQty,
-                            surahFrom: newSurah,
-                            ayahFrom: newAyahFrom,
-                            ayahTo: newAyahTo,
-                            surahTo: newSurah,
+                            quantity,
+                            surahFrom: isSourate ? newSurah : "",
+                            ayahFrom: isSourate ? newAyahFrom : "",
+                            ayahTo: isSourate ? newAyahTo : "",
+                            surahTo: isSourate ? newSurah : "",
                             status: newStatus,
                             quality: newQuality,
                           });
