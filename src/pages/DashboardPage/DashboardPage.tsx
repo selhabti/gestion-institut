@@ -23,7 +23,6 @@ import { MembersTab } from "./components/MembersTab";
 import { AttendanceTab } from "./components/AttendanceTab";
 import { AdminTab } from "./components/AdminTab";
 import { SessionReminderModal } from '@/components/professor/SessionReminderModal';
-import { SessionsTable } from '@/components/professor/SessionsTable';
 import { ProfessorButton } from '@/components/professor/ProfessorButton';
 
 // Utilitaires
@@ -570,7 +569,6 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
       loadingArchived={loadingArchived}
       onLoadArchived={loadArchivedMembers}
     />
-    <SessionsTable />
   </div>
 </TabsContent>
                 </Tabs>

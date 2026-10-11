@@ -204,35 +204,24 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
   return (
     <div className="space-y-6">
       {/* Sous-navigation Admin */}
-      <div className="flex gap-2 bg-white/95 backdrop-blur-xl rounded-2xl border border-black/10 shadow-lg p-2">
+      <div className="flex flex-wrap gap-2 bg-white rounded-2xl border border-slate-200/70 shadow-sm p-2">
         <button
           onClick={() => setAdminSubTab("registration")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
             adminSubTab === "registration"
-              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+              ? "bg-indigo-600 text-white"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
           <UserPlus className="h-4 w-4" />
           Inscription
         </button>
-        <button
-          onClick={() => setAdminSubTab("events")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-            adminSubTab === "events"
-              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          <Calendar className="h-4 w-4" />
-          Événements
-        </button>
         {isAttanzil && (
           <button
             onClick={() => setAdminSubTab("paiements")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
               adminSubTab === "paiements"
-                ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+                ? "bg-indigo-600 text-white"
                 : "text-slate-600 hover:bg-slate-100"
             }`}
           >
@@ -241,21 +230,10 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           </button>
         )}
         <button
-          onClick={() => setAdminSubTab("finance")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-            adminSubTab === "finance"
-              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          <Euro className="h-4 w-4" />
-          Finances
-        </button>
-        <button
           onClick={() => setAdminSubTab("cash")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
             adminSubTab === "cash"
-              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+              ? "bg-indigo-600 text-white"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
@@ -263,10 +241,32 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           Encaissements
         </button>
         <button
+          onClick={() => setAdminSubTab("finance")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
+            adminSubTab === "finance"
+              ? "bg-indigo-600 text-white"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Euro className="h-4 w-4" />
+          Finances
+        </button>
+        <button
+          onClick={() => setAdminSubTab("events")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
+            adminSubTab === "events"
+              ? "bg-indigo-600 text-white"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Calendar className="h-4 w-4" />
+          Événements
+        </button>
+        <button
           onClick={() => setAdminSubTab("staff")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
             adminSubTab === "staff"
-              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+              ? "bg-indigo-600 text-white"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >

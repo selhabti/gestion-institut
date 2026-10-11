@@ -11,6 +11,7 @@ import {
   Clock, Calendar, BarChart3, Euro, FileSpreadsheet
 } from "lucide-react";
 import { professorHoursService } from "@/services/professorHoursService";
+import { SessionsTable } from "@/components/professor/SessionsTable";
 import type { Member } from "@/types/member";
 import type { ProfessorSession } from "@/types/professorHours";
 
@@ -284,61 +285,8 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Clock className="h-5 w-5 text-orange-500" />
-            Heures professeur - {monthLabel}
-          </CardTitle>
-          <CardDescription>
-            {financeData.totalHours}h effectuées - {financeData.professorCost}€
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loadingSessions ? (
-            <div className="text-center py-4 text-slate-500">Chargement...</div>
-          ) : professorSessions.length === 0 ? (
-            <div className="text-center py-4 text-slate-400">
-              Aucune session enregistrée ce mois-ci
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-slate-500">
-                    <th className="pb-3 font-medium">Date</th>
-                    <th className="pb-3 font-medium">Début</th>
-                    <th className="pb-3 font-medium">Fin</th>
-                    <th className="pb-3 font-medium">Heures</th>
-                    <th className="pb-3 font-medium">Coût</th>
-                    <th className="pb-3 font-medium">Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {professorSessions.map((s) => (
-                    <tr key={s.id} className="border-b last:border-0 hover:bg-slate-50">
-                      <td className="py-3">{s.date}</td>
-                      <td className="py-3">{s.startTime}</td>
-                      <td className="py-3">{s.endTime}</td>
-                      <td className="py-3 font-medium">{s.actualHours}h</td>
-                      <td className="py-3 font-medium text-orange-600">
-                        {s.status !== "cancelled" ? `${(s.actualHours * HOURLY_RATE).toFixed(0)}€` : "—"}
-                      </td>
-                      <td className="py-3">
-                        {s.status === "completed" ? (
-                          <Badge className="bg-green-100 text-green-700">Effectué</Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-700">Annulé</Badge>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Heures professeur — tableau éditable (enregistrer / modifier / annuler une séance) */}
+      <SessionsTable />
     </div>
   );
 };
