@@ -1,8 +1,8 @@
 // src/components/attendance/SessionTimer.tsx
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Play, RotateCcw, Timer } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Timer } from "lucide-react";
 
 interface SessionTimerProps {
   sessionStart?: string; // "HH:MM"
@@ -14,54 +14,45 @@ const parseHM = (hhmm: string) => {
   return { h: h || 0, m: m || 0 };
 };
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 export function SessionTimer({
   sessionStart = "09:30",
   sessionEnd = "11:30",
 }: SessionTimerProps) {
-  const todayStr = new Date().toISOString().split("T")[0];
-  const key = `session_start_${todayStr}`;
-
-  const [startedAt, setStartedAt] = useState<number | null>(() => {
-    const v = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-    return v ? parseInt(v, 10) : null;
-  });
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Démarrage automatique le samedi dès l'heure de début de séance
-  useEffect(() => {
-    if (startedAt) return;
-    const d = new Date();
-    if (d.getDay() !== 6) return;
-    const { h, m } = parseHM(sessionStart);
-    const start = new Date();
-    start.setHours(h, m, 0, 0);
-    if (d.getTime() >= start.getTime()) {
-      const t = start.getTime();
-      localStorage.setItem(key, String(t));
-      setStartedAt(t);
-    }
-  }, [startedAt, sessionStart, key]);
+  const s = parseHM(sessionStart);
+  const e = parseHM(sessionEnd);
 
-  const start = () => {
-    const t = Date.now();
-    localStorage.setItem(key, String(t));
-    setStartedAt(t);
-  };
+  const start = new Date();
+  start.setHours(s.h, s.m, 0, 0);
+  const end = new Date();
+  end.setHours(e.h, e.m, 0, 0);
 
-  const reset = () => {
-    localStorage.removeItem(key);
-    setStartedAt(null);
-  };
+  // Démarre automatiquement à l'heure locale de début de séance
+  const elapsed = Math.max(
+    0,
+    Math.floor((now - start.getTime()) / 1000)
+  );
+  const hh = pad(Math.floor(elapsed / 3600));
+  const mm = pad(Math.floor((elapsed % 3600) / 60));
+  const ss = pad(elapsed % 60);
 
-  const elapsed = startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
-  const hh = String(Math.floor(elapsed / 3600)).padStart(2, "0");
-  const mm = String(Math.floor((elapsed % 3600) / 60)).padStart(2, "0");
-  const ss = String(elapsed % 60).padStart(2, "0");
+  const before = now < start.getTime();
+  const during = now >= start.getTime() && now <= end.getTime();
+
+  const status = before ? "À venir" : during ? "En cours" : "Terminée";
+  const statusClass = before
+    ? "bg-slate-100 text-slate-500"
+    : during
+    ? "bg-emerald-100 text-emerald-700"
+    : "bg-slate-100 text-slate-500";
 
   return (
     <Card className="border-indigo-200 bg-indigo-50/60">
@@ -79,19 +70,7 @@ export function SessionTimer({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {!startedAt ? (
-            <Button onClick={start}>
-              <Play className="h-4 w-4 mr-1" />
-              Démarrer la séance
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={reset}>
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Réinitialiser
-            </Button>
-          )}
-        </div>
+        <Badge className={statusClass}>{status}</Badge>
       </CardContent>
     </Card>
   );

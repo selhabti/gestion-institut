@@ -40,6 +40,7 @@ import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
 import { useStaff } from "@/hooks/useStaff";
 import { JUZ_REFERENCE, SURAHS, SURAH_VERSES, surahVerseCount } from "@/lib/quranReference";
+import { SurahCombobox } from "@/components/attendance/SurahCombobox";
 import type {
   MemorizationEntry,
   MemorizationKind,
@@ -376,18 +377,7 @@ export function StudentHistoryModal({
                       </div>
                     ) : (
                       <div className="flex flex-wrap items-center gap-2">
-                        <Select value={newSurah} onValueChange={setNewSurah}>
-                          <SelectTrigger className="w-64">
-                            <SelectValue placeholder="Sourate" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-72">
-                            {SURAHS.map((s, i) => (
-                              <SelectItem key={s} value={s}>
-                                {s} — {SURAH_VERSES[i]} v.
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SurahCombobox value={newSurah} onChange={setNewSurah} />
                         <Input
                           type="number"
                           min={1}
