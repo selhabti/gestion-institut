@@ -25,7 +25,8 @@ import {
   RotateCcw,
   UserPlus,
   Wallet,
-  ArrowRight
+  ArrowRight,
+  Copy
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -157,6 +158,49 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
     } catch (error) {
       console.error('❌ Erreur suppression:', error);
       toast.error('Erreur de suppression');
+    }
+  };
+
+  // Année scolaire d'une date (septembre → août)
+  const schoolYearLabel = (dateStr: string): string => {
+    const y = Number((dateStr || "").slice(0, 4));
+    const m = Number((dateStr || "").slice(5, 7));
+    return m >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+  };
+
+  // Duplique un événement pour l'année suivante (dates + titre décalés d'un an)
+  const duplicateToNextYear = async (event: Event) => {
+    const shift = (d: string): string => {
+      const [y, m, day] = d.split("-").map(Number);
+      const maxDay = new Date(y + 1, m, 0).getDate();
+      return `${y + 1}-${String(m).padStart(2, "0")}-${String(
+        Math.min(day, maxDay)
+      ).padStart(2, "0")}`;
+    };
+
+    const hasYear = /\b20\d{2}\b/.test(event.title);
+    const nextTitle = hasYear
+      ? event.title.replace(/\b(20\d{2})\b/g, (mm) => String(Number(mm) + 1))
+      : `${event.title} ${Number(event.end_date.slice(0, 4)) + 1}`;
+
+    try {
+      await createEvent(
+        {
+          title: nextTitle,
+          description: event.description || "",
+          event_type: event.event_type,
+          start_date: shift(event.start_date),
+          end_date: shift(event.end_date),
+          groups: event.groups || [],
+          exclude_from_stats: event.exclude_from_stats,
+          requires_attendance: event.requires_attendance,
+        },
+        user?.id ?? ""
+      );
+      toast.success(`Événement dupliqué : ${nextTitle}`);
+    } catch (error) {
+      console.error("❌ Erreur duplication:", error);
+      toast.error("Erreur lors de la duplication");
     }
   };
 
@@ -712,10 +756,13 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-semibold">{event.title}</h4>
                             <Badge variant="outline" className="text-xs">
                               {eventTypeLabels[event.event_type] || event.event_type}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Année {schoolYearLabel(event.start_date)}
                             </Badge>
                           </div>
                           
@@ -784,6 +831,15 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
                           onClick={() => setEditingEvent(event)}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-indigo-600 hover:text-indigo-700"
+                          title="Dupliquer pour l'année suivante"
+                          onClick={() => duplicateToNextYear(event)}
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
