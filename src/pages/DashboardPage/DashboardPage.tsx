@@ -58,7 +58,20 @@ const DashboardPage = () => {
     if (id === "zayed") return "Jeudi";
     return "Samedi";
   });
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const id = getCurrentInstitutId();
+    const today = new Date();
+    const sessionDays =
+      id === "attanzil" ? [6] : id === "zayed" ? [0, 1, 4] : [6, 0, 1];
+    // Ouvre directement la prochaine séance (pour Zayed : jeudi 08/10)
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      d.setHours(0, 0, 0, 0);
+      if (sessionDays.includes(d.getDay())) return d;
+    }
+    return today;
+  });
   const [shareMode, setShareMode] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [transferHistory, setTransferHistory] = useState<any[]>([]);
