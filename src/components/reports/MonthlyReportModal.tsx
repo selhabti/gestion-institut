@@ -7,6 +7,7 @@ import {
   Download, X, Target, Clock, ChevronLeft, ChevronRight
 } from "lucide-react";
 import type { Member } from "@/types/member";
+import { getInstitutStatsStartDate } from "@/lib/institutes";
 
 interface MonthlyReportModalProps {
   members: Member[];
@@ -56,12 +57,14 @@ export const MonthlyReportModal = ({
   const stats = useMemo(() => {
     let totalPresent = 0;
     let totalAttendances = 0;
+    const statsStart = getInstitutStatsStartDate();
 
     members.forEach((m) => {
       const monthlyAttendances = (m.attendances || []).filter((a) => {
         if (!a.date?.startsWith(selectedMonth)) return false;
+        if (statsStart && a.date < statsStart) return false;
         const day = new Date(a.date).getDay();
-        return day === 0 || day === 1 || day === 6;
+        return day === 0 || day === 1 || day === 4 || day === 6;
       });
       monthlyAttendances.forEach((a) => {
         totalAttendances++;
@@ -70,7 +73,11 @@ export const MonthlyReportModal = ({
     });
 
     const paidThisMonth = members.filter((m) =>
-      m.payments.some((p) => p.date?.startsWith(selectedMonth))
+      m.payments.some(
+        (p) =>
+          p.date?.startsWith(selectedMonth) &&
+          (!statsStart || p.date >= statsStart)
+      )
     ).length;
 
     return {
