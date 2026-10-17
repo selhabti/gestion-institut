@@ -344,7 +344,7 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           <MonthlyPaymentsTab members={members} onDataChanged={onDataChanged} />
         )
       ) : adminSubTab === "finance" ? (
-        <FinanceTab members={members} />
+        <FinanceTab members={members} onRefresh={onDataChanged} />
       ) : adminSubTab === "cash" ? (
         <CashRegisterTab members={members} />
       ) : adminSubTab === "registration" ? (

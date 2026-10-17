@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   DollarSign, Users, TrendingUp, TrendingDown,
   Download, AlertTriangle, CheckCircle, XCircle,
-  Clock, Calendar, BarChart3, Euro, FileSpreadsheet, Target
+  Clock, Calendar, BarChart3, Euro, FileSpreadsheet, Target, RefreshCw
 } from "lucide-react";
 import { professorHoursService } from "@/services/professorHoursService";
 import { SessionsTable } from "@/components/professor/SessionsTable";
@@ -21,9 +21,10 @@ const HOURLY_RATE = 30;
 
 interface FinanceTabProps {
   members: Member[];
+  onRefresh?: () => void;
 }
 
-export const FinanceTab = ({ members }: FinanceTabProps) => {
+export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -180,6 +181,10 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
           </Button>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => onRefresh?.()}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Rafraîchir
+          </Button>
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" />
             Cotisations CSV
@@ -311,6 +316,7 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
                     <th className="pb-3 font-medium">Nom</th>
                     <th className="pb-3 font-medium">Prénom</th>
                     <th className="pb-3 font-medium">Groupe</th>
+                    <th className="pb-3 font-medium">Cotisation</th>
                     <th className="pb-3 font-medium">Ville</th>
                     <th className="pb-3 font-medium">Statut</th>
                   </tr>
@@ -322,6 +328,9 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
                       <td className="py-3 uppercase">{m.firstName}</td>
                       <td className="py-3">
                         <Badge variant="outline">{m.group}</Badge>
+                      </td>
+                      <td className="py-3 font-semibold">
+                        {getGroupFee(m.group)}€
                       </td>
                       <td className="py-3 text-slate-500">{m.city || "—"}</td>
                       <td className="py-3">
