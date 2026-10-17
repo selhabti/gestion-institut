@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wallet, Search, Check } from "lucide-react";
+import { Wallet, Search, CreditCard } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Member } from "@/types/member";
@@ -21,6 +21,9 @@ const GROUP_FEES: Record<string, number> = {
 export const getGroupFee = (group: string): number =>
   GROUP_FEES[group] ?? 20;
 
+// Mois courant au format YYYY-MM
+const currentMonth = () => new Date().toISOString().slice(0, 7);
+
 interface MonthlyPaymentsTabProps {
   members: Member[];
 }
@@ -28,7 +31,17 @@ interface MonthlyPaymentsTabProps {
 export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  // Overrides locaux : memberId -> paymentId (null = non payé)
+  const [overrides, setOverrides] = useState<Record<string, string | null>>({});
+  const month = currentMonth();
+
+  const paidIdOf = (m: Member): string | null => {
+    if (m.id in overrides) return overrides[m.id];
+    const p = (m.payments || []).find(
+      (pp) => String(pp.date || "").slice(0, 7) === month
+    );
+    return p?.id ?? null;
+  };
 
   const rows = useMemo(
     () =>
@@ -38,19 +51,13 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
             .toLowerCase()
             .includes(search.toLowerCase())
         )
-        .map((m) => {
-          const payment = (m.payments || []).find((p) =>
-            p.date?.startsWith(currentMonth)
-          );
-          return {
-            member: m,
-            fee: getGroupFee(m.group),
-            paid: Boolean(payment),
-            paymentId: payment?.id,
-          };
-        })
+        .map((m) => ({
+          member: m,
+          fee: getGroupFee(m.group),
+          paymentId: paidIdOf(m),
+        }))
         .sort((a, b) => a.member.lastName.localeCompare(b.member.lastName)),
-    [members, search, currentMonth]
+    [members, search, overrides]
   );
 
   const markPaid = async (row: (typeof rows)[number]) => {
@@ -59,15 +66,19 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const { error } = await supabase.from("payments").insert({
-        member_id: row.member.id,
-        payment_date: new Date().toISOString().split("T")[0],
-        amount: row.fee,
-        created_by: user?.id ?? null,
-      });
+      const { data, error } = await supabase
+        .from("payments")
+        .insert({
+          member_id: row.member.id,
+          payment_date: new Date().toISOString().split("T")[0],
+          amount: row.fee,
+          created_by: user?.id ?? null,
+        })
+        .select()
+        .single();
       if (error) throw error;
+      setOverrides((prev) => ({ ...prev, [row.member.id]: data.id }));
       toast.success(`Paiement de ${row.fee}€ enregistré`);
-      setTimeout(() => window.location.reload(), 600);
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors du paiement");
@@ -86,8 +97,8 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
         .delete()
         .eq("id", row.paymentId);
       if (error) throw error;
+      setOverrides((prev) => ({ ...prev, [row.member.id]: null }));
       toast.success("Paiement annulé");
-      setTimeout(() => window.location.reload(), 600);
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors de l'annulation");
@@ -96,9 +107,9 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
     }
   };
 
-  const paidCount = rows.filter((r) => r.paid).length;
+  const paidCount = rows.filter((r) => r.paymentId).length;
   const collected = rows
-    .filter((r) => r.paid)
+    .filter((r) => r.paymentId)
     .reduce((s, r) => s + r.fee, 0);
 
   return (
@@ -153,63 +164,60 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
                   <th className="py-2 pr-4 font-medium">Groupe</th>
                   <th className="py-2 pr-4 font-medium">Cotisation</th>
                   <th className="py-2 pr-4 font-medium">Statut</th>
-                  <th className="py-2 font-medium">Action</th>
+                  <th className="py-2 font-medium">Paiement</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.member.id}
-                    className="border-b last:border-0 hover:bg-slate-50"
-                  >
-                    <td className="py-3 pr-4">
-                      <span className="font-medium">
-                        {capitalize(row.member.firstName)}
-                      </span>{" "}
-                      <span className="font-bold uppercase">
-                        {row.member.lastName}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <Badge variant="outline">
-                        {row.member.group === "Lundi"
-                          ? "Nouraniya"
-                          : row.member.group}
-                      </Badge>
-                    </td>
-                    <td className="py-3 pr-4 font-semibold">{row.fee}€</td>
-                    <td className="py-3 pr-4">
-                      {row.paid ? (
-                        <Badge className="bg-emerald-500 text-white">
-                          Payé
+                {rows.map((row) => {
+                  const paid = Boolean(row.paymentId);
+                  return (
+                    <tr
+                      key={row.member.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="py-3 pr-4">
+                        <span className="font-medium">
+                          {capitalize(row.member.firstName)}
+                        </span>{" "}
+                        <span className="font-bold uppercase">
+                          {row.member.lastName}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <Badge variant="outline">
+                          {row.member.group === "Lundi"
+                            ? "Nouraniya"
+                            : row.member.group}
                         </Badge>
-                      ) : (
-                        <Badge variant="outline">En attente</Badge>
-                      )}
-                    </td>
-                    <td className="py-3">
-                      {row.paid ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
+                      </td>
+                      <td className="py-3 pr-4 font-semibold">{row.fee}€</td>
+                      <td className="py-3 pr-4">
+                        {paid ? (
+                          <Badge className="bg-emerald-500 text-white">
+                            Payé
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">En attente</Badge>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        <button
+                          type="button"
                           disabled={busyId === row.member.id}
-                          onClick={() => unmark(row)}
+                          onClick={() => (paid ? unmark(row) : markPaid(row))}
+                          title={paid ? "Annuler le paiement" : "Marquer payé"}
+                          className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-colors disabled:opacity-50 ${
+                            paid
+                              ? "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600"
+                              : "bg-white text-slate-400 border-slate-200 hover:bg-slate-50"
+                          }`}
                         >
-                          Annuler
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          disabled={busyId === row.member.id}
-                          onClick={() => markPaid(row)}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Marquer payé
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                          <CreditCard className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {rows.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-6 text-center text-slate-400">
