@@ -25,7 +25,6 @@ import {
   RotateCcw,
   UserPlus,
   Wallet,
-  ArrowRight,
   Copy
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,7 +43,6 @@ import { useStaff, type AppRole } from "@/hooks/useStaff";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { PaymentsAdminTab } from "./PaymentsAdminTab";
 import { MonthlyPaymentsTab } from "./MonthlyPaymentsTab";
-import { ReorganisationTab } from "./ReorganisationTab";
 import type { Member, GroupType } from "@/types/member";
 
 interface AdminTabProps {
@@ -68,10 +66,9 @@ interface AdminTabProps {
 }
 
 export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember, onDataChanged }: AdminTabProps) => {
-  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff" | "paiements" | "reorg">("events");
+  const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff" | "paiements">("events");
   const { staff, loading: staffLoading, isSuperAdmin, updateRole, removeStaff } = useStaff();
   const isAttanzil = getCurrentInstitutId() === "attanzil";
-  const isZayed = getCurrentInstitutId() === "zayed";
 
   useEffect(() => {
     if ((adminSubTab === "events" || adminSubTab === "cash") && archivedMembers === undefined && onLoadArchived) {
@@ -309,19 +306,6 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           <Calendar className="h-4 w-4" />
           Événements
         </button>
-        {isZayed && (
-          <button
-            onClick={() => setAdminSubTab("reorg")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
-              adminSubTab === "reorg"
-                ? "bg-indigo-600 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <ArrowRight className="h-4 w-4" />
-            Réorganisation
-          </button>
-        )}
         <button
           onClick={() => setAdminSubTab("staff")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
@@ -335,9 +319,7 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
         </button>
       </div>
 
-      {adminSubTab === "reorg" ? (
-        <ReorganisationTab members={members} />
-      ) : adminSubTab === "paiements" ? (
+      {adminSubTab === "paiements" ? (
         isAttanzil ? (
           <PaymentsAdminTab members={members} />
         ) : (
