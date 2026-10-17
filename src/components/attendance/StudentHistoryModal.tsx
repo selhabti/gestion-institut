@@ -205,6 +205,23 @@ export function StudentHistoryModal({
     [planHook.plan, presentDates]
   );
 
+  // Position réellement validée (dernier samedi présent) → pour colorer la progression
+  const validatedEighths = useMemo(() => {
+    if (!planHook.plan) return null;
+    const base = planHook.plan.start_hizb * 8 + planHook.plan.start_eighths;
+    const todayStr = toYMD(new Date());
+    const pastPresent = plannedWeeks.filter(
+      (w) => w.isPresent && w.date <= todayStr
+    );
+    return pastPresent.length
+      ? pastPresent[pastPresent.length - 1].cumulativeEighths
+      : base;
+  }, [planHook.plan, plannedWeeks]);
+
+  const currentHizb =
+    validatedEighths != null ? Math.floor(validatedEighths / 8) : null;
+  const doneInHizb = validatedEighths != null ? validatedEighths % 8 : 0;
+
   if (!student) return null;
   if (loading) {
     return (
@@ -429,6 +446,43 @@ export function StudentHistoryModal({
                       </Button>
                     </div>
 
+                    {currentHizb !== null && (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-xs font-medium text-slate-600">
+                          Progression — Hizb {currentHizb}
+                        </span>
+                        <div className="flex gap-1">
+                          {Array.from({ length: 8 }, (_, i) => i + 1).map(
+                            (n) => (
+                              <div
+                                key={n}
+                                title={`${n}/8`}
+                                className={`h-3 w-7 rounded ${
+                                  n <= doneInHizb
+                                    ? "bg-emerald-500"
+                                    : "bg-slate-200"
+                                }`}
+                              />
+                            )
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-700">
+                          {doneInHizb}/8
+                        </span>
+                        {planHook.plan && (
+                          <span className="text-xs text-slate-400">
+                            (incrément{" "}
+                            {
+                              FRACTIONS_LABELS[
+                                planHook.plan.weekly_eighths - 1
+                              ]
+                            }
+                            /sem.)
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {plannedWeeks.length > 0 && (
                       <div className="overflow-x-auto rounded-xl border border-indigo-100 bg-white">
                         <table className="w-full text-sm">
@@ -592,20 +646,33 @@ export function StudentHistoryModal({
                           />
                         </div>
                         <div className="flex gap-1 flex-wrap">
-                          {FRACTIONS_LABELS.map((lbl, i) => (
-                            <button
-                              key={lbl}
-                              type="button"
-                              onClick={() => setNewFraction(i + 1)}
-                              className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-                                newFraction === i + 1
-                                  ? "bg-indigo-600 text-white border-transparent"
-                                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                              }`}
-                            >
-                              {lbl}
-                            </button>
-                          ))}
+                          {FRACTIONS_LABELS.map((lbl, i) => {
+                            const isSelected = newFraction === i + 1;
+                            const inCurrentHizb =
+                              currentHizb !== null &&
+                              newHizb === currentHizb;
+                            const isDone =
+                              inCurrentHizb && i + 1 <= doneInHizb;
+                            return (
+                              <button
+                                key={lbl}
+                                type="button"
+                                onClick={() => setNewFraction(i + 1)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                                  isSelected
+                                    ? "bg-indigo-600 text-white border-transparent"
+                                    : isDone
+                                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                    : inCurrentHizb
+                                    ? "bg-slate-50 text-slate-400 border-slate-200"
+                                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                {isDone && <Check className="h-3.5 w-3.5" />}
+                                {lbl}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (
