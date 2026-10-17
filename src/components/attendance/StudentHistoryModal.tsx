@@ -439,65 +439,85 @@ export function StudentHistoryModal({
                                 Présence
                               </th>
                               <th className="px-3 py-2 font-medium">
+                                À réciter
+                              </th>
+                              <th className="px-3 py-2 font-medium">
                                 Cible cumulée
                               </th>
                               <th className="px-3 py-2 font-medium">Action</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {plannedWeeks.map((w) => (
-                              <tr
-                                key={w.date}
-                                className="border-t border-slate-100"
-                              >
-                                <td className="px-3 py-2">
-                                  {new Date(
-                                    w.date + "T00:00:00"
-                                  ).toLocaleDateString("fr-FR", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  })}
-                                </td>
-                                <td className="px-3 py-2">
-                                  {w.isPresent ? (
-                                    <Badge className="bg-emerald-100 text-emerald-700">
-                                      Présent
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline">
-                                      Absent / à venir
-                                    </Badge>
-                                  )}
-                                </td>
-                                <td className="px-3 py-2 font-semibold text-indigo-700">
-                                  {w.label}
-                                </td>
-                                <td className="px-3 py-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      memo.upsertEntry({
-                                        weekStart: w.date,
-                                        kind: "nouvelle",
-                                        quantity: w.label,
-                                        surahFrom: "",
-                                        ayahFrom: "",
-                                        ayahTo: "",
-                                        surahTo: "",
-                                        status: w.isPresent
-                                          ? "fait"
-                                          : "a_revoir",
-                                        quality: "",
-                                      })
-                                    }
-                                  >
-                                    Enregistrer
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
+                            {plannedWeeks.map((w) => {
+                              const isPast = w.date <= toYMD(new Date());
+                              return (
+                                <tr
+                                  key={w.date}
+                                  className="border-t border-slate-100"
+                                >
+                                  <td className="px-3 py-2">
+                                    {new Date(
+                                      w.date + "T00:00:00"
+                                    ).toLocaleDateString("fr-FR", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                    })}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    {w.isPresent ? (
+                                      <Badge className="bg-emerald-100 text-emerald-700">
+                                        Présent
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline">Absent</Badge>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 font-semibold text-slate-800">
+                                    {w.amountLabel}
+                                    {w.reported && (
+                                      <span className="ml-1 text-xs text-amber-600">
+                                        (report)
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-indigo-700">
+                                    {w.label}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    {w.isPresent ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          memo.upsertEntry({
+                                            weekStart: w.date,
+                                            kind: "nouvelle",
+                                            quantity: w.label,
+                                            surahFrom: "",
+                                            ayahFrom: "",
+                                            ayahTo: "",
+                                            surahTo: "",
+                                            status: "fait",
+                                            quality: "",
+                                          })
+                                        }
+                                      >
+                                        Enregistrer
+                                      </Button>
+                                    ) : isPast ? (
+                                      <span className="text-xs font-medium text-amber-600">
+                                        Reporté
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-slate-400">
+                                        À venir
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

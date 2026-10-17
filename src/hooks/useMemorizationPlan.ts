@@ -86,12 +86,16 @@ export interface PlannedWeek {
   isPresent: boolean;
   cumulativeEighths: number;
   label: string;
+  amountEighths: number;
+  amountLabel: string;
+  reported: boolean;
 }
 
 /**
  * Calcule, pour chaque samedi depuis le début du programme, la cible cumulée.
- * La cible n'augmente que les semaines où l'élève est PRÉSENT (sinon l'incrément
- * est reporté : la progression suit le nombre de présences, pas le calendrier).
+ * Le cumul avance par semaine calendaire (indépendamment de la présence).
+ * Si l'élève est absent, la partie manquée est REPORTÉE : à la séance suivante
+ * il doit réciter (partie manquée + partie de la semaine), ex. 1/4 + 1/4.
  */
 export const computePlannedWeeks = (
   plan: MemorizationPlan,
@@ -105,26 +109,35 @@ export const computePlannedWeeks = (
   const end = new Date(today);
   end.setDate(end.getDate() + horizonWeeks * 7);
 
-  let presents = 0;
+  const base = plan.start_hizb * 8 + plan.start_eighths;
+  let lastValidated = base; // dernier cumul réellement récité
+  let index = 0;
   let d = new Date(start);
 
   while (d <= end) {
     const ds = toYMD(d);
     const isPresent = presentDates.has(ds);
-    if (isPresent) presents += 1;
 
-    const cumulativeEighths =
-      plan.start_hizb * 8 +
-      plan.start_eighths +
-      presents * plan.weekly_eighths;
+    // Cible cumulée selon le calendrier (1 incrément par samedi)
+    const cumulativeEighths = base + (index + 1) * plan.weekly_eighths;
+    // Part à réciter = cible - dernier cumul validé (inclut le report)
+    const amountEighths = cumulativeEighths - lastValidated;
+    const reported = amountEighths > plan.weekly_eighths;
 
     result.push({
       date: ds,
       isPresent,
       cumulativeEighths,
       label: formatEighths(cumulativeEighths),
+      amountEighths,
+      amountLabel: formatEighths(amountEighths).replace("Hizb 0 + ", ""),
+      reported,
     });
 
+    // On ne valide le cumul que si l'élève est présent
+    if (isPresent) lastValidated = cumulativeEighths;
+
+    index += 1;
     d.setDate(d.getDate() + 7);
   }
 
