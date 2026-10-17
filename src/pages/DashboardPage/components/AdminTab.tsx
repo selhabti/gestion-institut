@@ -686,7 +686,11 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
             </div>
           ) : (
             <div className="space-y-4">
-              {events.map((event) => {
+              {[...events]
+                .sort((a, b) =>
+                  (b.start_date || "").localeCompare(a.start_date || "")
+                )
+                .map((event) => {
                 const Icon = eventTypeIcons[event.event_type] || AlertTriangle;
                 const today = new Date().toISOString().split('T')[0];
                 const isActive = today >= event.start_date && today <= event.end_date;
