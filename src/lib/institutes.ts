@@ -98,3 +98,13 @@ export const getInstitutGroups = (): GroupType[] => {
   if (id === "zayed") return ["Jeudi", "Dimanche", "Lundi"];
   return ["Samedi", "Dimanche", "Lundi", "Jeudi"];
 };
+
+// Date de reprise officielle : tout ce qui précède est ignoré dans les statistiques.
+// Zayed : jeudi 08/10/2026.
+export const getInstitutStatsStartDate = (): string | null => {
+  const id = getCurrentInstitutId();
+  if (id === "zayed") {
+    return env.VITE_INSTITUT_ZAYED_STATS_START || "2026-10-08";
+  }
+  return null;
+};

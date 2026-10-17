@@ -1,6 +1,7 @@
 // src/services/attendanceService.ts
 import { supabase } from '@/lib/supabase';
 import type { SessionType } from '@/types/session';
+import { getInstitutStatsStartDate } from '@/lib/institutes';
 
 export type AttendanceStatus = 'present' | 'absent_justified' | 'absent_unjustified';
 
@@ -602,7 +603,10 @@ static async getStudentHistoryWithExclusion(studentId: string) {
     console.log('📅 Périodes exclues trouvées:', excludedPeriods?.length || 0);
 
     // 4. Filtrer les présences pour exclure les périodes de vacances
+    //    et tout ce qui précède la date de reprise officielle
+    const statsStart = getInstitutStatsStartDate();
     const filteredAttendances = ((attendances || []) as AttendanceRow[]).filter(attendance => {
+      if (statsStart && attendance.date < statsStart) return false;
       // Vérifier si cette date est pendant une période exclue
       const isExcluded = ((excludedPeriods || []) as PeriodRow[]).some(period => {
         return attendance.date >= period.start_date && attendance.date <= period.end_date;

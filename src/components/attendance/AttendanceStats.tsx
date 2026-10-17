@@ -5,6 +5,7 @@ import { TrendingUp, Target, Activity, CreditCard, Calendar, AlertCircle } from 
 import type { Member } from "@/types/member";
 import { SessionType } from "@/types/session";
 import { useEvents } from "@/hooks/useEvents";
+import { getInstitutStatsStartDate } from "@/lib/institutes";
 import { useState, useEffect, useMemo } from "react";
 
 interface AttendanceStatsProps {
@@ -46,6 +47,7 @@ export const AttendanceStats = ({
     let totalPresent = 0;
     let totalAttendances = 0;
     let totalExcludedDays = 0;
+    const statsStart = getInstitutStatsStartDate();
     
     // Statistiques d'assiduité ajustées
     const attendanceStats = {
@@ -65,6 +67,7 @@ export const AttendanceStats = ({
       // Présences du mois filtrées par jour de semaine de la date
       const monthlyAttendances = member.attendances.filter((a) => {
         if (!a.date?.startsWith(currentMonth)) return false;
+        if (statsStart && a.date < statsStart) return false;
         const day = new Date(a.date).getDay(); // 0=Dim, 1=Lun, 6=Sam
         if (selectedGroup === "Samedi+Dimanche")
           return day === 0 || day === 6;

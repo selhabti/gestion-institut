@@ -2,6 +2,7 @@
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
 import type { Member } from '@/types/member';
 import type { StudentHistory, MonthlyStats, SessionDetail, PaymentStatus, AttendanceStats } from '@/types/attendance';
+import { getInstitutStatsStartDate } from '@/lib/institutes';
 
 export const useStudentHistory = (members: Member[]) => {
   const getStudentHistory = (studentId: string): StudentHistory | null => {
@@ -34,11 +35,13 @@ export const useStudentHistory = (members: Member[]) => {
     // Liste des mois à afficher (3 derniers mois)
     const monthsToShow = [currentMonth, prevMonth1, prevMonth2];
     
-    // Filtrer pour garder seulement les mois à partir d'octobre 2025
+    // Filtrer pour ne garder que les mois qui contiennent des dates >= date de reprise
+    const startStr = getInstitutStatsStartDate() ?? '2025-10-01';
+    const instituteStartDate = new Date(startStr + 'T00:00:00');
     const filteredMonths = monthsToShow.filter(month => {
-      const monthDate = new Date(month + '-01');
-      const instituteStartDate = new Date('2025-10-01');
-      return monthDate >= instituteStartDate;
+      const [y, m] = month.split('-').map(Number);
+      const monthEnd = new Date(y, m, 0, 23, 59, 59);
+      return monthEnd >= instituteStartDate;
     });
   
     // Pour chaque mois, calculer les statistiques (même s'il n'y a pas de données)
@@ -84,17 +87,21 @@ export const useStudentHistory = (members: Member[]) => {
 
   const generateSessionsForMonth = (student: Member, month: string): SessionDetail[] => {
     const sessions: SessionDetail[] = [];
+    const startStr = getInstitutStatsStartDate();
     const start = startOfMonth(new Date(month + '-01'));
     const end = endOfMonth(start);
     
     const allDays = eachDayOfInterval({ start, end });
 
     allDays.forEach(day => {
+      const dateString = format(day, 'yyyy-MM-dd');
+      // Ne pas générer de séance avant la date de reprise officielle
+      if (startStr && dateString < startStr) return;
+
       // Vérifier si c'est un jour de séance pour le groupe de l'élève
       const isSessionDay = isStudentSessionDay(day, student.group);
       if (!isSessionDay) return;
 
-      const dateString = format(day, 'yyyy-MM-dd');
       const attendance = student.attendances.find(a => a.date === dateString);
       
       let status: SessionDetail['status'] = 'not_recorded';
