@@ -42,6 +42,7 @@ import { RegistrationForm } from "@/components/members";
 import { useStaff, type AppRole } from "@/hooks/useStaff";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { PaymentsAdminTab } from "./PaymentsAdminTab";
+import { MonthlyPaymentsTab } from "./MonthlyPaymentsTab";
 import { ReorganisationTab } from "./ReorganisationTab";
 import type { Member, GroupType } from "@/types/member";
 
@@ -219,19 +220,17 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
           <UserPlus className="h-4 w-4" />
           Inscription
         </button>
-        {isAttanzil && (
-          <button
-            onClick={() => setAdminSubTab("paiements")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
-              adminSubTab === "paiements"
-                ? "bg-indigo-600 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <Wallet className="h-4 w-4" />
-            Paiements
-          </button>
-        )}
+        <button
+          onClick={() => setAdminSubTab("paiements")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
+            adminSubTab === "paiements"
+              ? "bg-indigo-600 text-white"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Wallet className="h-4 w-4" />
+          Paiements
+        </button>
         <button
           onClick={() => setAdminSubTab("cash")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-colors ${
@@ -294,7 +293,11 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
       {adminSubTab === "reorg" ? (
         <ReorganisationTab members={members} />
       ) : adminSubTab === "paiements" ? (
-        <PaymentsAdminTab members={members} />
+        isAttanzil ? (
+          <PaymentsAdminTab members={members} />
+        ) : (
+          <MonthlyPaymentsTab members={members} />
+        )
       ) : adminSubTab === "finance" ? (
         <FinanceTab members={members} />
       ) : adminSubTab === "cash" ? (
