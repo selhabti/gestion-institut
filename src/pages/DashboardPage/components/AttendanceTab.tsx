@@ -10,6 +10,7 @@ import type { SessionType } from "@/types/session";
 import { lazyImport } from "@/utils/lazyImport";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { SessionTimer } from "@/components/attendance/SessionTimer";
+import { getSessionSchedule } from "@/lib/sessionSchedule";
 
 const LazyMembersTable = lazyImport(() => import("@/components/MembersTable"));
 
@@ -319,8 +320,15 @@ export const AttendanceTab = ({
         )}
       </div>
 
-      {/* MINUTEUR DE SÉANCE (Attanzil) */}
-      {isAttanzil && <SessionTimer />}
+      {/* MINUTEUR DE SÉANCE */}
+      <SessionTimer
+        sessionStart={getSessionSchedule(selectedGroup).start}
+        sessionEnd={getSessionSchedule(selectedGroup).end}
+        sessionDays={[getSessionSchedule(selectedGroup).day]}
+        label={`Séance ${
+          selectedGroup === "Lundi" ? "Nouraniya" : selectedGroup
+        }`}
+      />
 
       {/* TABLEAU */}
       <Card className="border border-slate-300 shadow-sm">

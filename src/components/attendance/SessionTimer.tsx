@@ -7,6 +7,8 @@ import { Timer } from "lucide-react";
 interface SessionTimerProps {
   sessionStart?: string; // "HH:MM"
   sessionEnd?: string;
+  sessionDays?: number[]; // 0=Dim, 1=Lun, 4=Jeu, 6=Sam ; vide = tous les jours
+  label?: string;
 }
 
 const parseHM = (hhmm: string) => {
@@ -19,6 +21,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export function SessionTimer({
   sessionStart = "09:30",
   sessionEnd = "11:30",
+  sessionDays = [],
+  label = "Séance",
 }: SessionTimerProps) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -35,12 +39,14 @@ export function SessionTimer({
   const end = new Date();
   end.setHours(e.h, e.m, 0, 0);
 
-  // Démarre automatiquement à 09:30 et se fige à 11:30 (fin de séance)
-  const startMs = start.getTime();
-  const endMs = end.getTime();
-  const capped = Math.min(now, endMs);
-  const elapsed =
-    now >= startMs ? Math.max(0, Math.floor((capped - startMs) / 1000)) : 0;
+  const isSessionToday =
+    sessionDays.length === 0 || sessionDays.includes(new Date().getDay());
+
+  // Se fige à la fin de la séance
+  const capped = Math.min(now, end.getTime());
+  const elapsed = isSessionToday
+    ? Math.max(0, Math.floor((capped - start.getTime()) / 1000))
+    : 0;
   const hh = pad(Math.floor(elapsed / 3600));
   const mm = pad(Math.floor((elapsed % 3600) / 60));
   const ss = pad(elapsed % 60);
@@ -48,12 +54,20 @@ export function SessionTimer({
   const before = now < start.getTime();
   const during = now >= start.getTime() && now <= end.getTime();
 
-  const status = before ? "À venir" : during ? "En cours" : "Terminée";
-  const statusClass = before
-    ? "bg-slate-100 text-slate-500"
-    : during
-    ? "bg-emerald-100 text-emerald-700"
-    : "bg-slate-100 text-slate-500";
+  let status = "Pas de séance aujourd'hui";
+  let statusClass = "bg-slate-100 text-slate-500";
+  if (isSessionToday) {
+    if (before) {
+      status = "À venir";
+      statusClass = "bg-slate-100 text-slate-500";
+    } else if (during) {
+      status = "En cours";
+      statusClass = "bg-emerald-100 text-emerald-700";
+    } else {
+      status = "Terminée";
+      statusClass = "bg-slate-100 text-slate-500";
+    }
+  }
 
   return (
     <Card className="border-indigo-200 bg-indigo-50/60">
@@ -64,7 +78,7 @@ export function SessionTimer({
           </div>
           <div>
             <p className="text-sm font-medium text-slate-700">
-              Séance Samedi {sessionStart} – {sessionEnd}
+              {label} {sessionStart} – {sessionEnd}
             </p>
             <p className="text-3xl font-black text-indigo-700 tabular-nums">
               {hh}:{mm}:{ss}

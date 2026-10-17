@@ -44,6 +44,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useProfessorHours } from '@/hooks/useProfessorHours';
+import { getCurrentInstitutId } from '@/lib/institutes';
 import { toast } from 'sonner';
 
 export function SessionsTable() {
@@ -59,6 +60,15 @@ export function SessionsTable() {
     updateSession,
     refresh 
   } = useProfessorHours();
+
+  const isAttanzil = getCurrentInstitutId() === "attanzil";
+  // Horaires comptés pour les heures prof (Nouraniya/Lundi exclue)
+  const SCHEDULE: Record<number, { start: string; end: string }> = isAttanzil
+    ? { 6: { start: "09:30", end: "11:30" } }
+    : {
+        0: { start: "16:30", end: "18:30" },
+        4: { start: "18:30", end: "20:00" },
+      };
   
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,8 +83,7 @@ export function SessionsTable() {
   const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
   const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
-  // Jours de cours (Samedi et Dimanche uniquement)
-  const PROFESSOR_SESSION_DAYS = [6, 0];
+  const PROFESSOR_SESSION_DAYS = Object.keys(SCHEDULE).map(Number);
 
   const getSessionList = () => {
     const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -120,8 +129,13 @@ export function SessionsTable() {
       setEditEndTime(sessionItem.session.endTime);
       setEditNotes(sessionItem.session.notes || '');
     } else {
-      setEditStartTime("16:30");
-      setEditEndTime("18:30");
+      const sch =
+        SCHEDULE[new Date(sessionItem.date + "T00:00:00").getDay()] ?? {
+          start: "16:30",
+          end: "18:30",
+        };
+      setEditStartTime(sch.start);
+      setEditEndTime(sch.end);
       setEditNotes("");
     }
     setShowEditModal(true);
@@ -208,10 +222,18 @@ export function SessionsTable() {
     if (!selectedSession?.session) return;
     
     try {
+      const sch =
+        SCHEDULE[new Date(selectedSession.date + "T00:00:00").getDay()] ?? {
+          start: "16:30",
+          end: "18:30",
+        };
+      const [sh, sm] = sch.start.split(":").map(Number);
+      const [eh, em] = sch.end.split(":").map(Number);
+      const hours = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
       await updateSession(selectedSession.session.id, {
-        actualHours: 2,
-        startTime: "16:30",
-        endTime: "18:30",
+        actualHours: hours,
+        startTime: sch.start,
+        endTime: sch.end,
         notes: selectedSession.session.notes?.replace('[ANNULÉE]', '').trim() || '',
         status: 'completed'
       });

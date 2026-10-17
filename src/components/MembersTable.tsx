@@ -538,19 +538,8 @@ export function MembersTable({
 
   return (
     <>
-      {/* Légende du pointage + toggle historique */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-3.5 w-3.5 text-green-600" /> Présent
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <FileQuestion className="h-3.5 w-3.5 text-blue-600" /> Absent justifié
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <X className="h-3.5 w-3.5 text-red-600" /> Absent non justifié
-          </span>
-        </div>
+      {/* Toggle historique */}
+      <div className="flex justify-end mb-4">
         <HistoricalEditToggle />
       </div>
 
@@ -727,6 +716,19 @@ export function MembersTable({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Légende du pointage (en bas) */}
+      <div className="flex items-center gap-4 flex-wrap mt-3 text-xs text-slate-500">
+        <span className="inline-flex items-center gap-1">
+          <Check className="h-3.5 w-3.5 text-green-600" /> Présent
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <FileQuestion className="h-3.5 w-3.5 text-blue-600" /> Absent justifié
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <X className="h-3.5 w-3.5 text-red-600" /> Absent non justifié
+        </span>
       </div>
 
       <StudentHistoryModal
