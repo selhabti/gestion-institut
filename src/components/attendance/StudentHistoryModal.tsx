@@ -38,6 +38,11 @@ import { AttendanceService } from "@/services/attendanceService";
 import { toast } from "sonner";
 import { getCurrentInstitutId } from "@/lib/institutes";
 import { useMemorization, type Riwaya } from "@/hooks/useMemorization";
+import {
+  useMemorizationPlan,
+  computePlannedWeeks,
+  toYMD,
+} from "@/hooks/useMemorizationPlan";
 import { useStaff } from "@/hooks/useStaff";
 import { JUZ_REFERENCE, SURAHS, SURAH_VERSES, surahVerseCount } from "@/lib/quranReference";
 import { SurahCombobox } from "@/components/attendance/SurahCombobox";
@@ -158,6 +163,47 @@ export function StudentHistoryModal({
     }
     return Array.from(map.entries());
   }, [memo.entries]);
+
+  // Programme de mémorisation : progression incrémentale liée à la présence
+  const planHook = useMemorizationPlan(
+    student?.studentId ?? null,
+    isOpen && isAttanzil
+  );
+
+  const presentDates = useMemo(() => {
+    const set = new Set<string>();
+    historyData?.monthlyStats?.forEach((m) =>
+      m.sessions.forEach((s) => {
+        if (s.status === "present") set.add(s.date);
+      })
+    );
+    return set;
+  }, [historyData]);
+
+  const [planStartDate, setPlanStartDate] = useState(() => {
+    const d = new Date();
+    const diff = (6 - d.getDay() + 7) % 7;
+    d.setDate(d.getDate() + diff);
+    return toYMD(d);
+  });
+  const [planStartHizb, setPlanStartHizb] = useState(1);
+  const [planStartEighths, setPlanStartEighths] = useState(0);
+  const [planWeeklyEighths, setPlanWeeklyEighths] = useState(2);
+
+  useEffect(() => {
+    const p = planHook.plan;
+    if (p) {
+      setPlanStartDate(p.start_date);
+      setPlanStartHizb(p.start_hizb);
+      setPlanStartEighths(p.start_eighths);
+      setPlanWeeklyEighths(p.weekly_eighths);
+    }
+  }, [planHook.plan]);
+
+  const plannedWeeks = useMemo(
+    () => (planHook.plan ? computePlannedWeeks(planHook.plan, presentDates) : []),
+    [planHook.plan, presentDates]
+  );
 
   if (!student) return null;
   if (loading) {
@@ -292,6 +338,172 @@ export function StudentHistoryModal({
                     </div>
                   )}
 
+                  {/* Programme de mémorisation (incrémental, lié à la présence) */}
+                  <div className="space-y-3 p-4 bg-indigo-50/60 rounded-2xl border border-indigo-100">
+                    <Label className="text-slate-800">
+                      Programme de mémorisation
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      La cible s'incrémente à chaque samedi où l'élève est
+                      présent ; si absent, l'incrément est reporté.
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input
+                        type="date"
+                        value={planStartDate}
+                        onChange={(e) => setPlanStartDate(e.target.value)}
+                        className="w-44"
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-500">Départ</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={60}
+                          value={planStartHizb}
+                          onChange={(e) =>
+                            setPlanStartHizb(
+                              Math.max(
+                                1,
+                                Math.min(60, Number(e.target.value) || 1)
+                              )
+                            )
+                          }
+                          className="w-16"
+                        />
+                        <span className="text-xs text-slate-500">+</span>
+                        <Select
+                          value={String(planStartEighths)}
+                          onValueChange={(v) =>
+                            setPlanStartEighths(Number(v))
+                          }
+                        >
+                          <SelectTrigger className="w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">0</SelectItem>
+                            {FRACTIONS_LABELS.map((lbl, i) => (
+                              <SelectItem key={lbl} value={String(i + 1)}>
+                                {lbl}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-500">
+                          Incrément / sem.
+                        </span>
+                        <Select
+                          value={String(planWeeklyEighths)}
+                          onValueChange={(v) =>
+                            setPlanWeeklyEighths(Number(v))
+                          }
+                        >
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FRACTIONS_LABELS.map((lbl, i) => (
+                              <SelectItem key={lbl} value={String(i + 1)}>
+                                {lbl}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          planHook.save({
+                            start_date: planStartDate,
+                            start_hizb: planStartHizb,
+                            start_eighths: planStartEighths,
+                            weekly_eighths: planWeeklyEighths,
+                          })
+                        }
+                      >
+                        Enregistrer le programme
+                      </Button>
+                    </div>
+
+                    {plannedWeeks.length > 0 && (
+                      <div className="overflow-x-auto rounded-xl border border-indigo-100 bg-white">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50">
+                            <tr className="text-left text-slate-500">
+                              <th className="px-3 py-2 font-medium">Samedi</th>
+                              <th className="px-3 py-2 font-medium">
+                                Présence
+                              </th>
+                              <th className="px-3 py-2 font-medium">
+                                Cible cumulée
+                              </th>
+                              <th className="px-3 py-2 font-medium">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {plannedWeeks.map((w) => (
+                              <tr
+                                key={w.date}
+                                className="border-t border-slate-100"
+                              >
+                                <td className="px-3 py-2">
+                                  {new Date(
+                                    w.date + "T00:00:00"
+                                  ).toLocaleDateString("fr-FR", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  })}
+                                </td>
+                                <td className="px-3 py-2">
+                                  {w.isPresent ? (
+                                    <Badge className="bg-emerald-100 text-emerald-700">
+                                      Présent
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline">
+                                      Absent / à venir
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 font-semibold text-indigo-700">
+                                  {w.label}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      memo.upsertEntry({
+                                        weekStart: w.date,
+                                        kind: "nouvelle",
+                                        quantity: w.label,
+                                        surahFrom: "",
+                                        ayahFrom: "",
+                                        ayahTo: "",
+                                        surahTo: "",
+                                        status: w.isPresent
+                                          ? "fait"
+                                          : "a_revoir",
+                                        quality: "",
+                                      })
+                                    }
+                                  >
+                                    Enregistrer
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Ajout / mise à jour d'une ligne */}
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                     <Label>Ajouter une ligne de suivi</Label>
@@ -341,23 +553,24 @@ export function StudentHistoryModal({
 
                     {qtyMode === "hizb" ? (
                       <div className="flex flex-wrap items-center gap-2">
-                        <Select
-                          value={String(newHizb)}
-                          onValueChange={(v) => setNewHizb(Number(v))}
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-72">
-                            {Array.from({ length: 60 }, (_, i) => i + 1).map(
-                              (n) => (
-                                <SelectItem key={n} value={String(n)}>
-                                  Hizb {n}
-                                </SelectItem>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-slate-500">Hizb</span>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={60}
+                            value={newHizb}
+                            onChange={(e) =>
+                              setNewHizb(
+                                Math.max(
+                                  1,
+                                  Math.min(60, Number(e.target.value) || 1)
+                                )
                               )
-                            )}
-                          </SelectContent>
-                        </Select>
+                            }
+                            className="w-20"
+                          />
+                        </div>
                         <div className="flex gap-1 flex-wrap">
                           {FRACTIONS_LABELS.map((lbl, i) => (
                             <button
