@@ -60,18 +60,9 @@ const MemberForm: React.FC<MemberFormProps> = ({
   // Tous les groupes disponibles
   const allGroups: GroupType[] = getInstitutGroups();
 
-  // Gérer la sélection/désélection d'un groupe
+  // Un élève appartient à UN SEUL groupe
   const toggleGroup = (group: GroupType) => {
-    if (selectedGroups.includes(group)) {
-      // Ne pas permettre de désélectionner le dernier groupe
-      if (selectedGroups.length > 1) {
-        setSelectedGroups(selectedGroups.filter(g => g !== group));
-      } else {
-        toast.warning("Un élève doit avoir au moins un groupe");
-      }
-    } else {
-      setSelectedGroups([...selectedGroups, group]);
-    }
+    setSelectedGroups([group]);
   };
 
   // Le premier groupe est le groupe principal
@@ -155,8 +146,6 @@ const MemberForm: React.FC<MemberFormProps> = ({
 
     setIsLoading(true);
     try {
-      const secondaryGroups = selectedGroups.slice(1); // Tous sauf le premier
-      
       await onAddMember(
         firstName.trim(), 
         lastName.trim(), 
@@ -164,7 +153,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
         phone.trim(), 
         email.trim(), 
         primaryGroup,
-        secondaryGroups.length > 0 ? secondaryGroups : undefined
+        undefined
       );
 
       const groupDescription = selectedGroups.length === 1 
@@ -418,13 +407,13 @@ const MemberForm: React.FC<MemberFormProps> = ({
 
             <div className="space-y-3">
               <Label className="text-lg font-geist-bold text-slate-800">
-                Groupes *
+                Groupe *
               </Label>
               
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="mb-3">
                   <p className="text-sm text-slate-600 font-geist-medium mb-2">
-                    Sélectionnez les groupes de l'élève :
+                    Sélectionnez le groupe de l'élève :
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {allGroups.map((group) => (
@@ -462,11 +451,11 @@ const MemberForm: React.FC<MemberFormProps> = ({
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-geist-bold text-blue-800">
-                        Groupe principal
+                        Groupe sélectionné
                       </p>
                       <p className="text-xs text-blue-600">
-                        Le premier groupe sélectionné ({getGroupDisplayName(primaryGroup)}) est le groupe principal. 
-                        Faites glisser pour réorganiser.
+                        {getGroupDisplayName(primaryGroup)} — c'est son groupe
+                        unique.
                       </p>
                     </div>
                   </div>

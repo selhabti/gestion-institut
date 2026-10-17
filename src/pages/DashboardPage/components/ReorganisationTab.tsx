@@ -36,23 +36,20 @@ export const ReorganisationTab = ({ members }: ReorganisationTabProps) => {
 
     setLoading(true);
     try {
-      // 1) Groupe principal : Samedi → Jeudi
+      // 1) Groupe principal : Samedi → Jeudi (un seul groupe par élève)
       const { error: e1 } = await supabase
         .from("members")
-        .update({ group_type: "Jeudi" })
+        .update({ group_type: "Jeudi", secondary_groups: [] })
         .eq("group_type", "Samedi");
       if (e1) throw e1;
 
-      // 2) Groupes secondaires : retirer Samedi, ajouter Jeudi
+      // 2) Un seul groupe par élève : on vide les groupes secondaires restants
       for (const m of members) {
         const sec = m.secondaryGroups || [];
-        if (sec.includes("Samedi")) {
-          const next = Array.from(
-            new Set([...sec.filter((g) => g !== "Samedi"), "Jeudi"])
-          );
+        if (sec.length > 0) {
           const { error } = await supabase
             .from("members")
-            .update({ secondary_groups: next })
+            .update({ secondary_groups: [] })
             .eq("id", m.id);
           if (error) throw error;
         }

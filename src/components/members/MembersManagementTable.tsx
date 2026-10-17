@@ -88,18 +88,9 @@ export const MembersManagementTable = ({
     setEditingMember({ ...member });
   };
 
-  // Gérer la sélection/désélection d'un groupe
+  // Un élève appartient à UN SEUL groupe : sélection unique
   const toggleGroup = (group: GroupType) => {
-    if (selectedGroups.includes(group)) {
-      // Ne pas permettre de désélectionner le dernier groupe
-      if (selectedGroups.length > 1) {
-        setSelectedGroups(selectedGroups.filter(g => g !== group));
-      } else {
-        toast.warning("Un élève doit avoir au moins un groupe");
-      }
-    } else {
-      setSelectedGroups([...selectedGroups, group]);
-    }
+    setSelectedGroups([group]);
   };
 
   // Obtenir le groupe principal (premier de la liste)
@@ -109,10 +100,7 @@ export const MembersManagementTable = ({
     if (!editingMember) return;
 
     try {
-      // Déterminer le groupe principal et les groupes secondaires
       const newPrimaryGroup = selectedGroups[0];
-      const newSecondaryGroups = selectedGroups.slice(1);
-
       await onUpdateMember(editingMember.id, {
         firstName: editingMember.firstName,
         lastName: editingMember.lastName,
@@ -120,14 +108,14 @@ export const MembersManagementTable = ({
         phone: editingMember.phone,
         email: editingMember.email,
         group: newPrimaryGroup,
-        secondaryGroups: newSecondaryGroups,
+        secondaryGroups: [],
       });
 
       setEditingMember(null);
       setSelectedGroups([]);
       
       toast.success("Élève mis à jour avec succès", {
-        description: `Groupes: ${selectedGroups.join(', ')}`,
+        description: `Groupe: ${newPrimaryGroup}`,
       });
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
@@ -447,7 +435,7 @@ export const MembersManagementTable = ({
               Modifier {editingMember?.firstName} {editingMember?.lastName}
             </DialogTitle>
             <DialogDescription>
-              Modifiez les informations et les groupes de cet élève
+              Modifiez les informations et le groupe de cet élève
             </DialogDescription>
           </DialogHeader>
 
@@ -527,16 +515,16 @@ export const MembersManagementTable = ({
             {/* Gestion des groupes multiples */}
             <div className="space-y-3">
               <label className="text-sm font-medium">
-                Groupes *
+                Groupe *
                 <span className="text-xs text-slate-500 ml-2">
-                  (Cliquez pour sélectionner/désélectionner)
+                  (Sélectionnez un seul groupe)
                 </span>
               </label>
               
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="mb-3">
                   <p className="text-sm text-slate-600 mb-2">
-                    Sélectionnez les groupes de l'élève :
+                    Sélectionnez le groupe de l'élève :
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {availableGroups.map((group) => (
@@ -581,11 +569,11 @@ export const MembersManagementTable = ({
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-blue-800">
-                        Groupe principal
+                        Groupe sélectionné
                       </p>
                       <p className="text-xs text-blue-600">
-                        Le premier groupe dans la liste ({getGroupDisplayName(primaryGroup)}) est le groupe principal.
-                        Faites glisser pour réorganiser.
+                        {getGroupDisplayName(primaryGroup)} — c'est son groupe
+                        unique.
                       </p>
                     </div>
                   </div>
