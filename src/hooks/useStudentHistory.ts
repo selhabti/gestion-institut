@@ -123,6 +123,8 @@ export const useStudentHistory = (members: Member[]) => {
         return dayOfWeek === 0; // Dimanche
       case 'Lundi':
         return dayOfWeek === 1; // Lundi
+      case 'Jeudi':
+        return dayOfWeek === 4; // Jeudi
       default:
         return false;
     }

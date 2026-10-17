@@ -128,6 +128,7 @@ export function MembersTable({
       Samedi: ["Samedi"],
       Dimanche: ["Dimanche"],
       Lundi: ["Lundi"],
+      Jeudi: ["Jeudi"],
       "Samedi+Dimanche": ["Samedi", "Dimanche"],
     };
     return groupDays[selectedGroup] || [];

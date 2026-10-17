@@ -32,6 +32,7 @@ export const SESSION_TYPES = [
   "Samedi",
   "Dimanche",
   "Lundi",
+  "Jeudi",
   "Samedi+Dimanche",
 ] as const;
 
@@ -69,6 +70,12 @@ export const GROUP_COLORS = {
     text: "text-orange-700",
     border: "border-orange-200",
     badge: "bg-orange-500",
+  },
+  Jeudi: {
+    bg: "bg-cyan-50",
+    text: "text-cyan-700",
+    border: "border-cyan-200",
+    badge: "bg-cyan-500",
   },
   "Samedi+Dimanche": {
     bg: "bg-purple-50",
@@ -139,6 +146,7 @@ export const GROUP_SESSION_DAYS: Record<string, string[]> = {
   Samedi: ["Samedi"],
   Dimanche: ["Dimanche"],
   Lundi: ["Lundi"],
+  Jeudi: ["Jeudi"],
   "Samedi+Dimanche": ["Samedi", "Dimanche"],
 } as const;
 

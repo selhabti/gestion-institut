@@ -49,11 +49,13 @@ const DashboardPage = () => {
   // États
   const isAttanzil = getCurrentInstitutId() === "attanzil";
   const [selectedGroup, setSelectedGroup] = useState<SessionType>(() => {
-    if (getCurrentInstitutId() === "attanzil") return "Samedi";
+    const id = getCurrentInstitutId();
+    if (id === "attanzil") return "Samedi";
     const today = new Date().getDay();
-    if (today === 6) return "Samedi";
     if (today === 0) return "Dimanche";
     if (today === 1) return "Lundi";
+    if (today === 4) return "Jeudi";
+    if (id === "zayed") return "Jeudi";
     return "Samedi";
   });
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -149,6 +151,9 @@ useEffect(() => {
         case "Lundi":
           targetDay = 1;
           break;
+        case "Jeudi":
+          targetDay = 4;
+          break;
         case "Samedi":
           targetDay = 6;
           break;
@@ -186,6 +191,7 @@ useEffect(() => {
   const isNextSessionToday = useCallback((group: SessionType): boolean => {
     const today = new Date().getDay();
     if (group === "Lundi" && today === 1) return true;
+    if (group === "Jeudi" && today === 4) return true;
     if (group === "Samedi" && today === 6) return true;
     if (group === "Dimanche" && today === 0) return true;
     if (group === "Samedi+Dimanche" && (today === 6 || today === 0))

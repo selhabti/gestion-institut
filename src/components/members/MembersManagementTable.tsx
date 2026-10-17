@@ -26,6 +26,7 @@ import { Edit, Trash2, User, Loader2, Star, X, Tag, ArrowRightLeft } from "lucid
 import type { Member, GroupType } from "@/types/member";
 import { toast } from "sonner";
 import MemberForm from "@/components/MemberForm";
+import { getInstitutGroups } from "@/lib/institutes";
 
 // ===================================
 // INTERFACE CORRIGÉE
@@ -78,7 +79,7 @@ export const MembersManagementTable = ({
       setSelectedGroups([...new Set(allGroups)]); // Éviter les doublons
       
       // Tous les groupes disponibles
-      const allAvailable: GroupType[] = ["Samedi", "Dimanche", "Lundi"];
+      const allAvailable: GroupType[] = getInstitutGroups();
       setAvailableGroups(allAvailable);
     }
   }, [editingMember]);

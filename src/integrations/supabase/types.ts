@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type GroupType = "Lundi" | "Samedi" | "Dimanche"
+export type GroupType = "Lundi" | "Samedi" | "Dimanche" | "Jeudi"
 export type AttendanceStatusType = "present" | "absent_justified" | "absent_unjustified"
 export type EventType = "vacation" | "seminar" | "holiday" | "special_session" | "maintenance"
 export type SessionStatusType = "completed" | "cancelled"

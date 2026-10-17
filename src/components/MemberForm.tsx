@@ -8,7 +8,7 @@ import { CheckCircle, AlertCircle, Loader2, UserPlus, Star, X, Users } from "luc
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import type { GroupType } from "@/types/member";
-import { getCurrentInstitutId } from "@/lib/institutes";
+import { getCurrentInstitutId, getInstitutGroups } from "@/lib/institutes";
 import { MemberFormDuplicateCheck } from "./MemberFormDuplicateCheck";
 import {
   AlertDialog,
@@ -46,7 +46,9 @@ const MemberForm: React.FC<MemberFormProps> = ({
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedGroups, setSelectedGroups] = useState<GroupType[]>(["Samedi"]);
+  const [selectedGroups, setSelectedGroups] = useState<GroupType[]>(() => [
+    getInstitutGroups()[0] ?? "Samedi",
+  ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
@@ -56,7 +58,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
   const [duplicateMember, setDuplicateMember] = useState<any>(null);
 
   // Tous les groupes disponibles
-  const allGroups: GroupType[] = ["Samedi", "Dimanche", "Lundi"];
+  const allGroups: GroupType[] = getInstitutGroups();
 
   // Gérer la sélection/désélection d'un groupe
   const toggleGroup = (group: GroupType) => {
@@ -113,7 +115,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
       setCity("");
       setPhone("");
       setEmail("");
-      setSelectedGroups(["Samedi"]);
+      setSelectedGroups([getInstitutGroups()[0] ?? "Samedi"]);
       setExistingMemberId(null);
       setDuplicateMember(null);
       setShowAddGroupDialog(false);
@@ -180,7 +182,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
       setCity("");
       setPhone("");
       setEmail("");
-      setSelectedGroups(["Samedi"]);
+      setSelectedGroups([getInstitutGroups()[0] ?? "Samedi"]);
       setDuplicateMember(null);
 
       setTimeout(() => setIsSuccess(false), 4000);

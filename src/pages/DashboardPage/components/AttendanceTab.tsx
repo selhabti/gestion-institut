@@ -109,6 +109,8 @@ export const AttendanceTab = ({
 
   // Attanzil : une seule séance, le Samedi (9h30 – 11h30)
   const isAttanzil = getCurrentInstitutId() === "attanzil";
+  // Zayed : réorganisation → Dimanche, Lundi, Jeudi (Samedi supprimé)
+  const isZayed = getCurrentInstitutId() === "zayed";
 
   const selected = new Date(selectedDate);
   selected.setHours(0, 0, 0, 0);
@@ -120,6 +122,7 @@ export const AttendanceTab = ({
   const isSessionDay = (date: Date): boolean => {
     const day = date.getDay();
     if (isAttanzil) return day === 6;
+    if (isZayed) return day === 0 || day === 1 || day === 4;
     return day === 6 || day === 0 || day === 1;
   };
 
@@ -172,8 +175,14 @@ export const AttendanceTab = ({
 
   const getSessionDayForDate = (date: Date): string | null => {
     const day = date.getDay();
+    if (isAttanzil) return day === 6 ? "Samedi" : null;
+    if (isZayed) {
+      if (day === 0) return "Dimanche";
+      if (day === 1) return "Lundi";
+      if (day === 4) return "Jeudi";
+      return null;
+    }
     if (day === 6) return "Samedi";
-    if (isAttanzil) return null;
     if (day === 0) return "Dimanche";
     if (day === 1) return "Lundi";
     return null;

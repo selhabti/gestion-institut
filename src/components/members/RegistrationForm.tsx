@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { GroupType } from "@/types/member";
+import { getInstitutGroups } from "@/lib/institutes";
 import { z } from "zod";
 
 const studentRegistrationSchema = z.object({
@@ -84,14 +85,16 @@ export const RegistrationForm = ({
   title = "Inscription Élève",
   description = "Inscrivez-vous en remplissant le formulaire ci-dessous",
   submitLabel = "S'inscrire",
-  initialGroup = "Samedi",
+  initialGroup,
 }: RegistrationFormProps) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [group, setGroup] = useState<GroupType>(initialGroup);
+  const [group, setGroup] = useState<GroupType>(
+    () => initialGroup ?? getInstitutGroups()[0] ?? "Samedi"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const resetForm = () => {
@@ -100,7 +103,7 @@ export const RegistrationForm = ({
     setCity("");
     setPhone("");
     setEmail("");
-    setGroup(initialGroup);
+    setGroup(getInstitutGroups()[0] ?? "Samedi");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -216,9 +219,11 @@ export const RegistrationForm = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Samedi">Samedi</SelectItem>
-                <SelectItem value="Dimanche">Dimanche</SelectItem>
-                <SelectItem value="Lundi">La méthode Nouraniya</SelectItem>
+                {getInstitutGroups().map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g === "Lundi" ? "La méthode Nouraniya" : g}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

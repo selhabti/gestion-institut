@@ -1,7 +1,12 @@
 // Path: src/types/session.ts
 import type { Member } from "./member";
 
-export type SessionType = "Samedi" | "Dimanche" | "Lundi" | "Samedi+Dimanche";
+export type SessionType =
+  | "Samedi"
+  | "Dimanche"
+  | "Lundi"
+  | "Jeudi"
+  | "Samedi+Dimanche";
 
 export interface SessionProps {
   selectedSession: SessionType;

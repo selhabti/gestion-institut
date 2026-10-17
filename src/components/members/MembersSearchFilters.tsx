@@ -1,5 +1,6 @@
 // Path: src/components/members/MembersSearchFilters.tsx
 import { SearchWithTags } from "./SearchWithTags";
+import { getInstitutGroups } from "@/lib/institutes";
 
 interface MembersSearchFiltersProps {
   onSearchChange: (searchTerms: string[]) => void; // ← Changé pour accepter un tableau
@@ -44,9 +45,11 @@ export const MembersSearchFilters = ({
             className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Tous les groupes</option>
-            <option value="Samedi">Samedi</option>
-            <option value="Dimanche">Dimanche</option>
-            <option value="Lundi">Lundi</option>
+            {getInstitutGroups().map((g) => (
+              <option key={g} value={g}>
+                {g === "Lundi" ? "La méthode Nouraniya" : g}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import type { SessionType } from "@/types/session";
 import { motion } from "framer-motion";
-import { getCurrentInstitutId } from "@/lib/institutes";
+import { getInstitutGroups } from "@/lib/institutes";
 
-const groups = [
-  { value: "Samedi" as const, label: "Samedi", dot: "bg-blue-500" },
-  { value: "Dimanche" as const, label: "Dimanche", dot: "bg-emerald-500" },
-  { value: "Samedi+Dimanche" as const, label: "Weekend", dot: "bg-purple-500" },
-  { value: "Lundi" as const, label: "Nouraniya", dot: "bg-orange-500" },
-];
+const GROUP_META: Record<string, { label: string; dot: string }> = {
+  Samedi: { label: "Samedi", dot: "bg-blue-500" },
+  Dimanche: { label: "Dimanche", dot: "bg-emerald-500" },
+  Lundi: { label: "Nouraniya", dot: "bg-orange-500" },
+  Jeudi: { label: "Jeudi", dot: "bg-cyan-500" },
+};
 
 const formatFrenchDate = (date: Date) => {
   const days = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
@@ -38,10 +38,13 @@ export const DateGroupSelector = ({
 }) => {
   const { day, dateNum, monthYear } = formatFrenchDate(selectedDate);
 
-  const isAttanzil = getCurrentInstitutId() === "attanzil";
-  const visibleGroups = isAttanzil
-    ? groups.filter((g) => g.value === "Samedi")
-    : groups;
+  const visibleGroups = getInstitutGroups()
+    .filter((g) => g !== "Samedi+Dimanche")
+    .map((g) => ({
+      value: g,
+      label: GROUP_META[g]?.label ?? g,
+      dot: GROUP_META[g]?.dot ?? "bg-slate-500",
+    }));
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -105,7 +108,9 @@ export const DateGroupSelector = ({
             </div>
             <div
               className={`grid gap-2 ${
-                isAttanzil ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"
+                visibleGroups.length === 1
+                  ? "grid-cols-1"
+                  : "grid-cols-2 sm:grid-cols-3"
               }`}
             >
               {visibleGroups.map((g) => {

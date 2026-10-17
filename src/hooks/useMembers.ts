@@ -8,7 +8,7 @@ export interface Member {
   city: string;
   phone?: string;
   email?: string;
-  group_type: "Lundi" | "Samedi" | "Dimanche";
+  group_type: "Lundi" | "Samedi" | "Dimanche" | "Jeudi";
   created_at: string;
 }
 
