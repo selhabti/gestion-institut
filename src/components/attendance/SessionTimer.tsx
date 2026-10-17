@@ -35,11 +35,12 @@ export function SessionTimer({
   const end = new Date();
   end.setHours(e.h, e.m, 0, 0);
 
-  // Démarre automatiquement à l'heure locale de début de séance
-  const elapsed = Math.max(
-    0,
-    Math.floor((now - start.getTime()) / 1000)
-  );
+  // Démarre automatiquement à 09:30 et se fige à 11:30 (fin de séance)
+  const startMs = start.getTime();
+  const endMs = end.getTime();
+  const capped = Math.min(now, endMs);
+  const elapsed =
+    now >= startMs ? Math.max(0, Math.floor((capped - startMs) / 1000)) : 0;
   const hh = pad(Math.floor(elapsed / 3600));
   const mm = pad(Math.floor((elapsed % 3600) / 60));
   const ss = pad(elapsed % 60);
