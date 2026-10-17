@@ -593,6 +593,7 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
       archivedMembers={archivedMembers}
       loadingArchived={loadingArchived}
       onLoadArchived={loadArchivedMembers}
+      onDataChanged={() => loadMembers(true)}
     />
   </div>
 </TabsContent>

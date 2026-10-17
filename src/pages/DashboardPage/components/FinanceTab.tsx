@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   DollarSign, Users, TrendingUp, TrendingDown,
   Download, AlertTriangle, CheckCircle, XCircle,
-  Clock, Calendar, BarChart3, Euro, FileSpreadsheet
+  Clock, Calendar, BarChart3, Euro, FileSpreadsheet, Target
 } from "lucide-react";
 import { professorHoursService } from "@/services/professorHoursService";
 import { SessionsTable } from "@/components/professor/SessionsTable";
+import { getGroupFee } from "@/lib/fees";
 import type { Member } from "@/types/member";
 import type { ProfessorSession } from "@/types/professorHours";
 
@@ -31,6 +32,7 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
   const [professorSessions, setProfessorSessions] = useState<ProfessorSession[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const selYear = parseInt(selectedMonth.split("-")[0]);
   const selMonth = parseInt(selectedMonth.split("-")[1]);
@@ -47,7 +49,7 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
       setLoadingSessions(false);
     };
     load();
-  }, [selYear, selMonth]);
+  }, [selYear, selMonth, refreshKey]);
 
   const financeData = useMemo(() => {
     const totalStudents = members.length;
@@ -61,7 +63,10 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
       (m) => !m.payments?.some((p) => p.date && p.date.startsWith(selectedMonth))
     );
 
-    const expectedRevenue = totalStudents * MONTHLY_FEE;
+    const expectedRevenue = members.reduce(
+      (sum, m) => sum + getGroupFee(m.group),
+      0
+    );
     const collectedRevenue = paymentsThisMonth.reduce((sum, p) => sum + (p.amount || MONTHLY_FEE), 0);
 
     const totalHours = professorSessions
@@ -70,8 +75,22 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
     const professorCost = totalHours * HOURLY_RATE;
 
     const netMargin = collectedRevenue - professorCost;
+    // Si TOUS les élèves payaient : le coût professeur est-il recouvrable ?
+    const projectedMargin = expectedRevenue - professorCost;
+    const recoverable = projectedMargin >= 0;
 
-    return { totalStudents, paidCount, latePayers, expectedRevenue, collectedRevenue, totalHours, professorCost, netMargin };
+    return {
+      totalStudents,
+      paidCount,
+      latePayers,
+      expectedRevenue,
+      collectedRevenue,
+      totalHours,
+      professorCost,
+      netMargin,
+      projectedMargin,
+      recoverable,
+    };
   }, [members, selectedMonth, professorSessions]);
 
   const monthLabel = new Date(selYear, selMonth - 1).toLocaleDateString("fr-FR", {
@@ -142,7 +161,8 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
             Finances - Gestion des cotisations
           </CardTitle>
           <CardDescription>
-            Suivi des paiements à {MONTHLY_FEE}€/mois par élève et coût professeur à {HOURLY_RATE}€/h
+            Cotisations par groupe (Jeudi 10€ • Dimanche/Nouraniya 20€) et
+            coût professeur à {HOURLY_RATE}€/h
           </CardDescription>
         </CardHeader>
       </Card>
@@ -171,7 +191,7 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-blue-600 mb-2">
@@ -231,6 +251,40 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
             </p>
           </CardContent>
         </Card>
+
+        <Card
+          className={
+            financeData.recoverable ? "border-emerald-200" : "border-red-200"
+          }
+        >
+          <CardContent className="p-6">
+            <div
+              className={`flex items-center gap-2 mb-2 ${
+                financeData.recoverable ? "text-emerald-600" : "text-red-600"
+              }`}
+            >
+              <Target className="h-5 w-5" />
+              <span className="text-sm font-medium">Si tout payé</span>
+            </div>
+            <p
+              className={`text-3xl font-bold ${
+                financeData.recoverable ? "text-emerald-700" : "text-red-700"
+              }`}
+            >
+              {financeData.projectedMargin >= 0 ? "+" : ""}
+              {financeData.projectedMargin}€
+            </p>
+            <p
+              className={`text-sm mt-1 font-medium ${
+                financeData.recoverable ? "text-emerald-600" : "text-red-600"
+              }`}
+            >
+              {financeData.recoverable
+                ? "Frais prof recouvrables"
+                : "Frais prof NON recouvrables"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -286,7 +340,7 @@ export const FinanceTab = ({ members }: FinanceTabProps) => {
       </Card>
 
       {/* Heures professeur — tableau éditable (enregistrer / modifier / annuler une séance) */}
-      <SessionsTable />
+      <SessionsTable onChanged={() => setRefreshKey((k) => k + 1)} />
     </div>
   );
 };

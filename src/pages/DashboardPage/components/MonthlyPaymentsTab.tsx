@@ -9,26 +9,20 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Member } from "@/types/member";
 import { capitalize } from "@/lib/utils";
-
-// Cotisation mensuelle par groupe
-const GROUP_FEES: Record<string, number> = {
-  Jeudi: 10,
-  Dimanche: 20,
-  Lundi: 20,
-  Samedi: 20,
-};
-
-export const getGroupFee = (group: string): number =>
-  GROUP_FEES[group] ?? 20;
+import { getGroupFee } from "@/lib/fees";
 
 // Mois courant au format YYYY-MM
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
 interface MonthlyPaymentsTabProps {
   members: Member[];
+  onDataChanged?: () => void;
 }
 
-export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
+export function MonthlyPaymentsTab({
+  members,
+  onDataChanged,
+}: MonthlyPaymentsTabProps) {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   // Overrides locaux : memberId -> paymentId (null = non payé)
@@ -79,6 +73,7 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
       if (error) throw error;
       setOverrides((prev) => ({ ...prev, [row.member.id]: data.id }));
       toast.success(`Paiement de ${row.fee}€ enregistré`);
+      onDataChanged?.();
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors du paiement");
@@ -99,6 +94,7 @@ export function MonthlyPaymentsTab({ members }: MonthlyPaymentsTabProps) {
       if (error) throw error;
       setOverrides((prev) => ({ ...prev, [row.member.id]: null }));
       toast.success("Paiement annulé");
+      onDataChanged?.();
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors de l'annulation");

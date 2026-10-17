@@ -47,7 +47,11 @@ import { useProfessorHours } from '@/hooks/useProfessorHours';
 import { getCurrentInstitutId } from '@/lib/institutes';
 import { toast } from 'sonner';
 
-export function SessionsTable() {
+interface SessionsTableProps {
+  onChanged?: () => void;
+}
+
+export function SessionsTable({ onChanged }: SessionsTableProps) {
   const { 
     sessions, 
     loading,
@@ -171,6 +175,7 @@ export function SessionsTable() {
       }
       setShowEditModal(false);
       await refresh();
+      onChanged?.();
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -208,6 +213,7 @@ export function SessionsTable() {
       }
       setShowCancelDialog(false);
       await refresh();
+      onChanged?.();
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -240,6 +246,7 @@ export function SessionsTable() {
       toast.success(`Séance restaurée`);
       setShowRestoreDialog(false);
       await refresh();
+      onChanged?.();
     } catch (error: any) {
       toast.error(error.message);
     }

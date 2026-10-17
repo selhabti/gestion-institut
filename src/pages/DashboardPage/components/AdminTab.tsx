@@ -55,6 +55,7 @@ interface AdminTabProps {
   archivedMembers?: Member[];
   loadingArchived?: boolean;
   onLoadArchived?: () => void;
+  onDataChanged?: () => void;
   onAddMember?: (
     firstName: string,
     lastName: string,
@@ -66,7 +67,7 @@ interface AdminTabProps {
   ) => Promise<void>;
 }
 
-export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember }: AdminTabProps) => {
+export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember, onDataChanged }: AdminTabProps) => {
   const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff" | "paiements" | "reorg">("events");
   const { staff, loading: staffLoading, isSuperAdmin, updateRole, removeStaff } = useStaff();
   const isAttanzil = getCurrentInstitutId() === "attanzil";
@@ -340,7 +341,7 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
         isAttanzil ? (
           <PaymentsAdminTab members={members} />
         ) : (
-          <MonthlyPaymentsTab members={members} />
+          <MonthlyPaymentsTab members={members} onDataChanged={onDataChanged} />
         )
       ) : adminSubTab === "finance" ? (
         <FinanceTab members={members} />
