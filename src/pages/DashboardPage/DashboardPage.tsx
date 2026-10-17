@@ -273,7 +273,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
-    window.location.href = (import.meta.env.BASE_URL || "/") + "auth";
+    window.location.href = (import.meta.env.BASE_URL || "/") + "login";
   }, []);
 
   const handleViewAllStudents = useCallback(() => {
@@ -335,7 +335,13 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
               Non authentifié
             </h2>
             <Button
-              onClick={() => navigate("/auth")}
+              onClick={() =>
+                navigate(
+                  getCurrentInstitutId()
+                    ? `/${getCurrentInstitutId()}/auth`
+                    : "/login"
+                )
+              }
               className="bg-blue-600 hover:bg-blue-700"
             >
               Se connecter

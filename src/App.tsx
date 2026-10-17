@@ -17,6 +17,7 @@ import StudentRegistration from "@/pages/StudentRegistration";
 import StaffRegistration from "@/pages/StaffRegistration";
 import NotFound from "@/pages/NotFound";
 import SelectInstitutPage from "@/pages/SelectInstitutPage";
+import LoginChoice from "@/pages/LoginChoice";
 import {
   getCurrentInstitutId,
   getInstitutList,
@@ -39,7 +40,7 @@ function RequireInstitut({ children }: { children: React.ReactNode }) {
   const { institutId } = useParams();
   const enabled = getInstitutList();
   if (!institutId || !enabled.some((c) => c.id === institutId)) {
-    return <Navigate to="/select" replace />;
+    return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
 }
@@ -47,7 +48,7 @@ function RequireInstitut({ children }: { children: React.ReactNode }) {
 // Redirige les anciens chemins (/dashboard) vers le chemin préfixé (/attanzil/dashboard)
 function InstitutRedirect({ tab }: { tab: string }) {
   const id = getCurrentInstitutId();
-  return <Navigate to={id ? `/${id}/${tab}` : "/select"} replace />;
+  return <Navigate to={id ? `/${id}/${tab}` : "/login"} replace />;
 }
 
 // Remonte DashboardPage quand on change d'institut (évite de garder les données du précédent)
@@ -65,15 +66,18 @@ function AppRoutes() {
   return (
     <div className="min-h-screen bg-background">
       <Routes>
-        {/* Choix de l'institut (global) */}
+        {/* Choix de l'institut pour se connecter (global) */}
+        <Route path="/login" element={<LoginChoice />} />
+
+        {/* Choix de l'institut (global, après connexion) */}
         <Route path="/select" element={<SelectInstitutPage />} />
 
-        {/* Racine : dashboard de l'institut (URL-aware) sinon choix */}
+        {/* Racine : dashboard de l'institut (URL-aware) sinon login */}
         <Route
           path="/"
           element={
             <Navigate
-              to={hasInstitut ? `/${getCurrentInstitutId()}/dashboard` : "/select"}
+              to={hasInstitut ? `/${getCurrentInstitutId()}/dashboard` : "/login"}
               replace
             />
           }
@@ -113,6 +117,14 @@ function AppRoutes() {
           }
         />
         <Route path="/:institutId/select" element={<SelectInstitutPage />} />
+        <Route
+          path="/:institutId/auth"
+          element={
+            <RequireInstitut>
+              <Auth />
+            </RequireInstitut>
+          }
+        />
 
         {/* Anciens chemins -> redirection vers le chemin préfixé */}
         <Route path="/dashboard" element={<InstitutRedirect tab="dashboard" />} />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from '@/lib/supabase';
-import { getCurrentInstitut } from '@/lib/institutes';
+import { getCurrentInstitut, getCurrentInstitutId } from '@/lib/institutes';
 import { toast } from "sonner";
 
 export default function Auth() {
@@ -35,10 +35,11 @@ export default function Auth() {
       console.log("✅ Connexion réussie:", data.user?.email);
       toast.success("Connexion réussie !");
       
-      // ⚠️ REDIRECTION MANUELLE EXPLICITE vers la sélection d'institut
+      // Redirection vers le dashboard de l'institut connecté
+      const id = getCurrentInstitutId();
       setTimeout(() => {
-        navigate("/select", { replace: true });
-      }, 1000);
+        navigate(id ? `/${id}/dashboard` : "/login", { replace: true });
+      }, 800);
       
     } catch (error: any) {
       console.error("💥 Erreur complète:", error);
@@ -122,6 +123,16 @@ export default function Auth() {
               className="text-sm font-semibold text-blue-800 hover:text-blue-900 underline"
             >
               Créer un compte staff
+            </button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="text-sm text-slate-500 hover:text-slate-700 underline"
+            >
+              ← Choisir un autre institut
             </button>
           </div>
         </CardContent>
