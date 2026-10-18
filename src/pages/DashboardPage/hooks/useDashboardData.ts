@@ -69,21 +69,23 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
   const loadMembers = useCallback(
     async (forceRefresh = false) => {
       if (!isMountedRef.current) return;
-      if (loadInProgressRef.current) return;
+      if (loadInProgressRef.current && !forceRefresh) return;
       if (!forceRefresh && hasLoadedRef.current && members.length > 0) return;
 
+      // Stale-while-revalidate : on affiche le cache puis on rafraîchit en arrière-plan.
+      let usedCache = false;
       if (!forceRefresh) {
         const cachedData = LocalCache.get<Member[]>(membersCacheKey());
         if (cachedData && cachedData.length > 0) {
           setMembers(cachedData);
           hasLoadedRef.current = true;
           setLoading(false);
-          return;
+          usedCache = true;
         }
       }
 
       loadInProgressRef.current = true;
-      setLoading(true);
+      if (!usedCache) setLoading(true);
 
       try {
         const startTime = performance.now();
@@ -414,7 +416,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
                   targetGroup as SessionType,
                   "Transfert manuel"
                 );
-                await loadMembers();
+                await loadMembers(true);
                 return;
               } else {
                 return;
@@ -437,7 +439,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
                   otherGroup,
                   `Rattrapage (absent ${targetGroup})`
                 );
-                await loadMembers();
+                await loadMembers(true);
                 return;
               }
             }
@@ -474,7 +476,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         
         if (result.success) {
           console.log("🔄 Transfert réussi:", result.message);
-          await loadMembers();
+          await loadMembers(true);
           toast.success("Transfert effectué avec succès");
         } else {
           console.error("❌ Transfert échoué:", result.message);
@@ -651,12 +653,13 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           };
 
           setMembers((prev) => [...prev, newMember]);
-          LocalCache.set(membersCacheKey(), [...members, newMember]);
+          LocalCache.remove(membersCacheKey());
 
           console.log(
             `✅ Membre ajouté: ${newMember.firstName} ${newMember.lastName}`
           );
           toast.success('Élève ajouté avec succès');
+          await loadMembers(true);
         }
       } catch (error) {
         console.error('❌ Erreur d\'ajout de membre:', error);
@@ -718,10 +721,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
           )
         );
 
-        const updatedMembers = members.map((member) =>
-          member.id === memberId ? { ...member, ...updates } : member
-        );
-        LocalCache.set(membersCacheKey(), updatedMembers);
+        LocalCache.remove(membersCacheKey());
 
         const { error } = await supabase
           .from("members")
@@ -731,7 +731,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         if (error) throw error;
       } catch (error) {
         console.error("❌ Erreur de mise à jour:", error);
-        loadMembers();
+        loadMembers(true);
       }
     },
     [loadMembers, members]
@@ -816,6 +816,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
               : m
           )
         );
+        LocalCache.remove(membersCacheKey());
 
         toast.success('Groupe retiré avec succès');
         
