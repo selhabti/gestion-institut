@@ -39,6 +39,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { DAYS_FR } from "@/pages/DashboardPage/utils/constants";
 import { getCurrentInstitutId } from "@/lib/institutes";
+import { formatDateForInput } from "@/utils/dateUtils";
 
 // ================================
 // TYPES ET PROPS
@@ -135,7 +136,7 @@ export function MembersTable({
   };
 
   const getFrenchDayName = (dateString: string): string => {
-    return DAYS_FR[new Date(dateString).getDay()];
+    return DAYS_FR[new Date(`${dateString}T00:00:00`).getDay()];
   };
 
   const isCourseDay = (): boolean => {
@@ -145,20 +146,15 @@ export function MembersTable({
   };
 
   const isToday = (): boolean => {
-    const today = new Date().toISOString().split("T")[0];
-    return currentDate === today;
+    return currentDate === formatDateForInput(new Date());
   };
 
   const isFutureDate = (): boolean => {
-    return new Date(currentDate) > new Date();
+    return currentDate > formatDateForInput(new Date());
   };
 
   const isPastDate = (dateString: string): boolean => {
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const date = new Date(dateString);
-    date.setHours(23, 59, 59, 999);
-    return date < today;
+    return dateString < formatDateForInput(new Date());
   };
 
   // ================================
@@ -283,7 +279,7 @@ export function MembersTable({
   // ================================
 
   const hasPaidThisMonth = (member: Member): boolean => {
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = formatDateForInput(new Date()).slice(0, 7);
     return member.payments.some((p) => p.date?.startsWith(currentMonth));
   };
 

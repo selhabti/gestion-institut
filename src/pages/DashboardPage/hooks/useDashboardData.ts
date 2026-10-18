@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import LocalCache from "@/utils/cache";
 import { supabase } from '@/lib/supabase';
 import { getCurrentInstitutId } from "@/lib/institutes";
+import { formatDateForInput } from "@/utils/dateUtils";
 import type { GroupType, AttendanceStatus, Member, PaymentMode, PaymentPlanEntry } from "@/types/member";
 import type { SessionType } from "@/types/session";
 import { toast } from "sonner";
@@ -207,7 +208,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         const targetSessionType = session_type || selectedGroup;
   
         // Détection date passée (format YYYY-MM-DD)
-        const todayStr = new Date().toISOString().split("T")[0];
+        const todayStr = formatDateForInput(new Date());
         const isPastDate = date < todayStr;
   
         if (isPastDate && !forceEdit) {
@@ -377,7 +378,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
         }
   
         // --- Détection si la date est passée (comparer en YYYY-MM-DD pour éviter TZ issues) ---
-        const todayStr = new Date().toISOString().split("T")[0];
+        const todayStr = formatDateForInput(new Date());
         const isPastDate = date < todayStr;
   
         // Si c'est passé et que le mode historique n'est pas activé => bloquer et prévenir
@@ -491,7 +492,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
   const handleAutoTransferAbsent = useCallback(
     async () => {
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = formatDateForInput(new Date());
         const opportunities = await getTransferOpportunities(members, "Samedi", today);
         
         if (opportunities.length === 0) {
@@ -840,7 +841,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       }
 
       const now = new Date();
-      const currentMonth = now.toISOString().slice(0, 7);
+      const currentMonth = formatDateForInput(now).slice(0, 7);
       const member = members.find((m) => m.id === memberId);
       if (!member) return;
 
@@ -857,7 +858,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       const newPayment = {
         id: tempPaymentId,
         member_id: memberId,
-        date: now.toISOString().split("T")[0],
+        date: formatDateForInput(now),
         amount,
         mode: mode ?? null,
         installmentLabel: installmentLabel ?? null,
@@ -874,7 +875,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       try {
         const payload: Record<string, unknown> = {
           member_id: memberId,
-          payment_date: now.toISOString().split("T")[0],
+          payment_date: formatDateForInput(now),
           amount,
           created_by: user?.id,
         };
@@ -904,7 +905,7 @@ export const useDashboardData = (user: any, shareMode: boolean) => {
       }
 
       const now = new Date();
-      const currentMonth = now.toISOString().slice(0, 7);
+      const currentMonth = formatDateForInput(now).slice(0, 7);
       const member = members.find((m) => m.id === memberId);
       if (!member) return;
 

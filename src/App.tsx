@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DashboardPage from "@/pages/DashboardPage";
 import Auth from "@/pages/Auth";
@@ -149,20 +150,24 @@ function AppRoutes() {
   );
 }
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <ErrorBoundary>
-      <TooltipProvider>
-        <Router
-          basename={import.meta.env.BASE_URL.replace(/\/$/, "")}
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <AppRoutes />
-        </Router>
-      </TooltipProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Router
+            basename={import.meta.env.BASE_URL.replace(/\/$/, "")}
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <AppRoutes />
+          </Router>
+        </TooltipProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

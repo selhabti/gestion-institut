@@ -27,6 +27,7 @@ import { ProfessorButton } from '@/components/professor/ProfessorButton';
 
 // Utilitaires
 import { DAYS_FR, MONTHS_FR } from "./utils/constants";
+import { formatDateForInput } from "@/utils/dateUtils";
 
 // Composants externes
 import { AppHeader } from "@/components/shared";
@@ -270,7 +271,7 @@ useEffect(() => {
     return "Tous les groupes";
   }, []);
 
-  const currentDateString = selectedDate.toISOString().split("T")[0];
+  const currentDateString = formatDateForInput(selectedDate);
 
   // Handlers
   const navigateDate = useCallback(

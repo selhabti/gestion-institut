@@ -46,6 +46,8 @@ import {
 import { useStaff } from "@/hooks/useStaff";
 import { JUZ_REFERENCE, SURAHS, SURAH_VERSES, surahVerseCount } from "@/lib/quranReference";
 import { SurahCombobox } from "@/components/attendance/SurahCombobox";
+import { MushafViewer } from "@/features/quran/MushafViewer";
+import { CycleRevisionCard } from "@/components/attendance/CycleRevisionCard";
 import type {
   MemorizationEntry,
   MemorizationKind,
@@ -58,12 +60,14 @@ const KIND_LABELS: Record<MemorizationKind, string> = {
   nouvelle: "Nouvelle",
   recente: "Récente",
   ancienne: "Ancienne",
+  tres_ancienne: "Très ancienne",
 };
 
 const KIND_CLASS: Record<MemorizationKind, string> = {
   nouvelle: "bg-indigo-100 text-indigo-700 border-indigo-200",
   recente: "bg-emerald-100 text-emerald-700 border-emerald-200",
   ancienne: "bg-amber-100 text-amber-700 border-amber-200",
+  tres_ancienne: "bg-rose-100 text-rose-700 border-rose-200",
 };
 
 const STATUS_LABELS: Record<MemorizationStatus, string> = {
@@ -72,7 +76,12 @@ const STATUS_LABELS: Record<MemorizationStatus, string> = {
   a_revoir: "À revoir",
 };
 
-const KINDS: MemorizationKind[] = ["nouvelle", "recente", "ancienne"];
+const KINDS: MemorizationKind[] = [
+  "nouvelle",
+  "recente",
+  "ancienne",
+  "tres_ancienne",
+];
 const STATUSES: MemorizationStatus[] = ["fait", "partiel", "a_revoir"];
 
 interface StudentHistoryModalProps {
@@ -218,6 +227,22 @@ export function StudentHistoryModal({
       : base;
   }, [planHook.plan, plannedWeeks]);
 
+  const nextTargetEighths = useMemo(() => {
+    if (!planHook.plan) return null;
+    const todayStr = toYMD(new Date());
+    const nextWeek = plannedWeeks.find(
+      (week) =>
+        week.date >= todayStr &&
+        (validatedEighths === null ||
+          week.cumulativeEighths > validatedEighths)
+    );
+    if (nextWeek) return nextWeek.cumulativeEighths;
+    const base =
+      validatedEighths ??
+      planHook.plan.start_hizb * 8 + planHook.plan.start_eighths;
+    return base + planHook.plan.weekly_eighths;
+  }, [planHook.plan, plannedWeeks, validatedEighths]);
+
   const currentHizb =
     validatedEighths != null ? Math.floor(validatedEighths / 8) : null;
   const doneInHizb = validatedEighths != null ? validatedEighths % 8 : 0;
@@ -290,6 +315,40 @@ export function StudentHistoryModal({
         </DialogHeader>
 
         <div className="space-y-8 mt-6">
+          {/* Part à mémoriser — cible de la semaine */}
+          {isAttanzil && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <MushafViewer
+                plan={planHook.plan}
+                validatedEighths={validatedEighths}
+                targetEighths={nextTargetEighths}
+                riwaya={memo.riwaya}
+                onRefresh={() => {
+                  void memo.reload();
+                  void planHook.reload();
+                }}
+              />
+            </motion.div>
+          )}
+
+          {/* Révision totale de fin de cycle */}
+          {isAttanzil && student?.studentId && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <CycleRevisionCard
+                memberId={student.studentId}
+                plan={planHook.plan}
+                entries={memo.entries}
+                enabled={isOpen}
+              />
+            </motion.div>
+          )}
+
           {/* Fiche de mémorisation (Attanzil) */}
           {isAttanzil && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

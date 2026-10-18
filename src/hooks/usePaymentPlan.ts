@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { PaymentPlanEntry } from "@/types/member";
+import { formatDateForInput } from "@/utils/dateUtils";
 
 export const TOTAL_DUE = 150;
 export const MAX_INSTALLMENTS = 5;
@@ -69,7 +70,7 @@ export const usePaymentPlan = (memberId: string | null, enabled: boolean) => {
           .from("payments")
           .insert({
             member_id: entry.member_id,
-            payment_date: new Date().toISOString().split("T")[0],
+            payment_date: formatDateForInput(new Date()),
             amount: entry.amount,
             payment_mode: "plusieurs_fois",
             installment_label: `${entry.number}/${entries.length}`,
@@ -121,7 +122,7 @@ export const usePaymentPlan = (memberId: string | null, enabled: boolean) => {
     (e) =>
       !e.paid &&
       e.due_date != null &&
-      new Date(e.due_date) < new Date(new Date().toISOString().split("T")[0])
+      e.due_date < formatDateForInput(new Date())
   );
 
   return {

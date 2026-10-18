@@ -58,7 +58,11 @@ export interface Payment {
   installmentLabel?: string | null;
 }
 
-export type MemorizationKind = "nouvelle" | "recente" | "ancienne";
+export type MemorizationKind =
+  | "nouvelle"
+  | "recente"
+  | "ancienne"
+  | "tres_ancienne";
 export type MemorizationStatus = "fait" | "partiel" | "a_revoir";
 
 export interface MemorizationEntry {
@@ -77,6 +81,33 @@ export interface MemorizationEntry {
   validated_at?: string | null;
   validated_by?: string | null;
   notes?: string | null;
+}
+
+export interface MemorizationEntrySnapshot {
+  id: string;
+  week_start: string;
+  kind: MemorizationKind;
+  quantity: string | null;
+  surah_from: string | null;
+  ayah_from: string | null;
+  surah_to: string | null;
+  ayah_to: string | null;
+  status: MemorizationStatus;
+  validated: boolean;
+}
+
+export interface MemorizationCycle {
+  id: string;
+  member_id: string;
+  cycle_number: number;
+  cycle_start: string;
+  cycle_end: string;
+  total_revision_done_at: string | null;
+  notes: string | null;
+  parts_snapshot: MemorizationEntrySnapshot[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Nouveau type pour les enregistrements de transfert
