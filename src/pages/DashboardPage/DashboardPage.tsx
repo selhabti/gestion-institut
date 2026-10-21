@@ -439,7 +439,28 @@ const handleSaveProfessorSession = useCallback((session: { startTime: string; en
           filteredMembersCount={filteredMembers.length}
           onDateChange={navigateDate}
           onGroupChange={(g: SessionType) => {
-            if (!isAttanzil) setSelectedGroup(g);
+            if (isAttanzil && g !== "Samedi" && g !== "Mercredi") return;
+            setSelectedGroup(g);
+
+            const targetDay =
+              g === "Samedi"
+                ? 6
+                : g === "Dimanche"
+                ? 0
+                : g === "Lundi"
+                ? 1
+                : g === "Mercredi"
+                ? 3
+                : g === "Jeudi"
+                ? 4
+                : null;
+            if (targetDay === null) return;
+
+            const now = new Date();
+            const next = new Date(now);
+            next.setHours(0, 0, 0, 0);
+            next.setDate(now.getDate() + ((targetDay - now.getDay() + 7) % 7));
+            setSelectedDate(next);
           }}
           getNextSessionDate={getNextSessionDate}
           isNextSessionToday={isNextSessionToday}
