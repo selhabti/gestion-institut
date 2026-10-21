@@ -255,10 +255,7 @@ export function MembersTable({
   const displayMembers = members.filter((member) => {
     if (transferredOutIds.has(member.id)) return false;
 
-    const isOpenMercredi =
-      getCurrentInstitutId() === "attanzil" && selectedGroup === "Mercredi";
     const isInSelectedGroup =
-      isOpenMercredi ||
       member.group === selectedGroup ||
       (member.secondaryGroups && member.secondaryGroups.includes(selectedGroup));
 

@@ -60,9 +60,18 @@ const MemberForm: React.FC<MemberFormProps> = ({
   // Tous les groupes disponibles
   const allGroups: GroupType[] = getInstitutGroups();
 
-  // Un élève appartient à UN SEUL groupe
+  // Plusieurs groupes possibles (ex. Samedi + Nouraniya du mercredi)
   const toggleGroup = (group: GroupType) => {
-    setSelectedGroups([group]);
+    setSelectedGroups((prev) => {
+      if (prev.includes(group)) {
+        if (prev.length === 1) {
+          toast.warning("Un élève doit avoir au moins un groupe");
+          return prev;
+        }
+        return prev.filter((g) => g !== group);
+      }
+      return [...prev, group];
+    });
   };
 
   // Le premier groupe est le groupe principal
@@ -153,7 +162,9 @@ const MemberForm: React.FC<MemberFormProps> = ({
         phone.trim(), 
         email.trim(), 
         primaryGroup,
-        undefined
+        selectedGroups.slice(1).length > 0
+          ? selectedGroups.slice(1)
+          : undefined
       );
 
       const groupDescription = selectedGroups.length === 1 
@@ -454,8 +465,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
                         Groupe sélectionné
                       </p>
                       <p className="text-xs text-blue-600">
-                        {getGroupDisplayName(primaryGroup)} — c'est son groupe
-                        unique.
+                        {getGroupDisplayName(primaryGroup)} — groupe principal.
+                        Ajoutez un autre groupe pour le cours supplémentaire.
                       </p>
                     </div>
                   </div>

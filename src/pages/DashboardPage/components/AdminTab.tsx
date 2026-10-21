@@ -359,7 +359,8 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
                   data.city,
                   data.phone,
                   data.email,
-                  data.group
+                  data.group,
+                  data.secondaryGroups
                 );
                 toast.success(
                   `${data.firstName} ${data.lastName} ajouté avec succès`

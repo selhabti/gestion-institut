@@ -232,11 +232,6 @@ useEffect(() => {
       return members;
     }
 
-    // Attanzil : la Nouraniya du mercredi est ouverte aux élèves de Samedi.
-    if (isAttanzil && selectedGroup === "Mercredi") {
-      return members;
-    }
-
     if (selectedGroup === "Samedi+Dimanche") {
       return members.filter(
         (member) =>

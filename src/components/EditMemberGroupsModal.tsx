@@ -7,6 +7,7 @@ import { Star, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Member, GroupType } from '@/types/member';
 import type { SessionType } from '@/types/session';
+import { getInstitutGroups } from '@/lib/institutes';
 
 interface EditMemberGroupsModalProps {
   member: Member;
@@ -50,8 +51,8 @@ const EditMemberGroupsModal: React.FC<EditMemberGroupsModalProps> = ({
   
   const [isLoading, setIsLoading] = useState(false);
 
-  // Tous les groupes disponibles (inclut Samedi+Dimanche)
-  const allGroups: SessionType[] = ['Samedi', 'Dimanche', 'Lundi', 'Samedi+Dimanche'];
+  // Tous les groupes disponibles pour l'institut courant
+  const allGroups: SessionType[] = getInstitutGroups();
   
   // Le groupe principal est le premier dans la liste
   const primaryGroup = selectedGroups[0] || member.group;

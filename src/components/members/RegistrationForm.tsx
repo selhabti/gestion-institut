@@ -70,6 +70,7 @@ export interface RegistrationData {
   phone: string;
   email: string;
   group: GroupType;
+  secondaryGroups?: GroupType[];
 }
 
 interface RegistrationFormProps {
@@ -95,6 +96,7 @@ export const RegistrationForm = ({
   const [group, setGroup] = useState<GroupType>(
     () => initialGroup ?? getInstitutGroups()[0] ?? "Samedi"
   );
+  const [secondaryGroups, setSecondaryGroups] = useState<GroupType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const resetForm = () => {
@@ -104,6 +106,7 @@ export const RegistrationForm = ({
     setPhone("");
     setEmail("");
     setGroup(getInstitutGroups()[0] ?? "Samedi");
+    setSecondaryGroups([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,6 +135,7 @@ export const RegistrationForm = ({
         phone: result.data.phone,
         email: result.data.email || "",
         group,
+        secondaryGroups: secondaryGroups.filter((g) => g !== group),
       });
       resetForm();
     } catch (error) {
@@ -212,7 +216,12 @@ export const RegistrationForm = ({
             <Label htmlFor="reg-group">Groupe</Label>
             <Select
               value={group}
-              onValueChange={(value) => setGroup(value as GroupType)}
+              onValueChange={(value) => {
+                setGroup(value as GroupType);
+                setSecondaryGroups((prev) =>
+                  prev.filter((g) => g !== (value as GroupType))
+                );
+              }}
               disabled={isLoading}
             >
               <SelectTrigger id="reg-group">
@@ -227,6 +236,39 @@ export const RegistrationForm = ({
               </SelectContent>
             </Select>
           </div>
+
+          {getInstitutGroups().filter((g) => g !== group).length > 0 && (
+            <div className="space-y-2">
+              <Label>Cours supplémentaires (optionnel)</Label>
+              <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                {getInstitutGroups()
+                  .filter((g) => g !== group)
+                  .map((g) => (
+                    <label
+                      key={g}
+                      className="flex items-center gap-2 text-sm text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={secondaryGroups.includes(g)}
+                        onChange={(e) =>
+                          setSecondaryGroups((prev) =>
+                            e.target.checked
+                              ? [...prev, g]
+                              : prev.filter((x) => x !== g)
+                          )
+                        }
+                        disabled={isLoading}
+                        className="h-4 w-4"
+                      />
+                      {g === "Lundi" || g === "Mercredi"
+                        ? "La méthode Nouraniya"
+                        : g}
+                    </label>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <Button
             type="submit"

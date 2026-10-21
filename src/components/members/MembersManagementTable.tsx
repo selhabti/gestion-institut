@@ -82,15 +82,25 @@ export const MembersManagementTable = ({
       const allAvailable: GroupType[] = getInstitutGroups();
       setAvailableGroups(allAvailable);
     }
-  }, [editingMember]);
+    // Ne réinitialiser que lorsqu'on ouvre un autre élève (pas à chaque frappe).
+  }, [editingMember?.id]);
 
   const handleEdit = (member: Member) => {
     setEditingMember({ ...member });
   };
 
-  // Un élève appartient à UN SEUL groupe : sélection unique
+  // Plusieurs groupes possibles (ex. Samedi + Nouraniya du mercredi)
   const toggleGroup = (group: GroupType) => {
-    setSelectedGroups([group]);
+    setSelectedGroups((prev) => {
+      if (prev.includes(group)) {
+        if (prev.length === 1) {
+          toast.warning("Un élève doit avoir au moins un groupe");
+          return prev;
+        }
+        return prev.filter((g) => g !== group);
+      }
+      return [...prev, group];
+    });
   };
 
   // Obtenir le groupe principal (premier de la liste)
@@ -108,7 +118,7 @@ export const MembersManagementTable = ({
         phone: editingMember.phone,
         email: editingMember.email,
         group: newPrimaryGroup,
-        secondaryGroups: [],
+        secondaryGroups: selectedGroups.slice(1),
       });
 
       setEditingMember(null);
@@ -517,7 +527,7 @@ export const MembersManagementTable = ({
               <label className="text-sm font-medium">
                 Groupe *
                 <span className="text-xs text-slate-500 ml-2">
-                  (Sélectionnez un seul groupe)
+                  (1er = principal ; ajoutez la Nouraniya si l'élève suit les deux)
                 </span>
               </label>
               
@@ -572,8 +582,8 @@ export const MembersManagementTable = ({
                         Groupe sélectionné
                       </p>
                       <p className="text-xs text-blue-600">
-                        {getGroupDisplayName(primaryGroup)} — c'est son groupe
-                        unique.
+                        {getGroupDisplayName(primaryGroup)} — groupe principal.
+                        Ajoutez un autre groupe pour le cours supplémentaire.
                       </p>
                     </div>
                   </div>
