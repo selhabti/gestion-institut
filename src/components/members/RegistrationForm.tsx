@@ -221,7 +221,7 @@ export const RegistrationForm = ({
               <SelectContent>
                 {getInstitutGroups().map((g) => (
                   <SelectItem key={g} value={g}>
-                    {g === "Lundi" ? "La méthode Nouraniya" : g}
+                    {g === "Lundi" || g === "Mercredi" ? "La méthode Nouraniya" : g}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -5,6 +5,7 @@ export type SessionType =
   | "Samedi"
   | "Dimanche"
   | "Lundi"
+  | "Mercredi"
   | "Jeudi"
   | "Samedi+Dimanche";
 

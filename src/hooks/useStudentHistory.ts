@@ -2,7 +2,7 @@
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
 import type { Member } from '@/types/member';
 import type { StudentHistory, MonthlyStats, SessionDetail, PaymentStatus, AttendanceStats } from '@/types/attendance';
-import { getInstitutStatsStartDate } from '@/lib/institutes';
+import { getInstitutStatsStartDate, getCurrentInstitutId } from '@/lib/institutes';
 
 export const useStudentHistory = (members: Member[]) => {
   const getStudentHistory = (studentId: string): StudentHistory | null => {
@@ -100,10 +100,15 @@ export const useStudentHistory = (members: Member[]) => {
 
       // Vérifier si c'est un jour de séance pour le groupe de l'élève
       const isSessionDay = isStudentSessionDay(day, student.group);
-      if (!isSessionDay) return;
-
       const attendance = student.attendances.find(a => a.date === dateString);
-      
+      // Attanzil : les élèves de Samedi peuvent suivre la Nouraniya du mercredi.
+      // On n'affiche ces mercredis que s'ils ont été pointés (pas de faux absents).
+      const isOptionalMercredi =
+        getCurrentInstitutId() === "attanzil" &&
+        getDay(day) === 3 &&
+        !!attendance;
+      if (!isSessionDay && !isOptionalMercredi) return;
+
       let status: SessionDetail['status'] = 'not_recorded';
       if (attendance) {
         status = attendance.status === 'present' ? 'present' : 'absent';
@@ -113,7 +118,7 @@ export const useStudentHistory = (members: Member[]) => {
         date: dateString,
         day: getFrenchDayName(day),
         status,
-        sessionType: student.group
+        sessionType: getDay(day) === 3 ? "Mercredi" : student.group
       });
     });
 
@@ -130,6 +135,8 @@ export const useStudentHistory = (members: Member[]) => {
         return dayOfWeek === 0; // Dimanche
       case 'Lundi':
         return dayOfWeek === 1; // Lundi
+      case 'Mercredi':
+        return dayOfWeek === 3; // Mercredi
       case 'Jeudi':
         return dayOfWeek === 4; // Jeudi
       default:

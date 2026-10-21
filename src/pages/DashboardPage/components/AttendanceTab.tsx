@@ -122,7 +122,7 @@ export const AttendanceTab = ({
 
   const isSessionDay = (date: Date): boolean => {
     const day = date.getDay();
-    if (isAttanzil) return day === 6;
+    if (isAttanzil) return day === 6 || day === 3;
     if (isZayed) return day === 0 || day === 1 || day === 4;
     return day === 6 || day === 0 || day === 1;
   };
@@ -176,7 +176,11 @@ export const AttendanceTab = ({
 
   const getSessionDayForDate = (date: Date): string | null => {
     const day = date.getDay();
-    if (isAttanzil) return day === 6 ? "Samedi" : null;
+    if (isAttanzil) {
+      if (day === 6) return "Samedi";
+      if (day === 3) return "Mercredi";
+      return null;
+    }
     if (isZayed) {
       if (day === 0) return "Dimanche";
       if (day === 1) return "Lundi";
@@ -269,12 +273,18 @@ export const AttendanceTab = ({
                   📝 Édition active
                 </Badge>
               )}
-              {isAttanzil && sessionDay === "Samedi" && (
+              {sessionDay && (
                 <Badge
                   variant="outline"
                   className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-2 py-0.5"
                 >
-                  9h30 – 11h30
+                  {getSessionSchedule(sessionDay).start
+                    .replace(":", "h")
+                    .replace(/^0/, "")}{" "}
+                  –{" "}
+                  {getSessionSchedule(sessionDay).end
+                    .replace(":", "h")
+                    .replace(/^0/, "")}
                 </Badge>
               )}
             </div>

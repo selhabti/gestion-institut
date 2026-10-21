@@ -64,7 +64,7 @@ export const MonthlyReportModal = ({
         if (!a.date?.startsWith(selectedMonth)) return false;
         if (statsStart && a.date < statsStart) return false;
         const day = new Date(a.date).getDay();
-        return day === 0 || day === 1 || day === 4 || day === 6;
+        return day === 0 || day === 1 || day === 3 || day === 4 || day === 6;
       });
       monthlyAttendances.forEach((a) => {
         totalAttendances++;
@@ -272,7 +272,7 @@ export const MonthlyReportModal = ({
                       className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200"
                     >
                       <span className="font-geist-bold text-slate-800">
-                        {group === "Lundi"
+                        {group === "Lundi" || group === "Mercredi"
                           ? "Méthode Nouraniya"
                           : `Groupe ${group}`}
                       </span>

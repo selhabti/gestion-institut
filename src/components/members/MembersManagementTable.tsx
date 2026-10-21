@@ -190,7 +190,7 @@ export const MembersManagementTable = ({
 
   // Fonction pour obtenir l'affichage des groupes
   const getGroupDisplayName = (g: GroupType): string => {
-    return g === "Lundi" ? "La méthode Nouraniya" : `Groupe ${g}`;
+    return g === "Lundi" || g === "Mercredi" ? "La méthode Nouraniya" : `Groupe ${g}`;
   };
 
   return (

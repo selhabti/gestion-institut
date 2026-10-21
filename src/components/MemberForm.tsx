@@ -202,7 +202,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
   };
 
   const getGroupDisplayName = (g: GroupType) => {
-    return g === "Lundi" ? "La méthode Nouraniya" : `Groupe ${g}`;
+    return g === "Lundi" || g === "Mercredi" ? "La méthode Nouraniya" : `Groupe ${g}`;
   };
 
   // Fonction pour formater les groupes d'un membre

@@ -47,7 +47,7 @@ export const MembersSearchFilters = ({
             <option value="">Tous les groupes</option>
             {getInstitutGroups().map((g) => (
               <option key={g} value={g}>
-                {g === "Lundi" ? "La méthode Nouraniya" : g}
+                {g === "Lundi" || g === "Mercredi" ? "La méthode Nouraniya" : g}
               </option>
             ))}
           </select>

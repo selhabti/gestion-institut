@@ -76,7 +76,8 @@ const EditMemberGroupsModal: React.FC<EditMemberGroupsModalProps> = ({
     switch(group) {
       case 'Samedi': return 'Groupe Samedi';
       case 'Dimanche': return 'Groupe Dimanche';
-      case 'Lundi': return 'La méthode Nouraniya';
+      case 'Lundi':
+      case 'Mercredi': return 'La méthode Nouraniya';
       case 'Samedi+Dimanche': return 'Groupe Weekend (Samedi+Dimanche)';
       default: return group;
     }

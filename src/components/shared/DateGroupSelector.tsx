@@ -9,6 +9,7 @@ const GROUP_META: Record<string, { label: string; dot: string }> = {
   Samedi: { label: "Samedi", dot: "bg-blue-500" },
   Dimanche: { label: "Dimanche", dot: "bg-emerald-500" },
   Lundi: { label: "Nouraniya", dot: "bg-orange-500" },
+  Mercredi: { label: "Nouraniya", dot: "bg-violet-500" },
   Jeudi: { label: "Jeudi", dot: "bg-cyan-500" },
 };
 

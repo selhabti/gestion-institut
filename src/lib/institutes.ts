@@ -88,13 +88,13 @@ export const getCurrentInstitut = (): InstitutConfig | null => {
 };
 
 // Groupes disponibles selon l'institut
-// - Attanzil : samedi uniquement
+// - Attanzil : samedi + Nouraniya du mercredi
 // - Zayed : réorganisation → dimanche, lundi, jeudi (samedi supprimé)
 import type { GroupType } from "@/types/member";
 
 export const getInstitutGroups = (): GroupType[] => {
   const id = getCurrentInstitutId();
-  if (id === "attanzil") return ["Samedi"];
+  if (id === "attanzil") return ["Samedi", "Mercredi"];
   if (id === "zayed") return ["Jeudi", "Dimanche", "Lundi"];
   return ["Samedi", "Dimanche", "Lundi", "Jeudi"];
 };

@@ -74,6 +74,7 @@ export const AttendanceStats = ({
         if (selectedGroup === "Samedi") return day === 6;
         if (selectedGroup === "Dimanche") return day === 0;
         if (selectedGroup === "Lundi") return day === 1;
+        if (selectedGroup === "Mercredi") return day === 3;
         if (selectedGroup === "Jeudi") return day === 4;
         return true;
       });

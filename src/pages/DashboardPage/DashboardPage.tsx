@@ -51,8 +51,8 @@ const DashboardPage = () => {
   const isAttanzil = getCurrentInstitutId() === "attanzil";
   const [selectedGroup, setSelectedGroup] = useState<SessionType>(() => {
     const id = getCurrentInstitutId();
-    if (id === "attanzil") return "Samedi";
     const today = new Date().getDay();
+    if (id === "attanzil") return today === 3 ? "Mercredi" : "Samedi";
     if (today === 0) return "Dimanche";
     if (today === 1) return "Lundi";
     if (today === 4) return "Jeudi";
@@ -63,7 +63,13 @@ const DashboardPage = () => {
     const id = getCurrentInstitutId();
     const today = new Date();
     const sessionDays =
-      id === "attanzil" ? [6] : id === "zayed" ? [0, 1, 4] : [6, 0, 1];
+      id === "attanzil"
+        ? today.getDay() === 3
+          ? [3]
+          : [6]
+        : id === "zayed"
+        ? [0, 1, 4]
+        : [6, 0, 1];
     // Ouvre directement la prochaine séance (pour Zayed : jeudi 08/10)
     for (let i = 0; i < 8; i++) {
       const d = new Date(today);
@@ -165,6 +171,9 @@ useEffect(() => {
         case "Lundi":
           targetDay = 1;
           break;
+        case "Mercredi":
+          targetDay = 3;
+          break;
         case "Jeudi":
           targetDay = 4;
           break;
@@ -205,6 +214,7 @@ useEffect(() => {
   const isNextSessionToday = useCallback((group: SessionType): boolean => {
     const today = new Date().getDay();
     if (group === "Lundi" && today === 1) return true;
+    if (group === "Mercredi" && today === 3) return true;
     if (group === "Jeudi" && today === 4) return true;
     if (group === "Samedi" && today === 6) return true;
     if (group === "Dimanche" && today === 0) return true;
@@ -219,6 +229,11 @@ useEffect(() => {
 
     // L'onglet Élèves est une liste de gestion : on affiche toujours tout le monde.
     if (activeTab === "members") {
+      return members;
+    }
+
+    // Attanzil : la Nouraniya du mercredi est ouverte aux élèves de Samedi.
+    if (isAttanzil && selectedGroup === "Mercredi") {
       return members;
     }
 
