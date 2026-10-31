@@ -67,7 +67,7 @@ interface AdminTabProps {
 
 export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMembers, loadingArchived, onLoadArchived, onAddMember, onDataChanged }: AdminTabProps) => {
   const [adminSubTab, setAdminSubTab] = useState<"events" | "finance" | "cash" | "registration" | "staff" | "paiements">("events");
-  const { staff, loading: staffLoading, isSuperAdmin, updateRole, removeStaff } = useStaff();
+  const { staff, loading: staffLoading, isSuperAdmin, updateRole, updatePermissions, removeStaff } = useStaff();
   const isAttanzil = getCurrentInstitutId() === "attanzil";
 
   useEffect(() => {
@@ -395,19 +395,11 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    window.open(
-                      (import.meta.env.BASE_URL || "/") + "staff",
-                      "_blank"
-                    )
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau compte staff
-                </Button>
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                Pour ajouter un compte : créez l'utilisateur dans la console Neon
+                (projet → Auth), puis attribuez-lui un rôle et ses droits ici.
+                Les rôles Gestionnaire / Super admin disposent de tous les
+                droits.
               </div>
 
               {staffLoading ? (
@@ -427,61 +419,96 @@ export const AdminTab = ({ user, shareMode, members, onRestoreMember, archivedMe
                         <th className="pb-3 font-medium">Nom</th>
                         <th className="pb-3 font-medium">Email</th>
                         <th className="pb-3 font-medium">Rôle</th>
+                        <th className="pb-3 font-medium">Présences</th>
+                        <th className="pb-3 font-medium">Récitations</th>
                         <th className="pb-3 font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {staff.map((s) => (
-                        <tr
-                          key={s.id}
-                          className="border-b last:border-0 hover:bg-slate-50"
-                        >
-                          <td className="py-3 font-medium">{s.name || "—"}</td>
-                          <td className="py-3 text-slate-600">
-                            {s.email || "—"}
-                          </td>
-                          <td className="py-3">
-                            <Select
-                              value={s.role}
-                              onValueChange={(v) =>
-                                updateRole(s.id, v as AppRole)
-                              }
-                            >
-                              <SelectTrigger className="w-40">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="super_admin">
-                                  Super admin
-                                </SelectItem>
-                                <SelectItem value="admin">
-                                  Gestionnaire
-                                </SelectItem>
-                                <SelectItem value="user">Utilisateur</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="py-3">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-600 hover:text-red-700"
-                              disabled={s.role === "super_admin"}
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `Retirer ${s.name || s.email} de l'équipe ?`
-                                  )
-                                ) {
-                                  removeStaff(s.id);
+                      {staff.map((s) => {
+                        const isPrivileged =
+                          s.role === "super_admin" || s.role === "admin";
+                        const canAttendance =
+                          isPrivileged || Boolean(s.permissions?.attendance);
+                        const canRecitations =
+                          isPrivileged || Boolean(s.permissions?.recitations);
+
+                        return (
+                          <tr
+                            key={s.id}
+                            className="border-b last:border-0 hover:bg-slate-50"
+                          >
+                            <td className="py-3 font-medium">{s.name || "—"}</td>
+                            <td className="py-3 text-slate-600">
+                              {s.email || "—"}
+                            </td>
+                            <td className="py-3">
+                              <Select
+                                value={s.role}
+                                onValueChange={(v) =>
+                                  updateRole(s.id, v as AppRole)
                                 }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="super_admin">
+                                    Super admin
+                                  </SelectItem>
+                                  <SelectItem value="admin">
+                                    Gestionnaire
+                                  </SelectItem>
+                                  <SelectItem value="user">Utilisateur</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="py-3">
+                              <Switch
+                                checked={canAttendance}
+                                disabled={!isSuperAdmin || isPrivileged}
+                                onCheckedChange={(checked) =>
+                                  updatePermissions(s.id, {
+                                    ...(s.permissions || {}),
+                                    attendance: checked,
+                                  })
+                                }
+                              />
+                            </td>
+                            <td className="py-3">
+                              <Switch
+                                checked={canRecitations}
+                                disabled={!isSuperAdmin || isPrivileged}
+                                onCheckedChange={(checked) =>
+                                  updatePermissions(s.id, {
+                                    ...(s.permissions || {}),
+                                    recitations: checked,
+                                  })
+                                }
+                              />
+                            </td>
+                            <td className="py-3">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-600 hover:text-red-700"
+                                disabled={s.role === "super_admin"}
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `Retirer ${s.name || s.email} de l'équipe ?`
+                                    )
+                                  ) {
+                                    removeStaff(s.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

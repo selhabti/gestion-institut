@@ -20,6 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
   Check,
   X,
   Calendar,
@@ -55,6 +62,7 @@ import type {
 } from "@/types/member";
 
 const FRACTIONS_LABELS = ["1/8", "1/4", "3/8", "1/2", "5/8", "3/4", "7/8", "1"];
+const TAJWID_LEVELS = ["Notions", "Débutant", "Intermédiaire", "Confirmé"];
 
 const KIND_LABELS: Record<MemorizationKind, string> = {
   nouvelle: "Nouvelle",
@@ -160,7 +168,9 @@ export function StudentHistoryModal({
   const [tajwidDraft, setTajwidDraft] = useState("");
   const [showRef, setShowRef] = useState(false);
   useEffect(() => {
-    setTajwidDraft(memo.tajwidLevel);
+    setTajwidDraft(
+      TAJWID_LEVELS.includes(memo.tajwidLevel) ? memo.tajwidLevel : ""
+    );
   }, [memo.tajwidLevel]);
 
   const weeks = useMemo(() => {
@@ -315,50 +325,18 @@ export function StudentHistoryModal({
         </DialogHeader>
 
         <div className="space-y-8 mt-6">
-          {/* Part à mémoriser — cible de la semaine */}
           {isAttanzil && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <MushafViewer
-                plan={planHook.plan}
-                validatedEighths={validatedEighths}
-                targetEighths={nextTargetEighths}
-                riwaya={memo.riwaya}
-                onRefresh={() => {
-                  void memo.reload();
-                  void planHook.reload();
-                }}
-              />
-            </motion.div>
-          )}
-
-          {/* Révision totale de fin de cycle */}
-          {isAttanzil && student?.studentId && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <CycleRevisionCard
-                memberId={student.studentId}
-                plan={planHook.plan}
-                entries={memo.entries}
-                enabled={isOpen}
-              />
-            </motion.div>
-          )}
-
-          {/* Fiche de mémorisation (Attanzil) */}
-          {isAttanzil && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="flex items-center gap-3">
                     <div className="p-3 rounded-2xl bg-indigo-600 text-white">
                       <BookOpen className="h-6 w-6" />
                     </div>
-                    <span>Fiche de mémorisation</span>
+                    <span>Suivi de mémorisation</span>
                   </CardTitle>
                   <Button
                     variant="outline"
@@ -369,7 +347,30 @@ export function StudentHistoryModal({
                     Juz / Hizb
                   </Button>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4">
+                  <Tabs defaultValue="target" className="space-y-4">
+                    <TabsList className="grid w-full grid-cols-2 gap-1 sm:grid-cols-4">
+                      <TabsTrigger value="target">À mémoriser</TabsTrigger>
+                      <TabsTrigger value="program">Programme</TabsTrigger>
+                      <TabsTrigger value="history">Historique</TabsTrigger>
+                      <TabsTrigger value="revision">Révision</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="target" className="space-y-4">
+                      <MushafViewer
+                        plan={planHook.plan}
+                        validatedEighths={validatedEighths}
+                        targetEighths={nextTargetEighths}
+                        riwaya={memo.riwaya}
+                        onRefresh={() => {
+                          void memo.reload();
+                          void planHook.reload();
+                        }}
+                        embedded
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="program" className="space-y-6">
                   {/* Riwaya */}
                   <div className="space-y-2">
                     <Label>Riwaya</Label>
@@ -399,17 +400,24 @@ export function StudentHistoryModal({
                         Niveau de tajwid (professeur uniquement)
                       </Label>
                       <div className="flex gap-2">
-                        <Input
+                        <Select
                           value={tajwidDraft}
-                          onChange={(e) => setTajwidDraft(e.target.value)}
-                          placeholder="ex : Bon, très bon, à revoir…"
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => memo.saveTajwid(tajwidDraft)}
+                          onValueChange={(value) => {
+                            setTajwidDraft(value);
+                            void memo.saveTajwid(value);
+                          }}
                         >
-                          Enregistrer
-                        </Button>
+                          <SelectTrigger className="w-64">
+                            <SelectValue placeholder="Choisir un niveau" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TAJWID_LEVELS.map((level) => (
+                              <SelectItem key={level} value={level}>
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   )}
@@ -433,21 +441,23 @@ export function StudentHistoryModal({
                       />
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-slate-500">Départ</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={60}
-                          value={planStartHizb}
-                          onChange={(e) =>
-                            setPlanStartHizb(
-                              Math.max(
-                                1,
-                                Math.min(60, Number(e.target.value) || 1)
+                        <Select
+                          value={String(planStartHizb)}
+                          onValueChange={(v) => setPlanStartHizb(Number(v))}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 60 }, (_, i) => i + 1).map(
+                              (hizb) => (
+                                <SelectItem key={hizb} value={String(hizb)}>
+                                  Hizb {hizb}
+                                </SelectItem>
                               )
-                            )
-                          }
-                          className="w-16"
-                        />
+                            )}
+                          </SelectContent>
+                        </Select>
                         <span className="text-xs text-slate-500">+</span>
                         <Select
                           value={String(planStartEighths)}
@@ -506,38 +516,29 @@ export function StudentHistoryModal({
                     </div>
 
                     {currentHizb !== null && (
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-xs font-medium text-slate-600">
-                          Progression — Hizb {currentHizb}
-                        </span>
-                        <div className="flex gap-1">
-                          {Array.from({ length: 8 }, (_, i) => i + 1).map(
-                            (n) => (
-                              <div
-                                key={n}
-                                title={`${n}/8`}
-                                className={`h-3 w-7 rounded ${
-                                  n <= doneInHizb
-                                    ? "bg-emerald-500"
-                                    : "bg-slate-200"
-                                }`}
-                              />
-                            )
-                          )}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium text-slate-600">
+                            Accomplissement — Hizb {currentHizb}
+                          </span>
+                          <span className="font-semibold text-emerald-700">
+                            {doneInHizb}/8
+                          </span>
                         </div>
-                        <span className="text-xs font-semibold text-emerald-700">
-                          {doneInHizb}/8
-                        </span>
+                        <Progress
+                          value={(doneInHizb / 8) * 100}
+                          className="h-3"
+                        />
                         {planHook.plan && (
-                          <span className="text-xs text-slate-400">
-                            (incrément{" "}
+                          <p className="text-xs text-slate-400">
+                            Incrément{" "}
                             {
                               FRACTIONS_LABELS[
                                 planHook.plan.weekly_eighths - 1
                               ]
                             }
-                            /sem.)
-                          </span>
+                            /sem.
+                          </p>
                         )}
                       </div>
                     )}
@@ -637,6 +638,9 @@ export function StudentHistoryModal({
                     )}
                   </div>
 
+                    </TabsContent>
+
+                    <TabsContent value="history" className="space-y-6">
                   {/* Ajout / mise à jour d'une ligne */}
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                     <Label>Ajouter une ligne de suivi</Label>
@@ -917,6 +921,25 @@ export function StudentHistoryModal({
                       ))}
                     </div>
                   )}
+                    </TabsContent>
+
+                    <TabsContent value="revision" className="space-y-4">
+                      {planHook.plan ? (
+                        <CycleRevisionCard
+                          memberId={student.studentId}
+                          plan={planHook.plan}
+                          entries={memo.entries}
+                          enabled={isOpen}
+                          embedded
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Définissez le programme pour activer la révision
+                          totale.
+                        </p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </motion.div>

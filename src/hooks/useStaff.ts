@@ -4,12 +4,18 @@ import { toast } from "sonner";
 
 export type AppRole = "super_admin" | "admin" | "user";
 
+export interface StaffPermissions {
+  attendance?: boolean;
+  recitations?: boolean;
+}
+
 export interface StaffMember {
   id: string;
   user_id: string;
   email: string | null;
   name: string | null;
   role: AppRole;
+  permissions?: StaffPermissions | null;
   created_at?: string;
 }
 
@@ -126,6 +132,24 @@ export const useStaff = () => {
     toast.success("Rôle mis à jour");
   }, []);
 
+  const updatePermissions = useCallback(
+    async (id: string, permissions: StaffPermissions) => {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ permissions })
+        .eq("id", id);
+      if (error) {
+        toast.error("Échec de la mise à jour des droits");
+        throw error;
+      }
+      setStaff((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, permissions } : s))
+      );
+      toast.success("Droits mis à jour");
+    },
+    []
+  );
+
   const removeStaff = useCallback(async (id: string) => {
     const { error } = await supabase.from("user_roles").delete().eq("id", id);
     if (error) {
@@ -143,6 +167,7 @@ export const useStaff = () => {
     currentRole,
     isSuperAdmin,
     updateRole,
+    updatePermissions,
     removeStaff,
   };
 };

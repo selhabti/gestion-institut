@@ -15,6 +15,7 @@ import {
   useQuranRubs,
   useQuranSurahs,
 } from "./api";
+import { WarshMushafViewer } from "./WarshMushafViewer";
 import type { QuranAyah, QuranPlan } from "./types";
 
 const BASMALA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
@@ -46,6 +47,7 @@ interface MushafViewerProps {
   targetEighths: number | null;
   riwaya?: "Hafs" | "Warsh" | null;
   onRefresh?: () => void;
+  embedded?: boolean;
 }
 
 export function MushafViewer({
@@ -54,6 +56,7 @@ export function MushafViewer({
   targetEighths,
   riwaya,
   onRefresh,
+  embedded,
 }: MushafViewerProps) {
   const rubsQuery = useQuranRubs();
   const surahsQuery = useQuranSurahs();
@@ -90,6 +93,7 @@ export function MushafViewer({
   const targetStartPage = targetStartRubData?.start_page ?? null;
 
   const [page, setPage] = useState(1);
+  const [imageError, setImageError] = useState(false);
   const lastTargetPage = useRef<number | null>(null);
 
   useEffect(() => {
@@ -98,6 +102,10 @@ export function MushafViewer({
     lastTargetPage.current = targetStartPage;
     setPage(targetStartPage);
   }, [targetStartPage]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [page]);
 
   const pageQuery = useQuranPage(page);
   const ayahs = pageQuery.data ?? [];
@@ -128,6 +136,14 @@ export function MushafViewer({
     void pageQuery.refetch();
     onRefresh?.();
   };
+
+  const pageImageUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/${
+    riwaya === "Warsh" ? "warsh-kfqc" : "hafs-kfqc"
+  }/${String(page).padStart(3, "0")}.svg`;
+  const cardClassName = embedded
+    ? "border-0 bg-transparent shadow-none"
+    : undefined;
+  const contentClassName = embedded ? "space-y-4 p-0" : "space-y-4";
 
   let previousSurah = -1;
   const pageContent = ayahs.map((ayah) => {
@@ -176,37 +192,30 @@ export function MushafViewer({
 
   if (riwaya === "Warsh") {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="rounded-2xl bg-emerald-600 p-3 text-white">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            Part à mémoriser
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Le mushaf Warsh sera ajouté prochainement. Le programme et les
-            quantités restent utilisables.
-          </p>
-        </CardContent>
-      </Card>
+      <WarshMushafViewer
+        plan={plan}
+        validatedEighths={validatedEighths}
+        targetEighths={targetEighths}
+        embedded={embedded}
+        onRefresh={onRefresh}
+      />
     );
   }
 
   if (!plan) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="rounded-2xl bg-emerald-600 p-3 text-white">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            Part à mémoriser
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className={cardClassName}>
+        {!embedded && (
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <div className="rounded-2xl bg-emerald-600 p-3 text-white">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              Part à mémoriser
+            </CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className={contentClassName}>
           <p className="text-sm text-muted-foreground">
             Définissez le programme de mémorisation pour voir la part à faire.
           </p>
@@ -216,23 +225,25 @@ export function MushafViewer({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle className="flex items-center gap-3">
-          <div className="rounded-2xl bg-emerald-600 p-3 text-white">
-            <BookOpen className="h-6 w-6" />
-          </div>
-          <div>
-            <span>Part à mémoriser</span>
-            <p className="text-xs font-normal text-muted-foreground">
-              {formatPosition(targetFrom)} → {formatPosition(targetTo)}
-            </p>
-          </div>
-        </CardTitle>
-        <Badge className="bg-amber-100 text-amber-800">À faire</Badge>
-      </CardHeader>
+    <Card className={cardClassName}>
+      {!embedded && (
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+          <CardTitle className="flex items-center gap-3">
+            <div className="rounded-2xl bg-emerald-600 p-3 text-white">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div>
+              <span>Part à mémoriser</span>
+              <p className="text-xs font-normal text-muted-foreground">
+                {formatPosition(targetFrom)} → {formatPosition(targetTo)}
+              </p>
+            </div>
+          </CardTitle>
+          <Badge className="bg-amber-100 text-amber-800">À faire</Badge>
+        </CardHeader>
+      )}
 
-      <CardContent className="space-y-4">
+      <CardContent className={contentClassName}>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-200">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -297,6 +308,12 @@ export function MushafViewer({
           </Button>
         </div>
 
+        {imageError && (
+          <p className="text-xs text-amber-700">
+            Page visuelle indisponible, affichage du texte.
+          </p>
+        )}
+
         {rubsQuery.isError || pageQuery.isError ? (
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
             Mushaf indisponible :{" "}
@@ -314,6 +331,16 @@ export function MushafViewer({
         ) : ayahs.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
             Aucun verset pour la page {page}.
+          </div>
+        ) : !imageError ? (
+          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white p-2 shadow-inner">
+            <img
+              src={pageImageUrl}
+              alt={`Page ${page} du mushaf`}
+              loading="lazy"
+              onError={() => setImageError(true)}
+              className="mx-auto w-full max-w-xl"
+            />
           </div>
         ) : (
           <div

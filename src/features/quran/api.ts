@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { QuranAyah, QuranRub, QuranSurah } from "./types";
+import type {
+  QuranAyah,
+  QuranRub,
+  QuranSurah,
+  QuranWarshEighth,
+} from "./types";
 
 export const QURAN_TOTAL_PAGES = 604;
 
@@ -92,6 +97,27 @@ export function useQuranAyahPage(
     queryKey: ["quran", "ayah-page", surah, ayah],
     queryFn: () => fetchAyahPage(surah as number, ayah as number),
     enabled: surah !== null && ayah !== null,
+    staleTime: Infinity,
+  });
+}
+
+const WARSH_EIGHTH_SELECT =
+  "number,hizb,eighth_index,juz,start_id,start_surah,start_ayah,start_page,end_id,end_surah,end_ayah,end_page,source,marker";
+
+async function fetchWarshEighths(): Promise<QuranWarshEighth[]> {
+  const { data, error } = await supabase
+    .from("quran_warsh_eighths")
+    .select(WARSH_EIGHTH_SELECT)
+    .order("number");
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as QuranWarshEighth[];
+}
+
+export function useQuranWarshEighths() {
+  return useQuery({
+    queryKey: ["quran", "warsh", "eighths"],
+    queryFn: fetchWarshEighths,
     staleTime: Infinity,
   });
 }

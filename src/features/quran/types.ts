@@ -53,3 +53,20 @@ export interface QuranPlan {
   start_eighths: number;
   weekly_eighths: number;
 }
+
+export interface QuranWarshEighth {
+  number: number;
+  hizb: number;
+  eighth_index: number;
+  juz: number;
+  start_id: number;
+  start_surah: number;
+  start_ayah: number;
+  start_page: number;
+  end_id: number;
+  end_surah: number;
+  end_ayah: number;
+  end_page: number;
+  source: string;
+  marker: boolean;
+}

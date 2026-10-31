@@ -58,6 +58,7 @@ interface CycleRevisionCardProps {
   plan: MemorizationPlan | null;
   entries: MemorizationEntry[];
   enabled: boolean;
+  embedded?: boolean;
 }
 
 const formatDate = (value: string) =>
@@ -87,6 +88,7 @@ export function CycleRevisionCard({
   plan,
   entries,
   enabled,
+  embedded,
 }: CycleRevisionCardProps) {
   const { cycles, loading, markTotalRevision, clearTotalRevision } =
     useMemorizationCycles(memberId, enabled && Boolean(plan));
@@ -159,7 +161,9 @@ export function CycleRevisionCard({
   return (
     <Card
       className={
-        target.overdue
+        embedded
+          ? "border-0 bg-transparent shadow-none"
+          : target.overdue
           ? "border-rose-200"
           : target.dueSoon
           ? "border-amber-200"
@@ -191,7 +195,7 @@ export function CycleRevisionCard({
         {statusBadge}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className={embedded ? "space-y-4 p-0" : "space-y-4"}>
         <p className="text-xs text-muted-foreground">
           Les 30 répétitions par partie restent orales. Ici, on valide la
           révision totale de fin de cycle.

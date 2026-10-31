@@ -1,0 +1,1007 @@
+{
+  "source": {
+    "repository": "https://github.com/radouane-saddiki/Quran",
+    "license": "MIT (LICENSE-source-quran-meta, Copyright (c) 2020 Quran-Center)",
+    "text": "KFGQPC Warsh Uthmanic v2.1"
+  },
+  "counts": {
+    "ayahs": 6214,
+    "surahs": 114,
+    "pages": 604,
+    "hizbs": 60,
+    "markers": 435,
+    "eighthBoundaries": 480
+  },
+  "errors": [],
+  "crossPage": [
+    {
+      "id": 536,
+      "key": "4:44",
+      "page": "85-86",
+      "lines": [
+        14,
+        1
+      ]
+    },
+    {
+      "id": 2434,
+      "key": "20:86",
+      "page": "317-318",
+      "lines": [
+        14,
+        2
+      ]
+    },
+    {
+      "id": 2824,
+      "key": "24:36",
+      "page": "354-355",
+      "lines": [
+        14,
+        2
+      ]
+    },
+    {
+      "id": 2830,
+      "key": "24:42",
+      "page": "355-356",
+      "lines": [
+        12,
+        1
+      ]
+    }
+  ],
+  "pageSamples": [
+    {
+      "page": 1,
+      "start": "1:1",
+      "end": "1:7",
+      "lines": [
+        3,
+        8
+      ],
+      "ayahs": 7,
+      "hizb": 1,
+      "juz": 1
+    },
+    {
+      "page": 2,
+      "start": "2:1",
+      "end": "2:4",
+      "lines": [
+        3,
+        8
+      ],
+      "ayahs": 4,
+      "hizb": 1,
+      "juz": 1
+    },
+    {
+      "page": 11,
+      "start": "2:69",
+      "end": "2:75",
+      "lines": [
+        1,
+        15
+      ],
+      "ayahs": 7,
+      "hizb": 1,
+      "juz": 1
+    },
+    {
+      "page": 42,
+      "start": "2:251",
+      "end": "2:255",
+      "lines": [
+        1,
+        15
+      ],
+      "ayahs": 5,
+      "hizb": 5,
+      "juz": 3
+    },
+    {
+      "page": 604,
+      "start": "112:1",
+      "end": "114:6",
+      "lines": [
+        3,
+        15
+      ],
+      "ayahs": 15,
+      "hizb": 60,
+      "juz": 30
+    }
+  ],
+  "surahSamples": [
+    {
+      "surah": 1,
+      "name": "Al-Fātiḥah",
+      "ayahs": 7,
+      "first": "1:1",
+      "last": "1:7",
+      "pages": [
+        1,
+        1
+      ],
+      "firstText": "اِ۬لْحَمْدُ لِلهِ رَبِّ اِ۬لْعَٰلَمِينَ ﰀ"
+    },
+    {
+      "surah": 2,
+      "name": "Al-Baqarah",
+      "ayahs": 285,
+      "first": "2:1",
+      "last": "2:285",
+      "pages": [
+        2,
+        49
+      ],
+      "firstText": "أَلَٓمِّٓۖ ذَٰلِكَ اَ۬لْكِتَٰبُ لَا رَيْبَۖ فِيهِ "
+    },
+    {
+      "surah": 9,
+      "name": "At-Taubah",
+      "ayahs": 130,
+      "first": "9:1",
+      "last": "9:130",
+      "pages": [
+        187,
+        207
+      ],
+      "firstText": "بَرَآءَةٞ مِّنَ اَ۬للَّهِ وَرَسُولِهِۦٓ إِلَى اَ۬"
+    },
+    {
+      "surah": 27,
+      "name": "An-Naml",
+      "ayahs": 95,
+      "first": "27:1",
+      "last": "27:95",
+      "pages": [
+        377,
+        385
+      ],
+      "firstText": "طَسِٓۖ تِلْكَ ءَايَٰتُ اُ۬لْقُرْءَانِ وَكِتَابٖ مّ"
+    },
+    {
+      "surah": 114,
+      "name": "An-Nās",
+      "ayahs": 6,
+      "first": "114:1",
+      "last": "114:6",
+      "pages": [
+        604,
+        604
+      ],
+      "firstText": "قُلَ اَعُوذُ بِرَبِّ اِ۬لنَّاسِ ﰀ"
+    }
+  ],
+  "hizbSamples": [
+    {
+      "hizb": 1,
+      "boundaries": [
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 0,
+          "id": 1,
+          "key": "1:1",
+          "page": 1,
+          "page_end": 1,
+          "text": "اِ۬لْحَمْدُ لِلهِ رَبِّ اِ۬لْع",
+          "source": "hizb",
+          "marker": false
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 1,
+          "id": 23,
+          "key": "2:16",
+          "page": 4,
+          "page_end": 4,
+          "text": "۞ مَثَلُهُمْ كَمَثَلِ اِ۬لذِے ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 2,
+          "id": 32,
+          "key": "2:25",
+          "page": 5,
+          "page_end": 5,
+          "text": "۞ إِنَّ اَ۬للَّهَ لَا يَسْتَحْ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 3,
+          "id": 40,
+          "key": "2:33",
+          "page": 6,
+          "page_end": 6,
+          "text": "۞ وَإِذْ قُلْنَا لِلْمَلَٰٓئِك",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 4,
+          "id": 48,
+          "key": "2:41",
+          "page": 7,
+          "page_end": 7,
+          "text": "۞ وَلَا تَلْبِسُواْ اُ۬لْحَقَّ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 5,
+          "id": 60,
+          "key": "2:53",
+          "page": 8,
+          "page_end": 8,
+          "text": "۞ وَإِذْ قَالَ مُوس۪ىٰ لِقَوْم",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 6,
+          "id": 66,
+          "key": "2:59",
+          "page": 9,
+          "page_end": 9,
+          "text": "۞ وَإِذِ اِ۪سْتَسْق۪ىٰ مُوس۪ىٰ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 1,
+          "juz": 1,
+          "eighth": 7,
+          "id": 73,
+          "key": "2:66",
+          "page": 10,
+          "page_end": 10,
+          "text": "۞ وَإِذْ قَالَ مُوس۪ىٰ لِقَوْم",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    },
+    {
+      "hizb": 2,
+      "boundaries": [
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 0,
+          "id": 82,
+          "key": "2:75",
+          "page": 11,
+          "page_end": 11,
+          "text": "۞ وَإِذَا لَقُواْ اُ۬لذِينَ ءَ",
+          "source": "hizb",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 1,
+          "id": 91,
+          "key": "2:84",
+          "page": 13,
+          "page_end": 13,
+          "text": "ثُمَّ أَنتُمْ هَٰٓؤُلَآءِ تَق",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 2,
+          "id": 98,
+          "key": "2:91",
+          "page": 14,
+          "page_end": 14,
+          "text": "۞ وَلَقَدْ جَآءَكُم مُّوس۪ىٰ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 3,
+          "id": 107,
+          "key": "2:100",
+          "page": 15,
+          "page_end": 15,
+          "text": "۞ وَلَمَّا جَآءَهُمْ رَسُولٞ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 4,
+          "id": 112,
+          "key": "2:105",
+          "page": 17,
+          "page_end": 17,
+          "text": "۞ مَا نَنسَخْ مِنَ اٰيَةٍ اَوْ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 5,
+          "id": 120,
+          "key": "2:113",
+          "page": 18,
+          "page_end": 18,
+          "text": "۞ وَمَنَ اَظْلَمُ مِمَّن مَّنَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 6,
+          "id": 130,
+          "key": "2:123",
+          "page": 19,
+          "page_end": 19,
+          "text": "۞ وَإِذِ اِ۪بْتَل۪ىٰٓ إِبْرَٰه",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 2,
+          "juz": 1,
+          "eighth": 7,
+          "id": 139,
+          "key": "2:132",
+          "page": 20,
+          "page_end": 20,
+          "text": "۞ أَمْ كُنتُمْ شُهَدَآءَ ا۪ذْ",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    },
+    {
+      "hizb": 3,
+      "boundaries": [
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 0,
+          "id": 148,
+          "key": "2:141",
+          "page": 22,
+          "page_end": 22,
+          "text": "۞ سَيَقُولُ اُ۬لسُّفَهَآءُ مِ",
+          "source": "hizb",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 1,
+          "id": 154,
+          "key": "2:147",
+          "page": 23,
+          "page_end": 23,
+          "text": "۞ وَلِكُلّٖ وِجْهَةٌ هُوَ مُوَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 2,
+          "id": 164,
+          "key": "2:157",
+          "page": 24,
+          "page_end": 24,
+          "text": "۞ إِنَّ اَ۬لصَّفَا وَالْمَرْوَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 3,
+          "id": 172,
+          "key": "2:165",
+          "page": 25,
+          "page_end": 25,
+          "text": "۞ إِذْ تَبَرَّأَ اَ۬لذِينَ اَ۟",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 4,
+          "id": 183,
+          "key": "2:176",
+          "page": 27,
+          "page_end": 27,
+          "text": "۞ لَّيْسَ اَ۬لْبِرُّ أَن تُوَل",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 5,
+          "id": 191,
+          "key": "2:184",
+          "page": 28,
+          "page_end": 28,
+          "text": "۞ شَهْرُ رَمَضَانَ اَ۬لذِےٓ أُ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 6,
+          "id": 195,
+          "key": "2:188",
+          "page": 29,
+          "page_end": 29,
+          "text": "۞ يَسْـَٔلُونَكَ عَنِ اِ۬لَاهِ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 3,
+          "juz": 2,
+          "eighth": 7,
+          "id": 202,
+          "key": "2:195",
+          "page": 30,
+          "page_end": 30,
+          "text": "وَأَتِمُّواْ اُ۬لْحَجَّ وَالْع",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    },
+    {
+      "hizb": 27,
+      "boundaries": [
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 0,
+          "id": 1808,
+          "key": "15:1",
+          "page": 262,
+          "page_end": 262,
+          "text": "أَلَٓر۪ۖ تِلْكَ ءَايَٰتُ اُ۬لْ",
+          "source": "hizb",
+          "marker": false
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 1,
+          "id": 1829,
+          "key": "15:22",
+          "page": 263,
+          "page_end": 263,
+          "text": "۞ وَأَرْسَلْنَا اَ۬لرِّيَٰحَ ل",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 2,
+          "id": 1856,
+          "key": "15:49",
+          "page": 264,
+          "page_end": 264,
+          "text": "۞ نَبِّۓْ عِبَادِيَ أَنِّيَ أ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 3,
+          "id": 1885,
+          "key": "15:78",
+          "page": 266,
+          "page_end": 266,
+          "text": "۞ وَإِن كَانَ أَصْحَٰبُ اُ۬لَا",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 4,
+          "id": 1907,
+          "key": "16:1",
+          "page": 267,
+          "page_end": 267,
+          "text": "أَت۪ىٰٓ أَمْرُ اُ۬للَّهِ فَلَا",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 5,
+          "id": 1921,
+          "key": "16:15",
+          "page": 269,
+          "page_end": 269,
+          "text": "۞ وَأَلْق۪ىٰ فِے اِ۬لَارْضِ رَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 6,
+          "id": 1936,
+          "key": "16:30",
+          "page": 270,
+          "page_end": 270,
+          "text": "۞ وَقِيلَ لِلذِينَ اَ۪تَّقَوْا",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 27,
+          "juz": 14,
+          "eighth": 7,
+          "id": 1944,
+          "key": "16:38",
+          "page": 271,
+          "page_end": 271,
+          "text": "۞ وَأَقْسَمُواْ بِاللَّهِ جَهْ",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    },
+    {
+      "hizb": 52,
+      "boundaries": [
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 0,
+          "id": 4581,
+          "key": "48:18",
+          "page": 513,
+          "page_end": 513,
+          "text": "۞ لَّقَدْ رَضِيَ اَ۬للَّهُ عَن",
+          "source": "hizb",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 1,
+          "id": 4589,
+          "key": "48:26",
+          "page": 514,
+          "page_end": 514,
+          "text": "۞ اِذْ جَعَلَ اَ۬لذِينَ كَفَرُ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 2,
+          "id": 4601,
+          "key": "49:9",
+          "page": 516,
+          "page_end": 516,
+          "text": "۞ وَإِن طَآئِفَتَٰنِ مِنَ اَ۬",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 3,
+          "id": 4606,
+          "key": "49:14",
+          "page": 517,
+          "page_end": 517,
+          "text": "۞ قَالَتِ اِ۬لَاعْرَابُ ءَامَن",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 4,
+          "id": 4611,
+          "key": "50:1",
+          "page": 518,
+          "page_end": 518,
+          "text": "قَٓۖ وَالْقُرْءَانِ اِ۬لْمَجِي",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 5,
+          "id": 4619,
+          "key": "50:9",
+          "page": 518,
+          "page_end": 518,
+          "text": "۞ وَنَزَّلْنَا مِنَ اَ۬لسَّمَا",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 6,
+          "id": 4637,
+          "key": "50:27",
+          "page": 519,
+          "page_end": 519,
+          "text": "۞ قَالَ قَرِينُهُۥ رَبَّنَا مَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 52,
+          "juz": 26,
+          "eighth": 7,
+          "id": 4656,
+          "key": "51:1",
+          "page": 520,
+          "page_end": 520,
+          "text": "وَالذَّٰرِيَٰتِ ذَرْواٗ ﰀ",
+          "source": "surah",
+          "marker": false
+        }
+      ]
+    },
+    {
+      "hizb": 55,
+      "boundaries": [
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 0,
+          "id": 5083,
+          "key": "58:1",
+          "page": 542,
+          "page_end": 542,
+          "text": "قَدْ سَمِعَ اَ۬للَّهُ قَوْلَ ا",
+          "source": "hizb",
+          "marker": false
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 1,
+          "id": 5090,
+          "key": "58:8",
+          "page": 543,
+          "page_end": 543,
+          "text": "۞ اَلَمْ تَرَ إِلَى اَ۬لذِينَ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 2,
+          "id": 5096,
+          "key": "58:14",
+          "page": 544,
+          "page_end": 544,
+          "text": "۞ أَلَمْ تَرَ إِلَى اَ۬لذِينَ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 3,
+          "id": 5105,
+          "key": "59:2",
+          "page": 545,
+          "page_end": 545,
+          "text": "هُوَ اَ۬لذِےٓ أَخْرَجَ اَ۬لذِي",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 4,
+          "id": 5114,
+          "key": "59:11",
+          "page": 547,
+          "page_end": 547,
+          "text": "۞ اَلَمْ تَرَ إِلَى اَ۬لذِينَ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 5,
+          "id": 5128,
+          "key": "60:1",
+          "page": 549,
+          "page_end": 549,
+          "text": "يَٰٓأَيُّهَا اَ۬لذِينَ ءَامَنُ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 6,
+          "id": 5134,
+          "key": "60:7",
+          "page": 550,
+          "page_end": 550,
+          "text": "۞ عَسَى اَ۬للَّهُ أَنْ يَّجْعَ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 55,
+          "juz": 28,
+          "eighth": 7,
+          "id": 5141,
+          "key": "61:1",
+          "page": 551,
+          "page_end": 551,
+          "text": "سَبَّحَ لِلهِ مَا فِے اِ۬لسَّم",
+          "source": "surah",
+          "marker": false
+        }
+      ]
+    },
+    {
+      "hizb": 59,
+      "boundaries": [
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 0,
+          "id": 5649,
+          "key": "78:1",
+          "page": 582,
+          "page_end": 582,
+          "text": "عَمَّۖ يَتَسَآءَلُونَ ﰀ",
+          "source": "hizb",
+          "marker": false
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 1,
+          "id": 5729,
+          "key": "79:41",
+          "page": 584,
+          "page_end": 584,
+          "text": "۞ يَسْـَٔلُونَكَ عَنِ اِ۬لسَّا",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 2,
+          "id": 5776,
+          "key": "81:1",
+          "page": 586,
+          "page_end": 586,
+          "text": "إِذَا اَ۬لشَّمْسُ كُوِّرَتْ ﰀ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 3,
+          "id": 5805,
+          "key": "82:1",
+          "page": 587,
+          "page_end": 587,
+          "text": "إِذَا اَ۬لسَّمَآءُ اُ۪نفَطَرَ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 4,
+          "id": 5837,
+          "key": "83:14",
+          "page": 588,
+          "page_end": 588,
+          "text": "۞ كَلَّا بَل رَّانَ عَلَىٰ قُل",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 5,
+          "id": 5860,
+          "key": "84:1",
+          "page": 589,
+          "page_end": 589,
+          "text": "إِذَا اَ۬لسَّمَآءُ اُ۪نشَقَّت",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 6,
+          "id": 5875,
+          "key": "84:16",
+          "page": 589,
+          "page_end": 589,
+          "text": "۞ فَلَآ أُقْسِمُ بِالشَّفَقِ ",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 59,
+          "juz": 30,
+          "eighth": 7,
+          "id": 5896,
+          "key": "85:12",
+          "page": 590,
+          "page_end": 590,
+          "text": "۞ إِنَّ بَطْشَ رَبِّكَ لَشَدِي",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    },
+    {
+      "hizb": 60,
+      "boundaries": [
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 0,
+          "id": 5924,
+          "key": "87:1",
+          "page": 591,
+          "page_end": 591,
+          "text": "سَبِّحِ اِ۪سْمَ رَبِّكَ اَ۬لَا",
+          "source": "hizb",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 1,
+          "id": 5959,
+          "key": "88:17",
+          "page": 592,
+          "page_end": 592,
+          "text": "۞ اَفَلَا يَنظُرُونَ إِلَى اَ۬",
+          "source": "marker",
+          "marker": true
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 2,
+          "id": 6021,
+          "key": "91:1",
+          "page": 595,
+          "page_end": 595,
+          "text": "وَالشَّمْسِ وَضُحَيٰهَا ﰀ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 3,
+          "id": 6036,
+          "key": "92:1",
+          "page": 595,
+          "page_end": 595,
+          "text": "وَاليْلِ إِذَا يَغْش۪ىٰ ﰀ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 4,
+          "id": 6057,
+          "key": "93:1",
+          "page": 596,
+          "page_end": 596,
+          "text": "وَالضُّح۪ىٰ ﰀ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 5,
+          "id": 6068,
+          "key": "94:1",
+          "page": 596,
+          "page_end": 596,
+          "text": "اَلَمْ نَشْرَحْ لَكَ صَدْرَكَ ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 6,
+          "id": 6126,
+          "key": "100:1",
+          "page": 599,
+          "page_end": 599,
+          "text": "وَالْعَٰدِيَٰتِ ضَبْحاٗ ﰀ",
+          "source": "surah",
+          "marker": false
+        },
+        {
+          "hizb": 60,
+          "juz": 30,
+          "eighth": 7,
+          "id": 6134,
+          "key": "100:9",
+          "page": 600,
+          "page_end": 600,
+          "text": "۞ اَفَلَا يَعْلَمُ إِذَا بُعْث",
+          "source": "marker",
+          "marker": true
+        }
+      ]
+    }
+  ],
+  "basmala": {
+    "entries": 2,
+    "samples": [
+      {
+        "key": "11:41",
+        "text": "۞ وَقَالَ اَ۪رْكَبُواْ فِيهَا بِسْمِ اِ۬للَّهِ مُجْر۪يٰهَا وَمُرْس۪يٰهَآۖ إِنَّ"
+      },
+      {
+        "key": "27:30",
+        "text": "اِنَّهُۥ مِن سُلَيْمَٰنَ وَإِنَّهُۥ بِسْمِ اِ۬للَّهِ اِ۬لرَّحْمَٰنِ اِ۬لرَّحِيمِ"
+      }
+    ],
+    "note": "La Basmala n’est pas comptée comme verset d’Al-Fâtiha dans ce jeu de données."
+  },
+  "layout": {
+    "pages": 604,
+    "lines": 8819,
+    "width": 17.164
+  }
+}
