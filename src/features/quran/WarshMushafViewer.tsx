@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QURAN_TOTAL_PAGES, useQuranWarshEighths } from "./api";
 import type { QuranPlan } from "./types";
+import { supabase } from "@/lib/supabase";
 
 function positionOf(cumulative: number) {
   const safe = Math.max(0, cumulative);
@@ -29,6 +30,7 @@ interface WarshMushafViewerProps {
   targetEighths: number | null;
   embedded?: boolean;
   onRefresh?: () => void;
+  memberId?: string;
 }
 
 export function WarshMushafViewer({
@@ -37,6 +39,7 @@ export function WarshMushafViewer({
   targetEighths,
   embedded,
   onRefresh,
+  memberId,
 }: WarshMushafViewerProps) {
   const eighthsQuery = useQuranWarshEighths();
 
@@ -82,18 +85,74 @@ export function WarshMushafViewer({
 
   const [page, setPage] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const [restoringPage, setRestoringPage] = useState(true);
+  const [restoredPage, setRestoredPage] = useState<number | null>(null);
   const lastTargetPage = useRef<number | null>(null);
 
   useEffect(() => {
+    let active = true;
+    setRestoringPage(true);
+    setRestoredPage(null);
+
+    if (!memberId) {
+      setRestoringPage(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("mushaf_progress")
+          .select("page")
+          .eq("member_id", memberId)
+          .maybeSingle();
+        if (!active) return;
+        if (data?.page) {
+          setRestoredPage(data.page);
+          setPage(data.page);
+        }
+      } catch (e) {
+        console.warn("Lecture de la dernière page Warsh impossible:", e);
+      } finally {
+        if (active) setRestoringPage(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [memberId]);
+
+  useEffect(() => {
     if (targetStartPage === null) return;
+    if (restoringPage) return;
+    if (restoredPage !== null) return;
     if (lastTargetPage.current === targetStartPage) return;
     lastTargetPage.current = targetStartPage;
     setPage(targetStartPage);
-  }, [targetStartPage]);
+  }, [targetStartPage, restoringPage, restoredPage]);
 
   useEffect(() => {
     setImageError(false);
   }, [page]);
+
+  useEffect(() => {
+    if (!memberId || restoringPage) return;
+    const timer = setTimeout(() => {
+      void supabase
+        .from("mushaf_progress")
+        .upsert(
+          { member_id: memberId, page, updated_at: new Date().toISOString() },
+          { onConflict: "member_id" }
+        )
+        .then((res: { error?: unknown } | null) => {
+          if (res?.error) {
+            console.warn("Sauvegarde de la dernière page Warsh impossible:", res.error);
+          }
+        });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [page, memberId, restoringPage]);
 
   const pageImageUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/warsh-kfqc/${String(
     page

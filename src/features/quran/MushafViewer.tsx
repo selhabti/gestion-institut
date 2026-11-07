@@ -17,6 +17,7 @@ import {
 } from "./api";
 import { WarshMushafViewer } from "./WarshMushafViewer";
 import type { QuranAyah, QuranPlan } from "./types";
+import { supabase } from "@/lib/supabase";
 
 const BASMALA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
 
@@ -48,6 +49,7 @@ interface MushafViewerProps {
   riwaya?: "Hafs" | "Warsh" | null;
   onRefresh?: () => void;
   embedded?: boolean;
+  memberId?: string;
 }
 
 export function MushafViewer({
@@ -57,6 +59,7 @@ export function MushafViewer({
   riwaya,
   onRefresh,
   embedded,
+  memberId,
 }: MushafViewerProps) {
   const rubsQuery = useQuranRubs();
   const surahsQuery = useQuranSurahs();
@@ -94,18 +97,77 @@ export function MushafViewer({
 
   const [page, setPage] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const [restoringPage, setRestoringPage] = useState(true);
+  const [restoredPage, setRestoredPage] = useState<number | null>(null);
   const lastTargetPage = useRef<number | null>(null);
 
+  // Reprendre la dernière page consultée pour cet élève.
+  useEffect(() => {
+    let active = true;
+    setRestoringPage(true);
+    setRestoredPage(null);
+
+    if (!memberId) {
+      setRestoringPage(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("mushaf_progress")
+          .select("page")
+          .eq("member_id", memberId)
+          .maybeSingle();
+        if (!active) return;
+        if (data?.page) {
+          setRestoredPage(data.page);
+          setPage(data.page);
+        }
+      } catch (e) {
+        console.warn("Lecture de la dernière page mushaf impossible:", e);
+      } finally {
+        if (active) setRestoringPage(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [memberId]);
+
+  // Aller à la cible uniquement si aucune page n'a été reprise.
   useEffect(() => {
     if (targetStartPage === null) return;
+    if (restoringPage) return;
+    if (restoredPage !== null) return;
     if (lastTargetPage.current === targetStartPage) return;
     lastTargetPage.current = targetStartPage;
     setPage(targetStartPage);
-  }, [targetStartPage]);
+  }, [targetStartPage, restoringPage, restoredPage]);
 
   useEffect(() => {
     setImageError(false);
   }, [page]);
+
+  // Mémoriser la page consultée (par élève).
+  useEffect(() => {
+    if (!memberId || restoringPage) return;
+    const timer = setTimeout(() => {
+      void supabase
+        .from("mushaf_progress")
+        .upsert(
+          { member_id: memberId, page, updated_at: new Date().toISOString() },
+          { onConflict: "member_id" }
+        )
+        .then((res: { error?: unknown } | null) => {
+          if (res?.error) {
+            console.warn("Sauvegarde de la dernière page mushaf impossible:", res.error);
+          }
+        });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [page, memberId, restoringPage]);
 
   const pageQuery = useQuranPage(page);
   const ayahs = pageQuery.data ?? [];
@@ -198,6 +260,7 @@ export function MushafViewer({
         targetEighths={targetEighths}
         embedded={embedded}
         onRefresh={onRefresh}
+        memberId={memberId}
       />
     );
   }

@@ -362,6 +362,7 @@ export function StudentHistoryModal({
                         validatedEighths={validatedEighths}
                         targetEighths={nextTargetEighths}
                         riwaya={memo.riwaya}
+                        memberId={student.studentId}
                         onRefresh={() => {
                           void memo.reload();
                           void planHook.reload();
