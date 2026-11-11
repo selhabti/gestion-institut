@@ -4,15 +4,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wallet, Search, CreditCard } from "lucide-react";
+import {
+  Wallet,
+  Search,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Member } from "@/types/member";
 import { capitalize } from "@/lib/utils";
 import { getGroupFee } from "@/lib/fees";
+import { formatDateForInput } from "@/utils/dateUtils";
 
-// Mois courant au format YYYY-MM
-const currentMonth = () => new Date().toISOString().slice(0, 7);
+const MONTHS_FR = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+
+// Mois courant au format YYYY-MM (heure locale)
+const currentMonth = () => formatDateForInput(new Date()).slice(0, 7);
+
+const monthLabel = (ym: string) => {
+  const [year, month] = ym.split("-").map(Number);
+  return `${MONTHS_FR[month - 1] ?? ""} ${year}`;
+};
 
 interface MonthlyPaymentsTabProps {
   members: Member[];
@@ -24,13 +51,22 @@ export function MonthlyPaymentsTab({
   onDataChanged,
 }: MonthlyPaymentsTabProps) {
   const [search, setSearch] = useState("");
+  const [month, setMonth] = useState(currentMonth);
   const [busyId, setBusyId] = useState<string | null>(null);
-  // Overrides locaux : memberId -> paymentId (null = non payé)
+  // Overrides locaux : `${month}:${memberId}` -> paymentId (null = non payé)
   const [overrides, setOverrides] = useState<Record<string, string | null>>({});
-  const month = currentMonth();
+
+  const shiftMonth = (delta: number) => {
+    const [year, monthNumber] = month.split("-").map(Number);
+    const d = new Date(year, monthNumber - 1 + delta, 1);
+    setMonth(
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    );
+  };
 
   const paidIdOf = (m: Member): string | null => {
-    if (m.id in overrides) return overrides[m.id];
+    const key = `${month}:${m.id}`;
+    if (key in overrides) return overrides[key];
     const p = (m.payments || []).find(
       (pp) => String(pp.date || "").slice(0, 7) === month
     );
@@ -51,8 +87,10 @@ export function MonthlyPaymentsTab({
           paymentId: paidIdOf(m),
         }))
         .sort((a, b) => a.member.lastName.localeCompare(b.member.lastName)),
-    [members, search, overrides]
+    [members, search, overrides, month]
   );
+
+  const lateRows = rows.filter((r) => !r.paymentId);
 
   const markPaid = async (row: (typeof rows)[number]) => {
     setBusyId(row.member.id);
@@ -60,19 +98,30 @@ export function MonthlyPaymentsTab({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      // Paiement d'un mois antérieur : daté dans ce mois (le 1er).
+      const paymentDate =
+        month === currentMonth()
+          ? formatDateForInput(new Date())
+          : `${month}-01`;
+
       const { data, error } = await supabase
         .from("payments")
         .insert({
           member_id: row.member.id,
-          payment_date: new Date().toISOString().split("T")[0],
+          payment_date: paymentDate,
           amount: row.fee,
           created_by: user?.id ?? null,
         })
         .select()
         .single();
       if (error) throw error;
-      setOverrides((prev) => ({ ...prev, [row.member.id]: data.id }));
-      toast.success(`Paiement de ${row.fee}€ enregistré`);
+      setOverrides((prev) => ({
+        ...prev,
+        [`${month}:${row.member.id}`]: data.id,
+      }));
+      toast.success(
+        `Paiement de ${row.fee}€ enregistré pour ${monthLabel(month)}`
+      );
       onDataChanged?.();
     } catch (error) {
       console.error(error);
@@ -84,7 +133,14 @@ export function MonthlyPaymentsTab({
 
   const unmark = async (row: (typeof rows)[number]) => {
     if (!row.paymentId) return;
-    if (!confirm(`Annuler le paiement de ${row.member.firstName} ?`)) return;
+    if (
+      !confirm(
+        `Annuler le paiement de ${row.member.firstName} pour ${monthLabel(
+          month
+        )} ?`
+      )
+    )
+      return;
     setBusyId(row.member.id);
     try {
       const { error } = await supabase
@@ -92,7 +148,10 @@ export function MonthlyPaymentsTab({
         .delete()
         .eq("id", row.paymentId);
       if (error) throw error;
-      setOverrides((prev) => ({ ...prev, [row.member.id]: null }));
+      setOverrides((prev) => ({
+        ...prev,
+        [`${month}:${row.member.id}`]: null,
+      }));
       toast.success("Paiement annulé");
       onDataChanged?.();
     } catch (error) {
@@ -110,10 +169,10 @@ export function MonthlyPaymentsTab({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-500">Encaissé ce mois</p>
+            <p className="text-sm text-slate-500">Encaissé — {monthLabel(month)}</p>
             <p className="text-2xl font-bold text-emerald-600">{collected}€</p>
           </CardContent>
         </Card>
@@ -122,6 +181,14 @@ export function MonthlyPaymentsTab({
             <p className="text-sm text-slate-500">Élèves à jour</p>
             <p className="text-2xl font-bold text-slate-800">
               {paidCount}/{rows.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-500">Retardataires</p>
+            <p className="text-2xl font-bold text-rose-600">
+              {lateRows.length}
             </p>
           </CardContent>
         </Card>
@@ -136,19 +203,39 @@ export function MonthlyPaymentsTab({
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4">
+        <CardHeader className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 space-y-0">
           <CardTitle className="flex items-center gap-3">
             <Wallet className="h-5 w-5" />
-            Cotisations du mois
+            Cotisations — {monthLabel(month)}
           </CardTitle>
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher…"
-              className="pl-8 w-56"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => shiftMonth(-1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-semibold w-32 text-center">
+              {monthLabel(month)}
+            </span>
+            <Button variant="outline" size="sm" onClick={() => shiftMonth(1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            {month !== currentMonth() && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMonth(currentMonth())}
+              >
+                Mois actuel
+              </Button>
+            )}
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher…"
+                className="pl-8 w-48"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -193,7 +280,9 @@ export function MonthlyPaymentsTab({
                             Payé
                           </Badge>
                         ) : (
-                          <Badge variant="outline">En attente</Badge>
+                          <Badge className="bg-rose-50 text-rose-700 border-rose-200">
+                            Retard
+                          </Badge>
                         )}
                       </td>
                       <td className="py-3">
@@ -224,6 +313,48 @@ export function MonthlyPaymentsTab({
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card
+        className={
+          lateRows.length > 0 ? "border-rose-200" : "border-emerald-200"
+        }
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            Retardataires — {monthLabel(month)}
+            <Badge
+              className={
+                lateRows.length > 0
+                  ? "bg-rose-100 text-rose-700"
+                  : "bg-emerald-100 text-emerald-700"
+              }
+            >
+              {lateRows.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lateRows.length === 0 ? (
+            <p className="text-sm text-emerald-700">
+              Tous les élèves sont à jour pour {monthLabel(month)}.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {lateRows.map((r) => (
+                <Badge
+                  key={r.member.id}
+                  variant="outline"
+                  className="bg-rose-50 text-rose-700 border-rose-200"
+                >
+                  {capitalize(r.member.firstName)}{" "}
+                  {r.member.lastName.toUpperCase()} • {r.member.group} •{" "}
+                  {r.fee}€
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
