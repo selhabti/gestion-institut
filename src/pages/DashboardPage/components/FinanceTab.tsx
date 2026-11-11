@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   DollarSign, Users, TrendingUp, TrendingDown,
   Download, AlertTriangle, CheckCircle, XCircle,
-  Clock, Calendar, BarChart3, Euro, FileSpreadsheet, Target, RefreshCw
+  Clock, Calendar, BarChart3, Euro, FileSpreadsheet, Target, RefreshCw,
+  EyeOff, RotateCcw
 } from "lucide-react";
 import { professorHoursService } from "@/services/professorHoursService";
 import { SessionsTable } from "@/components/professor/SessionsTable";
 import { getGroupFee } from "@/lib/fees";
+import { usePaymentExclusions } from "@/hooks/usePaymentExclusions";
 import type { Member } from "@/types/member";
 import type { ProfessorSession } from "@/types/professorHours";
 
@@ -34,6 +36,7 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
   const [professorSessions, setProfessorSessions] = useState<ProfessorSession[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { excluded, exclude, include } = usePaymentExclusions(selectedMonth);
 
   const selYear = parseInt(selectedMonth.split("-")[0]);
   const selMonth = parseInt(selectedMonth.split("-")[1]);
@@ -53,18 +56,20 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
   }, [selYear, selMonth, refreshKey]);
 
   const financeData = useMemo(() => {
-    const totalStudents = members.length;
+    const activeMembers = members.filter((m) => !excluded.has(m.id));
+    const excludedMembers = members.filter((m) => excluded.has(m.id));
+    const totalStudents = activeMembers.length;
 
     const paymentsThisMonth = members.flatMap((m) =>
       (m.payments || []).filter((p) => p.date && p.date.startsWith(selectedMonth))
     );
 
     const paidCount = paymentsThisMonth.length;
-    const latePayers = members.filter(
+    const latePayers = activeMembers.filter(
       (m) => !m.payments?.some((p) => p.date && p.date.startsWith(selectedMonth))
     );
 
-    const expectedRevenue = members.reduce(
+    const expectedRevenue = activeMembers.reduce(
       (sum, m) => sum + getGroupFee(m.group),
       0
     );
@@ -84,6 +89,7 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
       totalStudents,
       paidCount,
       latePayers,
+      excludedMembers,
       expectedRevenue,
       collectedRevenue,
       totalHours,
@@ -92,7 +98,7 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
       projectedMargin,
       recoverable,
     };
-  }, [members, selectedMonth, professorSessions]);
+  }, [members, selectedMonth, professorSessions, excluded]);
 
   const monthLabel = new Date(selYear, selMonth - 1).toLocaleDateString("fr-FR", {
     month: "long",
@@ -207,7 +213,10 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
               {financeData.expectedRevenue}€
             </p>
             <p className="text-sm text-slate-500 mt-1">
-              {financeData.totalStudents} élèves × {MONTHLY_FEE}€
+              {financeData.totalStudents} élèves actifs
+              {financeData.excludedMembers.length > 0
+                ? ` • ${financeData.excludedMembers.length} exclu(s)`
+                : ""}
             </p>
           </CardContent>
         </Card>
@@ -319,6 +328,7 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
                     <th className="pb-3 font-medium">Cotisation</th>
                     <th className="pb-3 font-medium">Ville</th>
                     <th className="pb-3 font-medium">Statut</th>
+                    <th className="pb-3 font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -339,6 +349,18 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
                           En attente
                         </Badge>
                       </td>
+                      <td className="py-3">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-slate-600"
+                          onClick={() => void exclude(m.id)}
+                          title="Ne pas compter cet élève dans la recette ni les retardataires"
+                        >
+                          <EyeOff className="h-4 w-4 mr-1" />
+                          Exclure
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -347,6 +369,45 @@ export const FinanceTab = ({ members, onRefresh }: FinanceTabProps) => {
           )}
         </CardContent>
       </Card>
+
+      {financeData.excludedMembers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <EyeOff className="h-5 w-5 text-slate-500" />
+              Exclus de la recette — {monthLabel}
+            </CardTitle>
+            <CardDescription>
+              Ces élèves ne sont pas comptés dans le revenu attendu ni dans les
+              retardataires. Un paiement déjà encaissé reste dans le collecté.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {financeData.excludedMembers.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
+                >
+                  <div className="text-sm">
+                    <span className="font-medium uppercase">{m.lastName}</span>{" "}
+                    {m.firstName} •{" "}
+                    <Badge variant="outline">{m.group}</Badge>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void include(m.id)}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Réintégrer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Heures professeur — tableau éditable (enregistrer / modifier / annuler une séance) */}
       <SessionsTable onChanged={() => setRefreshKey((k) => k + 1)} />
