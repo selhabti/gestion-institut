@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QURAN_TOTAL_PAGES, useQuranWarshEighths } from "./api";
 import type { QuranPlan } from "./types";
@@ -84,6 +85,7 @@ export function WarshMushafViewer({
   const targetEndPage = endRow?.end_page ?? null;
 
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
   const [imageError, setImageError] = useState(false);
   const [restoringPage, setRestoringPage] = useState(true);
   const [restoredPage, setRestoredPage] = useState<number | null>(null);
@@ -134,7 +136,22 @@ export function WarshMushafViewer({
 
   useEffect(() => {
     setImageError(false);
+    setPageInput(String(page));
   }, [page]);
+
+  const goToPage = () => {
+    const parsed = Number(pageInput);
+    if (!Number.isFinite(parsed)) {
+      setPageInput(String(page));
+      return;
+    }
+    const clamped = Math.min(
+      QURAN_TOTAL_PAGES,
+      Math.max(1, Math.round(parsed))
+    );
+    setPage(clamped);
+    setPageInput(String(clamped));
+  };
 
   useEffect(() => {
     if (!memberId || restoringPage) return;
@@ -240,9 +257,29 @@ export function WarshMushafViewer({
             <ChevronLeft className="mr-1 h-4 w-4" />
             Précédente
           </Button>
-          <Badge variant="outline">
-            Page {page} / {QURAN_TOTAL_PAGES}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min={1}
+              max={QURAN_TOTAL_PAGES}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  goToPage();
+                }
+              }}
+              className="h-8 w-20"
+              aria-label="Numéro de page"
+            />
+            <span className="text-xs text-muted-foreground">
+              / {QURAN_TOTAL_PAGES}
+            </span>
+            <Button variant="outline" size="sm" onClick={goToPage}>
+              Aller
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"
