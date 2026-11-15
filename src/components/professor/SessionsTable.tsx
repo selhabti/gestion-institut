@@ -41,9 +41,11 @@ import {
   Save,
   RefreshCw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { useProfessorHours } from '@/hooks/useProfessorHours';
+import { supabase } from '@/lib/supabase';
 import { getCurrentInstitutId } from '@/lib/institutes';
 import { toast } from 'sonner';
 
@@ -83,6 +85,9 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
   const [editEndTime, setEditEndTime] = useState("18:30");
   const [editNotes, setEditNotes] = useState("");
   const [cancelReason, setCancelReason] = useState("");
+  const [showCancelled, setShowCancelled] = useState(false);
+  const [deleteSessionItem, setDeleteSessionItem] = useState<any>(null);
+  const [alsoDeleteAttendance, setAlsoDeleteAttendance] = useState(false);
 
   const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
   const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -119,6 +124,13 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
   };
 
   const sessionList = getSessionList();
+  const cancelledCount = sessionList.filter(
+    (item) => item.status === "cancelled"
+  ).length;
+  const activeCount = sessionList.length - cancelledCount;
+  const visibleSessions = showCancelled
+    ? sessionList
+    : sessionList.filter((item) => item.status !== "cancelled");
 
   // Format date DD/MM/YYYY
   const formatDate = (dateStr: string) => {
@@ -252,6 +264,58 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
     }
   };
 
+  const handleDeleteSession = (sessionItem: any) => {
+    setDeleteSessionItem(sessionItem);
+    setAlsoDeleteAttendance(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteSessionItem) return;
+    try {
+      const date = deleteSessionItem.date;
+      const day = new Date(`${date}T00:00:00`).getDay();
+      const group = dayNames[day];
+
+      if (alsoDeleteAttendance && group) {
+        const { error: attendanceError } = await supabase
+          .from("attendances")
+          .delete()
+          .eq("date", date)
+          .eq("session_type", group);
+        if (attendanceError) throw attendanceError;
+      }
+
+      if (deleteSessionItem.session) {
+        await updateSession(deleteSessionItem.session.id, {
+          actualHours: 0,
+          startTime: "00:00",
+          endTime: "00:00",
+          notes: "",
+          status: "cancelled",
+        });
+      } else {
+        await saveSession({
+          date,
+          startTime: "00:00",
+          endTime: "00:00",
+          actualHours: 0,
+          notes: undefined,
+          status: "cancelled",
+        });
+      }
+
+      toast.success(
+        "Séance supprimée — elle n'est plus comptée dans les statistiques"
+      );
+      setDeleteSessionItem(null);
+      setAlsoDeleteAttendance(false);
+      await refresh();
+      onChanged?.();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la suppression");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -314,7 +378,8 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
                   {monthNames[currentMonth - 1]} {currentYear}
                 </CardTitle>
                 <p className="text-sm text-gray-500 mt-1">
-                  Séances du mois • {monthlyStats.sessionsCount} réalisées sur {sessionList.length}
+                  Séances du mois • {monthlyStats.sessionsCount} réalisées
+                  {cancelledCount > 0 ? ` • ${cancelledCount} annulée(s)` : ""}
                 </p>
               </div>
             </div>
@@ -335,14 +400,25 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
                 Mois suiv.
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
+              {cancelledCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCancelled((value) => !value)}
+                >
+                  {showCancelled
+                    ? "Masquer les annulées"
+                    : `Afficher les annulées (${cancelledCount})`}
+                </Button>
+              )}
             </div>
           </div>
 
           {/* Stats cards */}
           <div className="grid grid-cols-3 gap-3 mt-4">
             <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-blue-600">{sessionList.length}</div>
-              <div className="text-xs text-blue-600">Total séances</div>
+              <div className="text-2xl font-bold text-blue-600">{activeCount}</div>
+              <div className="text-xs text-blue-600">Séances tenues</div>
             </div>
             <div className="bg-green-50 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-green-600">{monthlyStats.sessionsCount}</div>
@@ -370,7 +446,7 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sessionList.map((item) => (
+                {visibleSessions.map((item) => (
                   <TableRow key={item.date} className="hover:bg-slate-50 transition-colors">
                     <TableCell className="text-center font-mono text-sm">
                       {formatDate(item.date)}
@@ -416,15 +492,26 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
                         {item.status === 'pending' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditSession(item)}
-                            className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
-                          >
-                            <Save className="h-3 w-3 mr-1" />
-                            Enregistrer
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditSession(item)}
+                              className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                            >
+                              <Save className="h-3 w-3 mr-1" />
+                              Enregistrer
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteSession(item)}
+                              className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Supprimer
+                            </Button>
+                          </>
                         )}
                         
                         {item.status === 'completed' && (
@@ -442,10 +529,19 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
                               size="sm"
                               variant="outline"
                               onClick={() => handleCancelSession(item)}
-                              className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                              className="bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-700"
                             >
                               <XCircle className="h-3 w-3 mr-1" />
                               Annuler
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteSession(item)}
+                              className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Supprimer
                             </Button>
                           </>
                         )}
@@ -469,7 +565,7 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
             </Table>
           </div>
 
-          {sessionList.length === 0 && (
+          {visibleSessions.length === 0 && (
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">Aucune séance ce mois-ci</p>
@@ -555,6 +651,59 @@ export function SessionsTable({ onChanged }: SessionsTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de suppression (indisponibilité du professeur) */}
+      <Dialog
+        open={!!deleteSessionItem}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteSessionItem(null);
+            setAlsoDeleteAttendance(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Supprimer la séance</DialogTitle>
+            <DialogDescription>
+              {deleteSessionItem &&
+                new Date(`${deleteSessionItem.date}T00:00:00`).toLocaleDateString(
+                  "fr-FR",
+                  { weekday: "long", day: "numeric", month: "long" }
+                )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <p className="text-sm text-slate-600">
+              La séance ne sera plus comptée dans les statistiques ni dans les
+              heures du professeur (0h). Aucun motif n'est demandé.
+            </p>
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={alsoDeleteAttendance}
+                onChange={(e) => setAlsoDeleteAttendance(e.target.checked)}
+                className="mt-0.5 h-4 w-4"
+              />
+              Supprimer aussi les présences enregistrées ce jour-là
+            </label>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteSessionItem(null);
+                setAlsoDeleteAttendance(false);
+              }}
+            >
+              Retour
+            </Button>
+            <Button onClick={handleConfirmDelete} className="bg-red-600">
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de restauration */}
       <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
