@@ -92,29 +92,24 @@ function PositionField({
     <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-3">
       <Label className="text-sm font-semibold">{title}</Label>
       <div className="flex items-center gap-2">
-        <Select
-          value={String(hizb)}
-          onValueChange={(value) => {
-            const next = Number(value);
-            onHizb(next);
-            if (next >= 61) onEighth(0);
+        <Input
+          type="number"
+          min={1}
+          max={61}
+          value={hizb}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            const clamped = Number.isFinite(next)
+              ? Math.min(61, Math.max(1, Math.round(next)))
+              : 1;
+            onHizb(clamped);
+            if (clamped >= 61) onEighth(0);
           }}
           disabled={disabled}
-        >
-          <SelectTrigger className="h-9 w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Array.from({ length: 60 }, (_, index) => index + 1).map(
-              (value) => (
-                <SelectItem key={value} value={String(value)}>
-                  Hizb {value}
-                </SelectItem>
-              )
-            )}
-            <SelectItem value="61">Terminé (480)</SelectItem>
-          </SelectContent>
-        </Select>
+          className="h-9 w-24"
+          aria-label="Hizb"
+        />
+        <span className="text-xs text-slate-500">Hizb</span>
         <Select
           value={String(eighth)}
           onValueChange={(value) => onEighth(Number(value))}
@@ -132,6 +127,9 @@ function PositionField({
           </SelectContent>
         </Select>
       </div>
+      <p className="text-[11px] text-slate-400">
+        Saisir 1–60 · 61 = terminé (480)
+      </p>
       <p className="text-xs text-slate-500">
         <span className="font-mono">{position}</span> ·{" "}
         {repere
