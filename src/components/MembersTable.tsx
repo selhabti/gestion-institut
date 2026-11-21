@@ -14,6 +14,7 @@ import {
   Unlock,
   Users,
   ArrowRightLeft,
+  BookOpen,
 } from "lucide-react";
 import type { Member, AttendanceStatus, PaymentMode } from "@/types/member";
 import type { SessionType } from "@/types/session";
@@ -27,6 +28,7 @@ import {
 } from "@/lib/utils";
 import { useState } from "react";
 import { StudentHistoryModal } from "@/components/attendance/StudentHistoryModal";
+import { MemoModal } from "@/features/memo/MemoModal";
 import { PaymentModal } from "@/components/attendance/PaymentModal";
 import { useStudentHistory } from "@/hooks/useStudentHistory";
 import {
@@ -116,6 +118,7 @@ export function MembersTable({
 
   // Modale de paiement (Attanzil : mode mensuel / complet / en plusieurs fois)
   const [paymentMember, setPaymentMember] = useState<Member | null>(null);
+  const [memoMember, setMemoMember] = useState<Member | null>(null);
 
   const transfers = activeTransfers;
   const setTransfers = onActiveTransfersChange || (() => {});
@@ -689,6 +692,19 @@ export function MembersTable({
                             <History className="h-4 w-4" />
                           </Button>
 
+                          {/* Mémorisation V2 */}
+                          {isAttanzil && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setMemoMember(member)}
+                              className="h-9 w-9 p-0 text-emerald-600 hover:bg-emerald-50"
+                              title="Mémorisation"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                          )}
+
                           {/* Supprimer */}
                           {isAdmin && onDeleteMember && canManageMembers && (
                             <Button
@@ -733,6 +749,13 @@ export function MembersTable({
         isOpen={!!selectedStudent}
         onClose={() => setSelectedStudent(null)}
       />
+
+      {memoMember && (
+        <MemoModal
+          member={memoMember}
+          onClose={() => setMemoMember(null)}
+        />
+      )}
 
       <PaymentModal
         member={paymentMember}

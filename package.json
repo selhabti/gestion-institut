@@ -14,6 +14,7 @@
     "dev:clean": "rm -rf node_modules/.vite && npm run dev",
     "build:clean": "rm -rf dist && npm run build",
     "type-check": "tsc --noEmit",
+    "test": "node --test tests/memo.test.mjs",
     "postinstall": "npm dedupe",
     "clean": "rm -rf node_modules dist .vite"
   },
