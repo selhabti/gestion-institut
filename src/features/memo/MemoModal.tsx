@@ -40,6 +40,7 @@ import {
   type SurahRef,
 } from "@/features/memo/reperes";
 import { SeanceEditor } from "./SeanceEditor";
+import { MemoMushafPanel, type MemoBlocKey } from "./MemoMushafPanel";
 import type { Member } from "@/types/member";
 
 const surahName = (surahs: SurahRef[], number: number) =>
@@ -166,6 +167,7 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
   const [tab, setTab] = useState("samedi");
   const [selectedSamedi, setSelectedSamedi] = useState(samediDe(new Date()));
   const [draft, setDraft] = useState<MemoSeance | null>(null);
+  const [mushafBloc, setMushafBloc] = useState<MemoBlocKey>("nouveau");
   const [legacyOpen, setLegacyOpen] = useState(false);
 
   const [settingsRythme, setSettingsRythme] = useState(2);
@@ -461,8 +463,9 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
             </div>
 
             <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="samedi">Samedi</TabsTrigger>
+                <TabsTrigger value="mushaf">Mushaf</TabsTrigger>
                 <TabsTrigger value="historique">Historique</TabsTrigger>
                 <TabsTrigger value="reglages">Réglages</TabsTrigger>
               </TabsList>
@@ -516,12 +519,28 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                     surahs={memo.surahs}
                     saving={memo.saving}
                     onSave={handleSave}
+                    onOpenMushaf={(bloc) => {
+                      setMushafBloc(bloc);
+                      setTab("mushaf");
+                    }}
                   />
                 ) : (
                   <div className="py-8 text-center text-sm text-slate-500">
                     Préparation de la séance…
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="mushaf" className="space-y-4">
+                <MemoMushafPanel
+                  draft={draft}
+                  riwaya={profile.riwaya}
+                  sens={profile.sens}
+                  reperes={reperesForProfile}
+                  surahs={memo.surahs}
+                  selected={mushafBloc}
+                  onSelectedChange={setMushafBloc}
+                />
               </TabsContent>
 
               <TabsContent value="historique" className="space-y-4">

@@ -30,6 +30,7 @@ interface SeanceEditorProps {
   surahs: SurahRef[];
   saving: boolean;
   onSave: (seance: MemoSeance) => Promise<void>;
+  onOpenMushaf?: (bloc: "nouveau" | "recent" | "ancien") => void;
 }
 
 const surahName = (surahs: SurahRef[], number: number) =>
@@ -43,6 +44,7 @@ export function SeanceEditor({
   surahs,
   saving,
   onSave,
+  onOpenMushaf,
 }: SeanceEditorProps) {
   const [nouveauStatut, setNouveauStatut] = useState<NouveauStatut | null>(
     draft.nouveau_statut
@@ -150,9 +152,13 @@ export function SeanceEditor({
             <Button
               size="sm"
               variant="outline"
-              onClick={() =>
-                openMushaf(draft.nouveau_de, "Mushaf — nouveau")
-              }
+              onClick={() => {
+                if (onOpenMushaf) {
+                  onOpenMushaf("nouveau");
+                  return;
+                }
+                openMushaf(draft.nouveau_de, "Mushaf — nouveau");
+              }}
             >
               <BookOpen className="mr-1 h-4 w-4" />
               Mushaf
@@ -265,7 +271,13 @@ export function SeanceEditor({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => openMushaf(draft.recent_de, "Mushaf — récent")}
+              onClick={() => {
+                if (onOpenMushaf) {
+                  onOpenMushaf("recent");
+                  return;
+                }
+                openMushaf(draft.recent_de, "Mushaf — récent");
+              }}
             >
               <BookOpen className="mr-1 h-4 w-4" />
               Mushaf
@@ -320,9 +332,13 @@ export function SeanceEditor({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() =>
-                  openMushaf(draft.ancien_de, "Mushaf — ancien")
-                }
+                onClick={() => {
+                  if (onOpenMushaf) {
+                    onOpenMushaf("ancien");
+                    return;
+                  }
+                  openMushaf(draft.ancien_de, "Mushaf — ancien");
+                }}
               >
                 <BookOpen className="mr-1 h-4 w-4" />
                 Mushaf
