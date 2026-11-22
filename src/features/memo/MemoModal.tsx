@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import {
   BookOpen,
   CalendarDays,
-  History,
+  Check,
+  Minus,
   Plus,
   RefreshCw,
   Settings2,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -20,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -40,7 +41,15 @@ import {
   type SurahRef,
 } from "@/features/memo/reperes";
 import { SeanceEditor } from "./SeanceEditor";
-import { MemoMushafPanel, type MemoBlocKey } from "./MemoMushafPanel";
+import { MemoMushafPanel } from "./MemoMushafPanel";
+import { MemoProgressBar } from "./MemoProgressBar";
+import { AideDialog, AIDE_KEY } from "./MemoAide";
+import { MushafPageDialog } from "./MushafPageDialog";
+import {
+  MEMO_BLOC_LABELS,
+  MEMO_COLORS,
+  type MemoBlocKey,
+} from "./colors";
 import type { Member } from "@/types/member";
 
 const surahName = (surahs: SurahRef[], number: number) =>
@@ -65,6 +74,33 @@ const dayLabel = (date: string) =>
     year: "numeric",
   });
 
+const RYTHME_OPTIONS = [
+  { value: 1, label: "1/8 de hizb par semaine" },
+  { value: 2, label: "1/4 de hizb par semaine" },
+  { value: 3, label: "3/8 de hizb par semaine" },
+  { value: 4, label: "1/2 hizb par semaine" },
+  { value: 6, label: "3/4 de hizb par semaine" },
+  { value: 8, label: "1 hizb par semaine" },
+];
+
+const QUOTA_OPTIONS = [
+  { value: 1, label: "1/8 de hizb d'ancien" },
+  { value: 2, label: "1/4 de hizb d'ancien" },
+  { value: 3, label: "3/8 de hizb d'ancien" },
+  { value: 4, label: "1/2 hizb d'ancien" },
+  { value: 6, label: "3/4 de hizb d'ancien" },
+  { value: 8, label: "1 hizb d'ancien" },
+  { value: 12, label: "1 hizb 1/2 d'ancien" },
+  { value: 16, label: "2 hizb d'ancien" },
+];
+
+const segmentLabel = (
+  current: number,
+  options: { value: number; label: string }[]
+) =>
+  options.find((option) => option.value === current)?.label ??
+  `${current} huitième(s)`;
+
 interface PositionFieldProps {
   title: string;
   hizb: number;
@@ -75,6 +111,7 @@ interface PositionFieldProps {
   repere: Repere | null;
   surahs: SurahRef[];
   disabled?: boolean;
+  onViewPage?: (page: number) => void;
 }
 
 function PositionField({
@@ -87,6 +124,7 @@ function PositionField({
   repere,
   surahs,
   disabled,
+  onViewPage,
 }: PositionFieldProps) {
   return (
     <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-3">
@@ -138,9 +176,86 @@ function PositionField({
             }${repere.exact ? "" : " ≈"}`
           : "Repère indisponible"}
       </p>
+      {repere && onViewPage && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-11"
+          onClick={() => onViewPage(repere.page)}
+        >
+          <BookOpen className="mr-1 h-4 w-4" />
+          Voir la page
+        </Button>
+      )}
     </div>
   );
 }
+
+type HistoryState = "ok" | "ko" | "half" | "absent" | "none";
+
+function HistoryPill({
+  bloc,
+  state,
+}: {
+  bloc: MemoBlocKey;
+  state: HistoryState;
+}) {
+  const color = MEMO_COLORS[bloc];
+  const base =
+    "inline-flex h-7 items-center gap-1 rounded-full border px-2 text-[11px] font-semibold";
+  if (state === "none") {
+    return (
+      <span className={`${base} border-slate-200 bg-slate-50 text-slate-500`}>
+        {MEMO_BLOC_LABELS[bloc]}
+      </span>
+    );
+  }
+  if (state === "absent") {
+    return (
+      <span className={`${base} border-slate-300 bg-slate-100 text-slate-600`}>
+        {MEMO_BLOC_LABELS[bloc]} · Absent
+      </span>
+    );
+  }
+  return (
+    <span
+      className={base}
+      style={{
+        backgroundColor: color.light,
+        borderColor: color.hex,
+        color: color.dark,
+      }}
+    >
+      {state === "ok" ? (
+        <Check className="h-3 w-3" />
+      ) : state === "half" ? (
+        <Minus className="h-3 w-3" />
+      ) : (
+        <X className="h-3 w-3" />
+      )}
+      {MEMO_BLOC_LABELS[bloc]}
+    </span>
+  );
+}
+
+const historyState = (
+  bloc: MemoBlocKey,
+  seance: MemoSeance
+): HistoryState => {
+  if (seance.nouveau_statut === "absent") return "absent";
+  if (bloc === "nouveau") {
+    return seance.nouveau_statut === "valide"
+      ? "ok"
+      : seance.nouveau_statut === "partiel"
+      ? "half"
+      : seance.nouveau_statut === "refaire"
+      ? "ko"
+      : "none";
+  }
+  const value = bloc === "recent" ? seance.recent_ok : seance.ancien_ok;
+  return value === true ? "ok" : value === false ? "ko" : "none";
+};
 
 interface MemoModalProps {
   member: Member;
@@ -167,6 +282,12 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
   const [draft, setDraft] = useState<MemoSeance | null>(null);
   const [mushafBloc, setMushafBloc] = useState<MemoBlocKey>("nouveau");
   const [legacyOpen, setLegacyOpen] = useState(false);
+  const [aideOpen, setAideOpen] = useState(false);
+  const [pageDialog, setPageDialog] = useState<{
+    page: number;
+    title: string;
+    riwaya: Riwaya;
+  } | null>(null);
 
   const [settingsRythme, setSettingsRythme] = useState(2);
   const [settingsQuota, setSettingsQuota] = useState(8);
@@ -193,8 +314,62 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
   );
 
   const profile = memo.profile;
-  const position = profile?.position ?? 0;
   const cycle = memo.cycleInfo;
+
+  const riwayaLabel =
+    (profile?.riwaya ?? member.riwaya?.toLowerCase() ?? "hafs") === "warsh"
+      ? "Warsh"
+      : "Hafs";
+
+  const summary = !profile
+    ? ""
+    : profile.position <= profile.position_origine
+    ? "Mémorisé : rien pour l'instant"
+    : profile.position >= 480
+    ? `Mémorisé : du Hizb ${
+        Math.floor(profile.position_origine / 8) + 1
+      } à la fin (480/480)`
+    : `Mémorisé : du Hizb ${
+        Math.floor(profile.position_origine / 8) + 1
+      } au Hizb ${Math.floor(profile.position / 8) + 1}, ${
+        profile.position % 8
+      }/8`;
+
+  const barOrigin = profile?.position_origine ?? 0;
+  const barPosition = profile?.position ?? 0;
+  const barRecentDe =
+    draft?.recent_de ??
+    (profile
+      ? Math.max(
+          profile.position_origine,
+          profile.position - 4 * profile.rythme
+        )
+      : 0);
+  const barRecentA = draft?.recent_a ?? profile?.position ?? 0;
+  const barNouveauDe = draft?.nouveau_de ?? profile?.position ?? 0;
+  const barNouveauA =
+    draft?.nouveau_a ??
+    (profile ? Math.min(480, profile.position + profile.rythme) : 0);
+
+  useEffect(() => {
+    try {
+      if (!window.localStorage.getItem(AIDE_KEY)) {
+        setAideOpen(true);
+        window.localStorage.setItem(AIDE_KEY, "1");
+      }
+    } catch {
+      // stockage indisponible : on n'ouvre pas automatiquement
+    }
+  }, []);
+
+  useEffect(() => {
+    const suggestion = memo.suggestion;
+    if (!suggestion || memo.profile) return;
+    setOriginHizb(hizbOf(suggestion.origine));
+    setOriginEighth(eighthOf(suggestion.origine));
+    setArriveHizb(hizbOf(suggestion.arrive));
+    setArriveEighth(eighthOf(suggestion.arrive));
+  }, [memo.suggestion?.origine, memo.suggestion?.arrive, memo.profile]);
 
   useEffect(() => {
     if (!profile) return;
@@ -334,9 +509,24 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-emerald-600" />
-            Mémorisation — {member.firstName} {member.lastName}
+          <DialogTitle className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <BookOpen className="h-5 w-5 shrink-0 text-emerald-600" />
+              <span className="truncate">
+                Mémorisation — {member.firstName} {member.lastName}
+              </span>
+              <Badge variant="outline" className="shrink-0">
+                {riwayaLabel}
+              </Badge>
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 shrink-0"
+              onClick={() => setAideOpen(true)}
+            >
+              ? Aide
+            </Button>
           </DialogTitle>
           <DialogDescription>
             {profile
@@ -345,12 +535,52 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
           </DialogDescription>
         </DialogHeader>
 
+        {profile && (
+          <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
+            <MemoProgressBar
+              origine={barOrigin}
+              position={barPosition}
+              ancienDe={draft?.ancien_de ?? null}
+              ancienA={draft?.ancien_a ?? null}
+              recentDe={barRecentDe}
+              recentA={barRecentA}
+              nouveauDe={barNouveauDe}
+              nouveauA={barNouveauA}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="font-semibold text-slate-800">{summary}</span>
+              <span
+                data-testid="cycle"
+                data-cycles={memo.profile?.cycles_faits ?? 0}
+                className="text-slate-500"
+              >
+                Cycle de révision n° {cycle.number}, {cycle.percent} % du tour
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Riwaya {riwayaLabel} · rythme {profile.rythme}/sem. · ancien{" "}
+              {profile.quota_revision}/sem.
+            </p>
+          </div>
+        )}
+
         {memo.loading && !profile ? (
           <div className="py-10 text-center text-sm text-slate-500">
             Chargement…
           </div>
         ) : !profile ? (
           <div className="space-y-4 py-2">
+            {memo.suggestion && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                Suggestion tirée de l'ancien suivi : à confirmer avec l'élève.
+              </div>
+            )}
+            {!memo.suggestion && (
+              <p className="text-sm text-slate-400">
+                Exemple : A commencé à Hizb 1, 0/8 — arrivé à Hizb 2, 3/8.
+              </p>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Riwaya</Label>
@@ -391,6 +621,13 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
               position={originPos}
               repere={originRepere}
               surahs={memo.surahs}
+              onViewPage={(page) =>
+                setPageDialog({
+                  page,
+                  title: "A commencé à",
+                  riwaya,
+                })
+              }
             />
             <PositionField
               title="Est arrivé à"
@@ -401,6 +638,13 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
               position={arrivePos}
               repere={arriveRepere}
               surahs={memo.surahs}
+              onViewPage={(page) =>
+                setPageDialog({
+                  page,
+                  title: "Est arrivé à",
+                  riwaya,
+                })
+              }
             />
             {originPos > arrivePos && (
               <p className="text-xs text-rose-600">
@@ -410,24 +654,52 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Rythme (huitièmes / semaine)</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={rythme}
-                  onChange={(event) => setRythme(Number(event.target.value))}
-                />
+                <Label>Rythme</Label>
+                <Select
+                  value={String(rythme)}
+                  onValueChange={(value) => setRythme(Number(value))}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RYTHME_OPTIONS.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={String(option.value)}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Quota de révision</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={quota}
-                  onChange={(event) => setQuota(Number(event.target.value))}
-                />
+                <Label>Quota de révision (ancien)</Label>
+                <Select
+                  value={String(quota)}
+                  onValueChange={(value) => setQuota(Number(value))}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {QUOTA_OPTIONS.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={String(option.value)}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+            <p className="text-xs text-slate-500">
+              {segmentLabel(rythme, RYTHME_OPTIONS)} ·{" "}
+              {segmentLabel(quota, QUOTA_OPTIONS)}.
+            </p>
 
             <div className="flex justify-end">
               <Button
@@ -442,23 +714,6 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="space-y-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="font-semibold text-emerald-800">
-                  Position {position}/480
-                </span>
-                <span className="text-xs text-emerald-700">
-                  Origine {profile.position_origine} · Cycle {cycle.number} ·{" "}
-                  {cycle.percent}%
-                </span>
-              </div>
-              <Progress value={(position / 480) * 100} className="h-3" />
-              <p className="text-xs text-emerald-700">
-                Riwaya {profile.riwaya === "warsh" ? "Warsh" : "Hafs"} · rythme{" "}
-                {profile.rythme}/sem. · quota {profile.quota_revision}
-              </p>
-            </div>
-
             <Tabs value={tab} onValueChange={setTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="samedi">Samedi</TabsTrigger>
@@ -546,10 +801,14 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                     <p className="font-semibold">Incohérences détectées</p>
                     <ul className="mt-1 space-y-1 text-xs">
                       {memo.avertissements.map((warning) => (
-                        <li key={warning.samedi}>
-                          {warning.samedi} : nouveau_de ={" "}
-                          {warning.nouveau_de} (attendu{" "}
-                          {warning.position_attendue})
+                        <li
+                          key={warning.samedi}
+                          data-testid="avertissement"
+                        >
+                          Ce samedi ({dayLabel(warning.samedi)}) ne suit pas le
+                          précédent : vérifie la séance du{" "}
+                          {dayLabel(warning.samedi)} (position attendue{" "}
+                          {warning.position_attendue}).
                         </li>
                       ))}
                     </ul>
@@ -560,24 +819,41 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                   {[...memo.seances].reverse().map((seance) => (
                     <div
                       key={seance.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm"
+                      className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-medium">{dayLabel(seance.samedi)}</p>
-                        <p className="text-xs text-slate-500">
-                          Statut : {seance.nouveau_statut ?? "à saisir"} · note{" "}
-                          {seance.note ?? "—"}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <HistoryPill
+                            bloc="nouveau"
+                            state={historyState("nouveau", seance)}
+                          />
+                          <HistoryPill
+                            bloc="recent"
+                            state={historyState("recent", seance)}
+                          />
+                          <HistoryPill
+                            bloc="ancien"
+                            state={historyState("ancien", seance)}
+                          />
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Note {seance.note ?? "—"}/5
+                          {seance.commentaire
+                            ? ` · ${seance.commentaire}`
+                            : ""}
                         </p>
                       </div>
                       <Button
                         size="sm"
                         variant="outline"
+                        className="h-11 shrink-0"
                         onClick={() => {
                           setSelectedSamedi(seance.samedi);
                           setTab("samedi");
                         }}
                       >
-                        Ouvrir
+                        Modifier
                       </Button>
                     </div>
                   ))}
@@ -589,12 +865,12 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                 </div>
 
                 <Button
-                  variant="outline"
+                  variant="link"
                   size="sm"
+                  className="px-0 text-slate-500"
                   onClick={() => setLegacyOpen(true)}
                 >
-                  <History className="mr-1 h-4 w-4" />
-                  Ancien historique (lecture seule)
+                  Ancien historique (avant la nouvelle version)
                 </Button>
               </TabsContent>
 
@@ -648,6 +924,13 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                   position={settingsOriginPos}
                   repere={settingsRoleRepere(settingsOriginPos)}
                   surahs={memo.surahs}
+                  onViewPage={(page) =>
+                    setPageDialog({
+                      page,
+                      title: "Point de départ",
+                      riwaya: profile.riwaya,
+                    })
+                  }
                 />
                 <PositionField
                   title="Position actuelle"
@@ -658,6 +941,13 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
                   position={settingsArrivePos}
                   repere={settingsRoleRepere(settingsArrivePos)}
                   surahs={memo.surahs}
+                  onViewPage={(page) =>
+                    setPageDialog({
+                      page,
+                      title: "Position actuelle",
+                      riwaya: profile.riwaya,
+                    })
+                  }
                 />
 
                 <div className="flex flex-wrap justify-between gap-2">
@@ -730,6 +1020,18 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AideDialog open={aideOpen} onOpenChange={setAideOpen} />
+
+        <MushafPageDialog
+          open={!!pageDialog}
+          onOpenChange={(open) => {
+            if (!open) setPageDialog(null);
+          }}
+          riwaya={pageDialog?.riwaya ?? "hafs"}
+          initialPage={pageDialog?.page ?? 1}
+          title={pageDialog?.title}
+        />
       </DialogContent>
     </Dialog>
   );

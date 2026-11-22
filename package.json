@@ -15,6 +15,7 @@
     "build:clean": "rm -rf dist && npm run build",
     "type-check": "tsc --noEmit",
     "test": "node --test tests/memo.test.mjs tests/memo.recette.test.mjs",
+    "test:e2e": "playwright test",
     "postinstall": "npm dedupe",
     "clean": "rm -rf node_modules dist .vite"
   },
@@ -74,6 +75,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",

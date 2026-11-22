@@ -48,5 +48,11 @@ pids
 # Optional eslint cache
 .eslintcachedeploy.log
 
+# Playwright
+test-results/
+playwright-report/
+.env.e2e
+e2e/.auth/
+
 # Dossier de sauvegarde local (à ne jamais versionner)
 /gestion-institut-main-backup/

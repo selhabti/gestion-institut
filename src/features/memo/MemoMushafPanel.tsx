@@ -12,16 +12,13 @@ import {
   type SurahRef,
 } from "./reperes";
 import type { Riwaya, Sens } from "./logic";
+import {
+  MEMO_BLOC_LABELS,
+  MEMO_COLORS,
+  type MemoBlocKey,
+} from "./colors";
 
 const TOTAL = 604;
-
-export type MemoBlocKey = "nouveau" | "recent" | "ancien";
-
-const BLOC_LABELS: Record<MemoBlocKey, string> = {
-  nouveau: "NOUVEAU",
-  recent: "RÉCENT",
-  ancien: "ANCIEN",
-};
 
 const pageUrl = (riwaya: Riwaya, page: number) =>
   `https://cdn.quran.ws/svg/pages/v1.1.1/${
@@ -123,24 +120,45 @@ export function MemoMushafPanel({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {(["nouveau", "recent", "ancien"] as MemoBlocKey[]).map((bloc) => (
-          <Button
-            key={bloc}
-            size="sm"
-            variant={active === bloc ? "default" : "outline"}
-            disabled={!hasRange(bloc)}
-            onClick={() => onSelectedChange(bloc)}
-          >
-            {BLOC_LABELS[bloc]}
-          </Button>
-        ))}
+        {(["nouveau", "recent", "ancien"] as MemoBlocKey[]).map((bloc) => {
+          const color = MEMO_COLORS[bloc];
+          const isActive = active === bloc;
+          return (
+            <Button
+              key={bloc}
+              size="sm"
+              variant="outline"
+              className="h-11"
+              disabled={!hasRange(bloc)}
+              style={
+                isActive
+                  ? {
+                      backgroundColor: color.hex,
+                      borderColor: color.hex,
+                      color: "#fff",
+                    }
+                  : {
+                      backgroundColor: color.light,
+                      borderColor: color.hex,
+                      color: color.dark,
+                    }
+              }
+              onClick={() => onSelectedChange(bloc)}
+            >
+              {MEMO_BLOC_LABELS[bloc]}
+            </Button>
+          );
+        })}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+      <div
+        className="rounded-2xl border-2 bg-slate-50/60 p-4"
+        style={{ borderColor: MEMO_COLORS[active].hex }}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-sm font-semibold text-slate-800">
-              {BLOC_LABELS[active]}
+              {MEMO_BLOC_LABELS[active]}
             </p>
             <p className="text-xs text-slate-500">
               {range.de} → {range.a} ·{" "}

@@ -44,6 +44,31 @@ export interface LegacyMemoRow {
   validated: boolean;
 }
 
+interface LegacyPlanRow {
+  start_date: string;
+  start_hizb: number;
+  start_eighths: number;
+  weekly_eighths: number;
+}
+
+export interface MemoSuggestion {
+  origine: number;
+  arrive: number;
+  oldStartHizb: number;
+  oldStartEighths: number;
+  weekly: number;
+  lastValidatedWeek: string | null;
+}
+
+const asYmd = (value: string | Date): string => {
+  if (typeof value === "string") return value.slice(0, 10);
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(date.getDate()).padStart(2, "0")}`;
+};
+
 export interface MemoStartInput {
   riwaya: Riwaya;
   date_debut: string;
@@ -134,6 +159,7 @@ export const useMemo = (memberId: string | null) => {
   const [reperes, setReperes] = useState<Repere[]>([]);
   const [surahs, setSurahs] = useState<SurahRef[]>([]);
   const [legacy, setLegacy] = useState<LegacyMemoRow[]>([]);
+  const [legacyPlan, setLegacyPlan] = useState<LegacyPlanRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -142,13 +168,20 @@ export const useMemo = (memberId: string | null) => {
       setProfile(null);
       setSeances([]);
       setLegacy([]);
+      setLegacyPlan(null);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const [profileRes, seancesRes, reperesRes, surahsRes, legacyRes] =
-        await Promise.all([
+      const [
+        profileRes,
+        seancesRes,
+        reperesRes,
+        surahsRes,
+        legacyRes,
+        planRes,
+      ] = await Promise.all([
           supabase
             .from("eleves_memo")
             .select("*")
@@ -174,6 +207,11 @@ export const useMemo = (memberId: string | null) => {
             )
             .eq("member_id", memberId)
             .order("week_start", { ascending: false }),
+          supabase
+            .from("memorization_plan")
+            .select("start_date,start_hizb,start_eighths,weekly_eighths")
+            .eq("member_id", memberId)
+            .maybeSingle(),
         ]);
 
       setProfile(
@@ -196,6 +234,9 @@ export const useMemo = (memberId: string | null) => {
         }))
       );
       setLegacy(((legacyRes.data ?? []) as LegacyMemoRow[]) ?? []);
+      setLegacyPlan(
+        planRes.data ? (planRes.data as LegacyPlanRow) : null
+      );
     } catch (error) {
       console.error("Erreur chargement mémorisation V2:", error);
       toast.error("Impossible de charger le suivi de mémorisation");
@@ -220,6 +261,52 @@ export const useMemo = (memberId: string | null) => {
 
   const etat: Etat | null = replay?.etat ?? null;
   const avertissements: AvertissementSeance[] = replay?.avertissements ?? [];
+
+  const suggestion = useReactMemo<MemoSuggestion | null>(() => {
+    if (!legacyPlan) return null;
+
+    const origine = Math.max(
+      0,
+      Math.min(480, (legacyPlan.start_hizb - 1) * 8 + legacyPlan.start_eighths)
+    );
+    const weekly =
+      Number.isFinite(legacyPlan.weekly_eighths) &&
+      legacyPlan.weekly_eighths > 0
+        ? Math.round(legacyPlan.weekly_eighths)
+        : 2;
+
+    const validated = legacy
+      .filter((row) => row.validated && row.week_start)
+      .sort((a, b) =>
+        asYmd(a.week_start).localeCompare(asYmd(b.week_start))
+      );
+    const lastValidated =
+      validated.length > 0 ? validated[validated.length - 1] : null;
+
+    let weeks = 0;
+    if (lastValidated) {
+      const start = Date.parse(
+        `${asYmd(legacyPlan.start_date)}T00:00:00Z`
+      );
+      const end = Date.parse(
+        `${asYmd(lastValidated.week_start)}T00:00:00Z`
+      );
+      if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
+        weeks = Math.floor((end - start) / (7 * 86_400_000)) + 1;
+      }
+    }
+
+    return {
+      origine,
+      arrive: Math.max(origine, Math.min(480, origine + weeks * weekly)),
+      oldStartHizb: legacyPlan.start_hizb,
+      oldStartEighths: legacyPlan.start_eighths,
+      weekly,
+      lastValidatedWeek: lastValidated
+        ? asYmd(lastValidated.week_start)
+        : null,
+    };
+  }, [legacyPlan, legacy]);
 
   const reperesFor = useCallback(
     (riwaya: Riwaya) => reperes.filter((repere) => repere.riwaya === riwaya),
@@ -484,6 +571,8 @@ export const useMemo = (memberId: string | null) => {
     reperes,
     surahs,
     legacy,
+    legacyPlan,
+    suggestion,
     loading,
     saving,
     cycleInfo,
