@@ -243,7 +243,6 @@ export function MemoModal({ member, onClose }: MemoModalProps) {
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.eleve_id, selectedSamedi, memo.seances.length]);
 
   const startValid =

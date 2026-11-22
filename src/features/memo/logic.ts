@@ -2,7 +2,7 @@
 // Aucune dépendance à la base : uniquement des entrées/sorties typées.
 
 export type Riwaya = "hafs" | "warsh";
-export type Sens = "fatiha_vers_nas" | "nas_vers_fatiha";
+export type Sens = "fatiha_vers_nas";
 export type NouveauStatut = "valide" | "partiel" | "refaire" | "absent";
 
 export const POSITION_MIN = 0;
@@ -69,6 +69,14 @@ const clampInt = (value: number, min: number, max: number): number => {
   return Math.max(min, Math.min(max, Math.round(value)));
 };
 
+const assertSens = (sens: Sens): void => {
+  if (sens !== "fatiha_vers_nas") {
+    throw new Error(
+      "Sens non pris en charge : seul 'fatiha_vers_nas' est autorisé."
+    );
+  }
+};
+
 const safePositive = (value: number, fallback: number): number =>
   Number.isFinite(value) && value > 0 ? Math.round(value) : fallback;
 
@@ -86,6 +94,7 @@ export const preparerSeance = (
   eleve: EleveMemo,
   samedi: string
 ): SeanceBrouillon => {
+  assertSens(eleve.sens);
   const origine = clampPosition(eleve.position_origine);
   const position = Math.max(origine, clampPosition(etat.position));
   const rythme = safePositive(eleve.rythme, 2);
@@ -206,6 +215,7 @@ export const rejouerAvecAvertissements = (
   eleve: EleveMemo,
   seances: SeanceSaisie[]
 ): { etat: Etat; avertissements: AvertissementSeance[] } => {
+  assertSens(eleve.sens);
   let etat: Etat = {
     position: Math.max(
       clampPosition(eleve.position_origine),

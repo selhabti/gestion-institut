@@ -36,6 +36,7 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+memo-audit-*.log
 pnpm-debug.log*
 
 # Runtime data

@@ -300,6 +300,15 @@ test("tour complet de la zone avec origine > 0", () => {
   assert.equal(after2.cycles_faits, 1);
 });
 
+test("sens non pris en charge refusé", () => {
+  const e = { ...eleve(), sens: "nas_vers_fatiha" };
+  assert.throws(
+    () => preparerSeance(etat(), e, "2026-01-03"),
+    /fatiha_vers_nas/
+  );
+  assert.throws(() => rejouer(e, []), /fatiha_vers_nas/);
+});
+
 test("rejouer : avertissement si nouveau_de incohérent", () => {
   const e = eleve();
   const { sessions } = buildSessions(e, ["2026-01-03", "2026-01-10"]);

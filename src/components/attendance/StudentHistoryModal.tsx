@@ -14,7 +14,6 @@ import { useState, useMemo, useEffect } from "react";
 import type { StudentHistory } from "@/types/attendance";
 import { motion } from "framer-motion";
 import { AttendanceService } from "@/services/attendanceService";
-import { toast } from "sonner";
 
 interface StudentHistoryModalProps {
   student: StudentHistory | null;

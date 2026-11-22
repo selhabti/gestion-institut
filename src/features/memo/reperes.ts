@@ -2,7 +2,7 @@
 // Fonctions pures : les données viennent de la table `reperes` chargée par le hook.
 
 export type Riwaya = "hafs" | "warsh";
-export type Sens = "fatiha_vers_nas" | "nas_vers_fatiha";
+export type Sens = "fatiha_vers_nas";
 
 export interface Repere {
   riwaya: Riwaya;
