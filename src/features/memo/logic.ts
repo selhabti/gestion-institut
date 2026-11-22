@@ -159,6 +159,15 @@ export const appliquerSeance = (
     };
   }
 
+  // Absent : l'état est strictement inchangé, même si ancien_ok a été coché par erreur.
+  if (statut === "absent") {
+    return {
+      position: etat.position,
+      pointeur_rev: etat.pointeur_rev,
+      cycles_faits: etat.cycles_faits,
+    };
+  }
+
   let position = current;
   if (statut === "valide") {
     position = clampPosition(seance.nouveau_a);

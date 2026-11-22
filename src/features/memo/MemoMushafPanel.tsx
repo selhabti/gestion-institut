@@ -80,11 +80,17 @@ export function MemoMushafPanel({
 
   const [page, setPage] = useState(startRepere?.page ?? 1);
   const [input, setInput] = useState(String(startRepere?.page ?? 1));
+  const [imageError, setImageError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     setPage(startRepere?.page ?? 1);
     setInput(String(startRepere?.page ?? 1));
   }, [startRepere?.page, active, draft?.id]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [page, riwaya, reloadKey]);
 
   useEffect(() => {
     setInput(String(page));
@@ -206,11 +212,29 @@ export function MemoMushafPanel({
         </div>
 
         <img
+          key={`${riwaya}-${page}-${reloadKey}`}
           src={pageUrl(riwaya, page)}
           alt={`Page ${page} du mushaf`}
           className="mx-auto mt-3 w-full max-w-xl"
           loading="lazy"
+          onError={() => setImageError(true)}
         />
+
+        {imageError && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <span>Page {page} indisponible, réessayer</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setImageError(false);
+                setReloadKey((value) => value + 1);
+              }}
+            >
+              Réessayer
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

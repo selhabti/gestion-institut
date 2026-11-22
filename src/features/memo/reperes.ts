@@ -31,6 +31,16 @@ const clampHuitieme = (value: number): number => {
   return Math.max(0, Math.min(480, Math.round(value)));
 };
 
+/**
+ * Quart Hafs (1-based) utilisé pour approximer un huitième.
+ * 0 -> 1 ; h -> floor(h/2)+1 ; 480 -> 240 (le repère 480 reste la fin).
+ */
+export const hafsRubNumber = (position: number): number => {
+  const p = clampHuitieme(position);
+  if (p <= 0) return 1;
+  return Math.min(240, Math.floor(p / 2) + 1);
+};
+
 export const positionVersRepere = (
   reperes: Repere[],
   riwaya: Riwaya,

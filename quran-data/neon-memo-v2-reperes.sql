@@ -7,7 +7,8 @@
 --
 -- Warsh : exact pour 41 hizbs ; 30 bornes interpolées (marqueurs ۞ manquants dans la source)
 --         sont marquées exact = false (liste ci-dessous).
--- Hafs  : 1/8 pair -> quart h/2 (exact) ; 1/8 impair -> quart précédent (exact = false).
+-- Hafs  : 1/8 pair -> quart (h/2)+1 (exact) ; 1/8 impair -> même quart que h-1 (exact = false).
+--         (quran_rubs.number est 1-based ; l'ancien h/2 était décalé d'un quart.)
 
 -- ---- Warsh ----
 insert into public.reperes (riwaya, sens, huitieme, sourate, verset, page, exact)
@@ -51,10 +52,7 @@ select
   (gs.h % 2 = 0)
 from generate_series(1, 479) as gs(h)
 join public.quran_rubs r
-  on r.number = case
-       when gs.h % 2 = 0 then gs.h / 2
-       else greatest(1, (gs.h - 1) / 2)
-     end
+  on r.number = (gs.h / 2) + 1
 on conflict (riwaya, sens, huitieme) do update
   set sourate = excluded.sourate,
       verset  = excluded.verset,

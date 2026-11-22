@@ -10,6 +10,7 @@ import {
   prochainSamedi,
 } from "../src/features/memo/logic.ts";
 import {
+  hafsRubNumber,
   positionVersRepere,
   plageVersLibelle,
   plageHizbLibelle,
@@ -309,6 +310,30 @@ test("sens non pris en charge refusé", () => {
   assert.throws(() => rejouer(e, []), /fatiha_vers_nas/);
 });
 
+test("absent : état strictement inchangé même si ancien_ok", () => {
+  const e = eleve({ quota_revision: 2 });
+  const { state: five } = buildSessions(e, [
+    "2026-01-03",
+    "2026-01-10",
+    "2026-01-17",
+    "2026-01-24",
+    "2026-01-31",
+  ]);
+  const d = preparerSeance(five, e, "2026-02-07");
+  const after = appliquerSeance(
+    five,
+    {
+      ...d,
+      ...saisie("2026-02-07", {
+        nouveau_statut: "absent",
+        ancien_ok: true,
+      }),
+    },
+    e
+  );
+  assert.deepEqual(after, five);
+});
+
 test("rejouer : avertissement si nouveau_de incohérent", () => {
   const e = eleve();
   const { sessions } = buildSessions(e, ["2026-01-03", "2026-01-10"]);
@@ -436,6 +461,66 @@ test("reperes : position et libellé de plage", () => {
   );
   assert.equal(hafs?.kind, "pages");
   assert.equal(hafs?.exact, false);
+});
+
+test("ancrage Hafs : paires exactes / impaires = position-1", () => {
+  // Débuts des quarts 1-based de quran_rubs (fixture d'ancrage).
+  const rubStarts = new Map([
+    [1, { sourate: 1, verset: 1 }],
+    [2, { sourate: 2, verset: 26 }],
+    [3, { sourate: 2, verset: 44 }],
+    [4, { sourate: 2, verset: 60 }],
+    [5, { sourate: 2, verset: 75 }],
+    [49, { sourate: 5, verset: 82 }],
+    [50, { sourate: 5, verset: 97 }],
+    [51, { sourate: 5, verset: 109 }],
+    [52, { sourate: 6, verset: 13 }],
+    [237, { sourate: 87, verset: 1 }],
+    [238, { sourate: 90, verset: 1 }],
+    [239, { sourate: 94, verset: 1 }],
+    [240, { sourate: 100, verset: 9 }],
+  ]);
+
+  const anchors = [
+    [0, 1, 1, true],
+    [2, 2, 26, true],
+    [4, 2, 44, true],
+    [6, 2, 60, true],
+    [8, 2, 75, true],
+    [96, 5, 82, true],
+    [98, 5, 97, true],
+    [100, 5, 109, true],
+    [102, 6, 13, true],
+    [472, 87, 1, true],
+    [474, 90, 1, true],
+    [476, 94, 1, true],
+    [478, 100, 9, true],
+    [479, 100, 9, false],
+    [480, 114, 6, true],
+  ];
+
+  for (const [position, sourate, verset, exact] of anchors) {
+    if (position === 480) {
+      assert.equal(sourate, 114);
+      assert.equal(verset, 6);
+      assert.equal(exact, true);
+      continue;
+    }
+
+    const rub = hafsRubNumber(position);
+    const start = rubStarts.get(rub);
+    assert.ok(start, `quart ${rub} absent de la fixture pour p=${position}`);
+    assert.equal(start.sourate, sourate, `p=${position} sourate`);
+    assert.equal(start.verset, verset, `p=${position} verset`);
+    assert.equal(
+      exact,
+      position === 0 || position % 2 === 0,
+      `p=${position} exact`
+    );
+  }
+
+  assert.equal(hafsRubNumber(478), hafsRubNumber(479));
+  assert.equal(hafsRubNumber(8), 5);
 });
 
 test("reperes : libellé hizb", () => {
