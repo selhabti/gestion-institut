@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QURAN_TOTAL_PAGES, useQuranWarshEighths } from "./api";
+import { AnnotatablePage } from "./AnnotatablePage";
 import type { QuranPlan } from "./types";
 import { supabase } from "@/lib/supabase";
 
@@ -171,9 +172,7 @@ export function WarshMushafViewer({
     return () => clearTimeout(timer);
   }, [page, memberId, restoringPage]);
 
-  const pageImageUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/warsh-kfqc/${String(
-    page
-  ).padStart(3, "0")}.svg`;
+  const pageImageUrl = `https://raw.githubusercontent.com/QuranHub/quran-pages-images/main/ayat/warsh/${page}.png`;
 
   const refresh = () => {
     void eighthsQuery.refetch();
@@ -327,12 +326,12 @@ export function WarshMushafViewer({
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white p-2 shadow-inner">
-            <img
+            <AnnotatablePage
               src={pageImageUrl}
               alt={`Page ${page} du mushaf Warsh`}
-              loading="lazy"
-              onError={() => setImageError(true)}
-              className="mx-auto w-full max-w-xl"
+              annotationKey={`warsh:${memberId ?? "anon"}:${page}`}
+              maxWidthClass="max-w-xl"
+              onImageError={() => setImageError(true)}
             />
           </div>
         )}

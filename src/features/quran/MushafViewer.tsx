@@ -17,6 +17,7 @@ import {
   useQuranSurahs,
 } from "./api";
 import { WarshMushafViewer } from "./WarshMushafViewer";
+import { AnnotatablePage } from "./AnnotatablePage";
 import type { QuranAyah, QuranPlan } from "./types";
 import { supabase } from "@/lib/supabase";
 
@@ -216,9 +217,7 @@ export function MushafViewer({
     onRefresh?.();
   };
 
-  const pageImageUrl = `https://cdn.quran.ws/svg/pages/v1.1.1/${
-    riwaya === "Warsh" ? "warsh-kfqc" : "hafs-kfqc"
-  }/${String(page).padStart(3, "0")}.svg`;
+  const pageImageUrl = `https://raw.githubusercontent.com/QuranHub/quran-pages-images/main/ayat/tajweed/${page}.png`;
   const cardClassName = embedded
     ? "border-0 bg-transparent shadow-none"
     : undefined;
@@ -434,12 +433,12 @@ export function MushafViewer({
           </div>
         ) : !imageError ? (
           <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white p-2 shadow-inner">
-            <img
+            <AnnotatablePage
               src={pageImageUrl}
-              alt={`Page ${page} du mushaf`}
-              loading="lazy"
-              onError={() => setImageError(true)}
-              className="mx-auto w-full max-w-xl"
+              alt={`Page ${page} du mushaf Tajweed`}
+              annotationKey={`hafs:${memberId ?? "anon"}:${page}`}
+              maxWidthClass="max-w-lg"
+              onImageError={() => setImageError(true)}
             />
           </div>
         ) : (
